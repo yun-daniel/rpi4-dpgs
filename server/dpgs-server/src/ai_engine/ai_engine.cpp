@@ -58,8 +58,23 @@ void detector(cv::Mat &_frame, cv::dnn::Net &net, std::vector<Detection> &output
 
     blob = cv::dnn::blobFromImage(frame, 1.0/255.0, cv::Size(640, 640), cv::Scalar(), true, false);
 
+    // Debug Session
+    std::vector<cv::Mat> channels;
+    cv::dnn::imagesFromBlob(blob, channels);
+    cv::imshow("blob", channels[0]);
+    cv::waitKey(0);
+    // ----
+
     net.setInput(blob);
     net.forward(outputs, net.getUnconnectedOutLayersNames());
+
+
+    for (size_t i = 0; i < outputs.size(); ++i) {
+        std::cout << "Output " << i
+            << ": " << outputs[i].rows << " x " << outputs[i].cols
+            << " x " << outputs[i].channels() << std::endl;
+    }
+
 }
 
 
@@ -68,6 +83,7 @@ void run_ai_engine() {
     std::vector<std::string>    class_list;
     cv::dnn::Net                net;
     cv::Mat                     frame;
+    std::vector<Detection> outputs;
 
     // Initialize
     init_dnn(class_list, net);
@@ -81,7 +97,10 @@ void run_ai_engine() {
 //            break;
         }
 
+        detector(frame, net, outputs, class_list);
+
         cv::imshow("Frame", frame);
+        cv::waitKey(0);
 
 
 //    }
