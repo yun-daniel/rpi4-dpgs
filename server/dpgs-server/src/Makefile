@@ -10,5 +10,5 @@ dpgs-server.o: skeleton.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
 clean: 
-	rm dpgs-server*
+	rm -f dpgs-server*
 
