@@ -4,6 +4,7 @@
 
 #include <unistd.h>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -16,12 +17,67 @@ vector<pthread_t> tid_auth;         // Threads for handling ID/password authenti
 // pthread_t *tid_auth = nullptr;      // Threads for handling ID/password authentication with clients
 
 int tid_mapdata_count = 0;          // Count of tid of tid_mapdata
-int tid_auth_count = 0;             // Count of tid of tid_auth
 
 pthread_mutex_t m_mapdata = PTHREAD_MUTEX_INITIALIZER;      // Mutex for tid_mapdata and tid_mapdata_count
-pthread_mutex_t m_auth = PTHREAD_MUTEX_INITIALIZER;         // Mutex for tid_auth and tid_auth_count
+pthread_mutex_t m_auth = PTHREAD_MUTEX_INITIALIZER;         // Mutex for tid_auth
 
 pthread_attr_t attr;                // Thread attributes for detach state
+
+/*
+Cleanup handler of pthread_routine1 and pthread_routine2
+Request cancel to threads depends on arg
+1 : tid_mapdata
+2 : tid_auth
+*/
+void cleanup_handler1 (void *arg) {
+    int option = *((int *)arg);
+    vector<pthread_t> *v_ptr;
+    pthread_mutex_t *m_ptr;
+    free(arg);
+
+    if (option == 1) {
+        // v_ptr = &tid_mapdata;
+        // m_ptr = &m_mapdata
+    }
+    else if (option == 2) {
+        v_ptr = &tid_auth;
+        m_ptr = &m_auth;
+    }
+    else {
+        return;
+    }
+
+    int i;
+    pthread_mutex_lock(m_ptr);
+        for (i = 0; i < v_ptr->size(); i++) {
+            if (pthread_cancel((*v_ptr)[i]) != 0) {
+                fprintf(stderr, "%d's pthread_cancel failure\n", i);
+            }
+        }
+    fprintf(stderr, "handelr1 : %lx\n", pthread_self());
+    pthread_mutex_unlock(m_ptr);
+}
+
+/*
+Cleanup handler of subpthread of pthread_routine2
+Erase the element that same value of *arg
+*/
+void cleanup_handler2_auth (void *arg) {
+    pthread_t tid = *((pthread_t *)arg);
+    pthread_mutex_t *m_ptr = &m_auth;
+    free(arg);
+
+    pthread_mutex_lock(m_ptr);
+    auto it = find(tid_auth.begin(), tid_auth.end(), tid);
+        if (it == tid_auth.end()) {
+            fprintf(stderr, "There is no element of that tid\n");
+            pthread_mutex_unlock(m_ptr);
+            return;
+        }   
+        fprintf(stderr, "erase : %lx\n", tid);
+        tid_auth.erase(it);
+    pthread_mutex_unlock(m_ptr);
+}
 
 /*
 thread for send map data to client socket
@@ -46,9 +102,18 @@ void * auth (void *arg) {
     int clnt_sock = *((int *)arg);
     free(arg);
 
+    pthread_t *tid_ptr = (pthread_t *)malloc(sizeof(pthread_t));
+    *tid_ptr = pthread_self();
+    pthread_cleanup_push(cleanup_handler2_auth, tid_ptr);
+
     // send map data to clnt_sock
     
     printf("threads(auth) : %lx\n", pthread_self());
+    while (1) {
+        sleep(1);
+    }
+
+    pthread_cleanup_pop(1);         
 
     return nullptr;
 }
@@ -86,6 +151,10 @@ void * pthread_routine1 (void *arg) {
 
 void * pthread_routine2 (void *arg) {
     printf("threads[2] : %lx\n", pthread_self());
+
+    int *option_ptr = (int *)malloc(sizeof(int));
+    *option_ptr = 2;
+    pthread_cleanup_push(cleanup_handler1, option_ptr);
     
     // create listen_fd
 
@@ -98,17 +167,19 @@ void * pthread_routine2 (void *arg) {
         // *clnt_sock = accept(listen_fd, ..);
 
         // add tid
-        pthread_mutex_lock(&m_auth);
-            if (pthread_create(&tid, &attr, auth, (void *)clnt_sock) != 0) {
-                fprintf(stderr, "%d's pthread_create of auth is failed\n", *clnt_sock);
-                free (clnt_sock);
-            } else {
+        if (pthread_create(&tid, &attr, auth, (void *)clnt_sock) != 0) {
+            fprintf(stderr, "%d's pthread_create of auth is failed\n", *clnt_sock);
+            free (clnt_sock);
+        } else {
+            pthread_mutex_lock(&m_auth);
                 tid_auth.push_back(tid);
-            }
-        pthread_mutex_unlock(&m_auth);
+            pthread_mutex_unlock(&m_auth);
+        }
 
         sleep(3);
     }
+
+    pthread_cleanup_pop(1);     // this will be not excuted
 
     return nullptr;
 }
@@ -168,7 +239,6 @@ if excute successfully return 0, otherwise return 1
 int setting_threads (void) {
 
     // setting detach option of pthread
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     if (pthread_attr_init(&attr) != 0) {
         fprintf(stderr, "pthread_attr_init failure\n");
         return 1;
@@ -189,7 +259,7 @@ int setting_threads (void) {
         fprintf(stderr, "thread2 creation fail\n");
         return 1;
     }
-    
+    /*
     // Thread 3 : camera interface
     if (pthread_create(&threads[3], NULL, pthread_routine3, NULL) != 0) {
         fprintf(stderr, "thread3 creation fail\n");
@@ -213,6 +283,7 @@ int setting_threads (void) {
         fprintf(stderr, "thread6 creation fail\n");
         return 1;
     }
+        */
 
     return 0;
 }
@@ -221,6 +292,7 @@ int setting_threads (void) {
 void exit_routine() {
     int i;
 
+    
     // Terminate the tid_mapdata[]
     fprintf(stderr, "Terminate Map Data Start\n");
     pthread_mutex_lock(&m_mapdata);
@@ -233,6 +305,7 @@ void exit_routine() {
     free(tid_mapdata);
     fprintf(stderr, "Terminate Map Data End\n");
 
+    /*
     // Terminate the tid_auth[]
     fprintf(stderr, "Terminate Auth Start\n");
     pthread_mutex_lock(&m_auth);
@@ -244,9 +317,10 @@ void exit_routine() {
     pthread_mutex_unlock(&m_auth);
     tid_auth.clear();
     fprintf(stderr, "Terminate Auth End\n");
+    */
 
     // Terminate the threads[]
-    for (i = 1; i < THREAD_CNT; i++) {
+    for (i = 1; i < 3; i++) {
         if (pthread_cancel(threads[i]) != 0) {
             fprintf(stderr, "%d's pthread_cancel failure\n", i);
         }
@@ -255,6 +329,8 @@ void exit_routine() {
         }
         fprintf(stderr, "Terminate the threads[%d]\n", i);
     }
+    
+    sleep(5);       // for wating cleanup handler
 
     pthread_attr_destroy(&attr);
 }
