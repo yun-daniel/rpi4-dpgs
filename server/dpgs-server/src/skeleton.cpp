@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cstdlib>
-#include <pthread.h>
-
-#include <unistd.h>
 #include <vector>
 #include <algorithm>
+
+#include <unistd.h>
+#include <pthread.h>
 
 using namespace std;
 
@@ -21,11 +21,11 @@ pthread_mutex_t m_auth = PTHREAD_MUTEX_INITIALIZER;         // Mutex for tid_aut
 pthread_attr_t attr;                // Thread attributes for detach state
 
 /*
-Cleanup handler of pthread_routine1 and pthread_routine2
-Request cancel to threads depends on arg
-1 : tid_mapdata
-2 : tid_auth
-*/
+ * cleanup_handler1: cleanup handler for pthread_routine1 and pthread_routine2
+ * Cancels threads based on the arg
+ *   1: cancel all threads in tid_mapdata
+ *   2: cancel all threads in tid_auth
+ */
 void cleanup_handler1 (void *arg) {
     int option = *((int *)arg);
     vector<pthread_t> *v_ptr;
@@ -55,10 +55,11 @@ void cleanup_handler1 (void *arg) {
     pthread_mutex_unlock(m_ptr);
 }
 
-/* 
-Cleanup handler of subpthread of pthread_routine 1
-Erase the element the same value of *arg
-*/
+/*
+ * cleanup_handler2_mapdata:
+ * Cleanup handler for sub-threads created by pthread_routine1
+ * Deletes from tid_mapdata the thread based on the arg
+ */
 void cleanup_handler2_mapdata (void *arg) {
     pthread_t tid = *((pthread_t *)arg);
     free (arg);
@@ -76,9 +77,10 @@ void cleanup_handler2_mapdata (void *arg) {
 }
 
 /*
-Cleanup handler of subpthread of pthread_routine2
-Erase the element that same value of *arg
-*/
+ * cleanup_handler2_auth:
+ * Cleanup handler for sub-threads created by pthread_routine2
+ * Deletes from tid_auth the thread based on the arg
+ */
 void cleanup_handler2_auth (void *arg) {
     pthread_t tid = *((pthread_t *)arg);
     free(arg);
@@ -96,9 +98,9 @@ void cleanup_handler2_auth (void *arg) {
 }
 
 /*
-thread for send map data to client socket
-arg contains client socket fd
-*/
+ * Thread that sends map data to a client
+ * arg points to the client socket file descriptor
+ */
 void * send_mapdata (void *arg) {
     int clnt_sock = *((int *)arg);
     free(arg);
@@ -120,9 +122,9 @@ void * send_mapdata (void *arg) {
 }
 
 /*
-thread for ID/password authentication with clients
-arg contains client socket fd
-*/
+ * Thread that handles ID/password authentication with a client
+ * arg points to the client socket file descriptor
+ */
 void * auth (void *arg) {
     int clnt_sock = *((int *)arg);
     free(arg);
@@ -254,18 +256,17 @@ void * pthread_routine6 (void *arg) {
     return nullptr;
 }
 
-/* 
-Create threads for each task
-
-Thread 1 : client connection manager (send map data)
-Thread 2 : client connection manager (receive id/pw)
-Thread 3 : camera interface
-Thread 4 : ISP
-Thread 5 : device driver (sensor)
-Thread 6 : device driver (actuator)
-
-if excute successfully return 0, otherwise return 1
-*/
+/*
+ * Create one thread for each task:
+ *   1. Client connection manager — sends map data
+ *   2. Client connection manager — receives ID/password
+ *   3. Camera interface
+ *   4. ISP processing
+ *   5. Device driver — sensor
+ *   6. Device driver — actuator
+ *
+ * Returns 0 on success, 1 on failure.
+ */
 int setting_threads (void) {
 
     // setting detach option of pthread
