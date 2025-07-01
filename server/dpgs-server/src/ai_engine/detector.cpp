@@ -16,40 +16,6 @@ cv::Mat letterbox(const cv::Mat &src) {
 }
 
 
-void detector(cv::Mat &_frame, cv::dnn::Net &net, std::vector<Detection> &output, const std::vector<std::string> &class_name) {
-    cv::Mat blob;
-    std::vector<cv::Mat> outputs;
-
-    auto frame = letterbox(_frame);
-
-    blob = cv::dnn::blobFromImage(frame, 1.0/255.0, cv::Size(640, 640), cv::Scalar(), true, false);
-
-    // Debug Session - show blob
-//    std::vector<cv::Mat> channels;
-//    cv::dnn::imagesFromBlob(blob, channels);
-//    cv::imshow("blob", channels[0]);
-//    cv::waitKey(0);
-    // ----
-
-    net.setInput(blob);
-    net.forward(outputs, net.getUnconnectedOutLayersNames());
-
-    output = post_detector(frame, outputs, class_name);
-    
-
-    // Debug Session    
-    for (int i=0; i<output.size(); ++i) {
-        std::cout << "[Output " << i
-            << "] " << "class_id: " << output[i].class_id
-            << ", " << "confidence: " << output[i].confidence
-            << ", " << "[" << output[i].box.x
-            << ", " << output[i].box.y
-            << ", " << output[i].box.width
-            << ", " << output[i].box.height << "]\n";
-    }
-}
-
-
 std::vector<Detection> post_detector(cv::Mat &frame, std::vector<cv::Mat> &outputs, const std::vector<std::string> &className) {
     std::vector<Detection> output;
 
@@ -108,6 +74,40 @@ std::vector<Detection> post_detector(cv::Mat &frame, std::vector<cv::Mat> &outpu
     }
 
     return output;
+}
+
+
+void detector(cv::Mat &_frame, cv::dnn::Net &net, std::vector<Detection> &output, const std::vector<std::string> &class_name) {
+    cv::Mat blob;
+    std::vector<cv::Mat> outputs;
+
+    auto frame = letterbox(_frame);
+
+    blob = cv::dnn::blobFromImage(frame, 1.0/255.0, cv::Size(640, 640), cv::Scalar(), true, false);
+
+    // Debug Session - show blob
+//    std::vector<cv::Mat> channels;
+//    cv::dnn::imagesFromBlob(blob, channels);
+//    cv::imshow("blob", channels[0]);
+//    cv::waitKey(0);
+    // ----
+
+    net.setInput(blob);
+    net.forward(outputs, net.getUnconnectedOutLayersNames());
+
+    output = post_detector(frame, outputs, class_name);
+    
+
+    // Debug Session    
+    for (int i=0; i<output.size(); ++i) {
+        std::cout << "[Output " << i
+            << "] " << "class_id: " << output[i].class_id
+            << ", " << "confidence: " << output[i].confidence
+            << ", " << "[" << output[i].box.x
+            << ", " << output[i].box.y
+            << ", " << output[i].box.width
+            << ", " << output[i].box.height << "]\n";
+    }
 }
 
 

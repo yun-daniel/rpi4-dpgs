@@ -1,6 +1,7 @@
 #include "ai_engine_internal.h"
 #include "ai_engine.h"
 #include "detector.h"
+#include "classifier.h"
 #include "map_manager.h"
 
 #include <fstream>
@@ -60,7 +61,7 @@ void init_dnn(std::vector<std::string> &class_list, cv::dnn::Net &net) {
 }
 
 
-void draw_slots(cv::Mat& frame, const std::vector<Slot>& slots) {
+void overlay_slots(cv::Mat& frame, const std::vector<Slot>& slots) {
 
     for (const auto& slot : slots) {
 
@@ -86,7 +87,7 @@ void print_frame(const cv::Mat& frame) {
 
 
 void run_ai_engine() {
-    // Declare Variables
+    // Declare
     std::vector<std::string>    class_list;
     cv::dnn::Net                net;
     cv::Mat                     frame;
@@ -112,9 +113,9 @@ void run_ai_engine() {
 
         detector(frame, net, outputs, class_list);
 
-//        classifier(outputs, mgr);
+        classifier(outputs, mgr);
 
-        draw_slots(frame, map.slots);
+        overlay_slots(frame, map.slots);
         overlay_detection(frame, outputs, class_list);
         print_frame(frame);
 

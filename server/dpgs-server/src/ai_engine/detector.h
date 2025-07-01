@@ -11,9 +11,7 @@ struct Detection {
 };
 
 
-cv::Mat letterbox(const cv::Mat &src);
 void detector(cv::Mat &_frame, cv::dnn::Net &net, std::vector<Detection> &output, const std::vector<std::string> &class_name);
-std::vector<Detection> post_detector(cv::Mat &frame, std::vector<cv::Mat> &outputs, const std::vector<std::string> &className);
 
 
 // Utility
