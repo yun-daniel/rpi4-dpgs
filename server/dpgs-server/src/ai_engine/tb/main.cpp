@@ -1,4 +1,5 @@
 #include "ai_engine.h"
+#include "map_manager.h"
 
 #include <iostream>
 
@@ -10,6 +11,27 @@ int main(int argc, char **argv) {
     std::cout << "[DEBUG] Run Idle\n";
     while (1) {
     }
+
+
+    // MapManager TEST Session ----
+//    MapManager mgr("config/map.json");
+//
+//    mgr.insert_slot(4, "occupied", cv::Rect(400, 500, 90, 110));
+//    mgr.printMap();
+//
+//    mgr.update_slot(4, "vacant");
+//    mgr.printMap();
+//
+//    mgr.update_slot(99, "occupied");
+//
+//    mgr.delete_slot(4);
+//
+//    std::cout << "\nUpdated Map\n";
+//    mgr.printMap();
+//
+//    mgr.save();
+//    std::cout << "Saved updated map.json\n";
+    // --------------
 
     return 0;
 }
