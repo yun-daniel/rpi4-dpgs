@@ -9,6 +9,9 @@ dpgs-server: dpgs-server.o
 dpgs-server.o: skeleton.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
+valgrind:
+	valgrind --leak-check=full --leak-resolution=high --show-reachable=yes ./dpgs-server
+
 clean: 
 	rm -f dpgs-server*
 
