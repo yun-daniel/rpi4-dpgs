@@ -6,12 +6,15 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
 #include <pthread.h>
 
 using namespace std;
 
 #define THREAD_CNT  7               /* Total number of threads */
                                     /* (0th index is intentionally unused for clear numbering) */
+
+pid_t ai_pid;                       // Process to run AI model
 
 pthread_t threads[THREAD_CNT];      // Core task handler threads 
 vector<pthread_t> tid_mapdata;      // Threads for sending map data to each client
@@ -316,9 +319,8 @@ int setting_threads (void) {
         fprintf(stderr, "thread6 creation fail\n");
         return 1;
     }
-    */
+        */
         
-
     return 0;
 }
 
@@ -327,12 +329,12 @@ int setting_threads (void) {
  * Return 0 on success, 1 on failure
  */
 int setting_process (void) {
-    pid_t ai_pid;
-
     ai_pid = fork();
     if (ai_pid == 0) {      /* child */
         // Execute other program or call function
-        exit(EXIT_SUCCESS); 
+        while (1) {
+            sleep(1);
+        }
     }
     else if (ai_pid > 0) {  /* parent */
         fprintf(stdout, "Process %d spawned process %d\n", getpid(), ai_pid) ;
@@ -342,8 +344,6 @@ int setting_process (void) {
         return 1;
     }
 
-    wait(0x0);
-
     return 0;
 }
 
@@ -351,8 +351,8 @@ int setting_process (void) {
  * Performs tasks for a safe exit
  */
 void exit_routine() {
-    int i;
     // Terminate the threads[]
+    int i;
     for (i = 1; i < 3; i++) {
         if (pthread_cancel(threads[i]) != 0) {
             fprintf(stderr, "%d's pthread_cancel failure\n", i);
@@ -362,6 +362,17 @@ void exit_routine() {
         }
         fprintf(stderr, "Terminate the threads[%d]\n", i);
     } 
+
+    // Terminate the ai-process
+    if (kill(ai_pid, SIGTERM) == -1) {
+        perror("Error: ai_pid sigterm failed");
+    }
+    int wstatus;
+    if (waitpid(ai_pid, &wstatus, 0) != ai_pid) {
+        perror("Error: ai_pid waitpid failed");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(stderr, "Terminate the ai_pid\n");
 }
 
 int main (void) {
