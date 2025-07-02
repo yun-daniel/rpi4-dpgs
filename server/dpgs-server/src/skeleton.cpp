@@ -4,6 +4,8 @@
 #include <algorithm>
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <pthread.h>
 
 using namespace std;
@@ -120,7 +122,7 @@ void * send_mapdata (void *arg) {
 
     // send map data to clnt_sock
     
-    printf("threads[send_mapdata] : %lx\n", pthread_self());
+    printf("PID[send_mapdata] : %lx\n", pthread_self());
     while (1) {
         sleep(1);
     }
@@ -144,7 +146,7 @@ void * auth (void *arg) {
 
     // send map data to clnt_sock
     
-    printf("threads[auth] : %lx\n", pthread_self());
+    printf("PID[auth] : %lx\n", pthread_self());
     while (1) {
         sleep(1);
     }
@@ -321,6 +323,31 @@ int setting_threads (void) {
 }
 
 /*
+ * Run ai-engine
+ * Return 0 on success, 1 on failure
+ */
+int setting_process (void) {
+    pid_t ai_pid;
+
+    ai_pid = fork();
+    if (ai_pid == 0) {      /* child */
+        // Execute other program or call function
+        exit(EXIT_SUCCESS); 
+    }
+    else if (ai_pid > 0) {  /* parent */
+        fprintf(stdout, "Process %d spawned process %d\n", getpid(), ai_pid) ;
+    }
+    else {      /* ai_pid < 0 */
+        fprintf(stderr, "Fork failed\n");
+        return 1;
+    }
+
+    wait(0x0);
+
+    return 0;
+}
+
+/*
  * Performs tasks for a safe exit
  */
 void exit_routine() {
@@ -339,13 +366,15 @@ void exit_routine() {
 
 int main (void) {
 
+    if (setting_process() == 1) {
+        fprintf(stderr, "setting_process() failure\n");
+        exit(EXIT_FAILURE);
+    }
+
     if (setting_threads() == 1) {
         fprintf(stderr, "setting_threads() failed\n");
         exit(EXIT_FAILURE);
     }
-
-    // Multi process : AI model & prediction algorithm
-
 
     int input;
     printf(">> ");
