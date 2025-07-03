@@ -1,10 +1,17 @@
 #include "ai_engine.h"
 #include "map_manager.h"
+#include "frame_buffer.h"
 
 #include <iostream>
 
 
 int main(int argc, char **argv) {
+
+//    FrameBuffer fb("FB");
+//    if (!fb.initialize()) {
+//        std::cerr << "Failed to initialize FrameBuffer\n";
+//        return 1;
+//    }
 
     run_ai_engine();
 

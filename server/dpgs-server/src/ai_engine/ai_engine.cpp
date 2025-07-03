@@ -90,10 +90,11 @@ void run_ai_engine() {
     // Declare
     std::vector<std::string>    class_list;
     cv::dnn::Net                net;
-    cv::Mat                     frame;
+//    cv::Mat                     frame;
     std::vector<Detection>      outputs;
-    MapManager mgr("config/map.json");
-    const ParkingLotMap& map = mgr.getMap();
+    MapManager                  mgr("config/map.json");
+    const ParkingLotMap&        map = mgr.getMap();
+    ParkingStatusClassifier     classifier(mgr);
 
     // Initialize
     if (init_test_video() == false) {
@@ -105,7 +106,7 @@ void run_ai_engine() {
 
     // Run
     while (true) {
-        frame = frame_sampling();
+        cv::Mat frame = frame_sampling();
         if (frame.empty()) {
             std::cout << "[DEBUG] No image\n";
             break;
@@ -113,7 +114,7 @@ void run_ai_engine() {
 
         detector(frame, net, outputs, class_list);
 
-        classifier(outputs, mgr);
+        classifier.classify(outputs);
 
         overlay_slots(frame, map.slots);
         overlay_detection(frame, outputs, class_list);
