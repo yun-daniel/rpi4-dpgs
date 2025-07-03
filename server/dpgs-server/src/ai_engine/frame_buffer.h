@@ -13,7 +13,7 @@ constexpr int FRAME_CHANNELS    = 3;
 constexpr int FRAME_MAX_SIZE    = FRAME_WIDTH * FRAME_HEIGHT * FRAME_CHANNELS;
 
 struct FrameSlot {
-    std::atomic<bool>   ready;
+    std::atomic<bool>   valid;
     int                 rows, cols, type;
     size_t              data_size;
     uint8_t             data[FRAME_MAX_SIZE];
@@ -22,6 +22,7 @@ struct FrameSlot {
 struct SharedFrameBuffer {
     std::atomic<size_t> write_idx;
     std::atomic<size_t> read_idx;
+    std::atomic<size_t> count;
     FrameSlot slots[BUFFER_SIZE];
 };
 
@@ -39,9 +40,9 @@ class FrameBuffer {
 
  private:
     std::string shm_name;
-    int         shm_fd = -1;
-    void*       shm_ptr = nullptr;
-    size_t      shm_total_size = 0;
+    int shm_fd              = -1;
+    void* shm_ptr           = nullptr;
+    size_t shm_total_size   = 0;
 
     SharedFrameBuffer* buffer = nullptr;
 
