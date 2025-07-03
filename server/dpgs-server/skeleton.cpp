@@ -348,7 +348,7 @@ int setting_process (void) {
 }
 
 /*
- * Performs tasks for a safe exit
+ * Performs cleanup tasks to ensure a safe exit when the server is forcibly terminated
  */
 void exit_routine() {
     // Terminate the threads[]
