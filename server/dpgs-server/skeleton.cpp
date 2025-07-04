@@ -279,7 +279,7 @@ void * pthread_routine6 (void *arg) {
  *   5. Device driver — sensor
  *   6. Device driver — actuator
  *
- * Returns 0 on success, 1 on failure.
+ * Returns 0 on success, 1 on failure
  */
 int setting_threads (void) {
 
