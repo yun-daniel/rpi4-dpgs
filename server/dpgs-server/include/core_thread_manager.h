@@ -10,15 +10,15 @@
 
 class CoreThreadManager
 {
-    private:
-        int thread_cnt;
-        pthread_t threads[MAX_THREAD];
-    
-    public:
-        CoreThreadManager();
-        ~CoreThreadManager();
-        int add_thread(void *(*fptr)(void *arg));
-        int clear();
+private:
+    int thread_cnt;
+    pthread_t threads[MAX_THREAD];
+
+public:
+    CoreThreadManager();
+    ~CoreThreadManager();
+    int add_thread(void *(*fptr)(void *arg));
+    int clear();
 };
 
 #endif  // CORE_THREAD_MANAGER_H
