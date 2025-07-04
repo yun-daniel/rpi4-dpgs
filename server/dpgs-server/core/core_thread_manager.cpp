@@ -18,7 +18,7 @@ int CoreThreadManager::add_thread(void *(*fptr)(void *arg)) {
     }
     
     if (pthread_create(&threads[thread_cnt], NULL, *fptr, NULL) != 0) {
-        fprintf(stderr, "Error: Create thread for threads[%d] failure", thread_cnt);
+        fprintf(stderr, "Error: Create thread for core threads[%d] failed", thread_cnt);
         return 1;
     }
 
@@ -35,14 +35,14 @@ int CoreThreadManager::clear() {
 
     int i;
     for (i = 0; i < thread_cnt; i++) {
-        printf("Delete PID: %lx\n", threads[i]);
+        printf("Delete PID(Layer 2): %lx\n", threads[i]);
 
         if (pthread_cancel(threads[i]) != 0) {
-            fprintf(stderr, "%d's pthread_cancel failure\n", i);
+            fprintf(stderr, "Error: %d's pthread_cancel failure\n", i);
             return 1;
         }
         if (pthread_join(threads[i], NULL) != 0) {
-            fprintf(stderr, "%d's pthread_join failure\n", i);
+            fprintf(stderr, "Error: %d's pthread_join failure\n", i);
             return 1;
         }
         fprintf(stderr, "Terminate the threads[%d]\n", i);
