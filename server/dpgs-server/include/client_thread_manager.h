@@ -18,7 +18,7 @@ private:
     // listen_fd
     vector<pthread_t> client_tid_vec;    // Subthreads spawned for each connected client      
 
-    /* For signal_mapdata() */
+    /* For signal_mapdata() : Not interface elements */
     int mapdata;
     int sent_counter;                   
     int temp_total_clients;  
@@ -34,10 +34,10 @@ public:
     void connect_client();
     void remove(void *arg);
     int clear();
-    int siganl_mapdata();           
 
-    /* For signal mapdata() */
-    void * send_mapdata(void *arg);
+    /* Not interface elements */
+    int siganl_mapdata();           
+    void * send_mapdata(void *arg);     // For signal mapdata()
 
 };
 
