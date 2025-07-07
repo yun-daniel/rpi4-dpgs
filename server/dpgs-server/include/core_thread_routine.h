@@ -1,7 +1,7 @@
 #ifndef CORE_THREAD_ROUTINE_H
 #define CORE_THREAD_ROUTINE_H
 
-#include <iostream>
+#include <cstdio>
 #include <cstdlib>
 
 #include <unistd.h>

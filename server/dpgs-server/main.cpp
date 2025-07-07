@@ -3,15 +3,10 @@
 
 #include <unistd.h>
 
+#include "core_thread_routine.h"
 #include "core_thread_manager.h"
 
 using namespace std;
-
-void * hello (void *arg) {
-    printf("hello dabbee\n");
-
-    return nullptr;
-}
 
 /*
  * Create one thread for each task:
@@ -23,13 +18,20 @@ void * hello (void *arg) {
  *
  * Returns 0 on success, 1 on failure.
  */
-int setting_threads (CoreThreadManager * ctm_ptr) {
+int setting_threads (CoreThreadManager *ctm_ptr) {
 
     // Thread 1 : client connection manager (send map data)
-    if (ctm_ptr->add_thread(hello) == 1) {
+    if (ctm_ptr->add_thread(core_thread_routine1) == 1) {
         return 1;
     }
-    
+
+    /*
+    // Thread 2 : client connection manager (receive id/pw)
+    if (ctm_ptr->add_thread(core_thread_routine2) == 1) {
+        return 1;
+    }
+        */
+
     return 0;
 }
 
@@ -44,7 +46,11 @@ int main (void) {
 
     // sleep(1);
 
-    ctm.clear();
+    int input;
+    cin >> input;
+    if (input > 0) {
+        ctm.clear();
+    }
 
     return 0;
 }

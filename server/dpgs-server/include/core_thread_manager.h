@@ -1,8 +1,7 @@
 #ifndef CORE_THREAD_MANAGER_H
 #define CORE_THREAD_MANAGER_H
 
-#include <iostream>
-#include <cstdlib>
+#include <cstdio>
 
 #include <pthread.h>
 
