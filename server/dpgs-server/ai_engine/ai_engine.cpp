@@ -38,7 +38,7 @@ void AIEngine::Impl::run() {
 
         std::vector<Detection> detections;
         detector(frame, net, detections, class_list);
-        classifier.classify(detections);
+        classifier.classify(frame, detections);
 
         overlay_slots(frame, map);
         overlay_detection(frame, detections, class_list);
@@ -103,11 +103,13 @@ void AIEngine::Impl::overlay_slots(cv::Mat& frame, const SharedParkingLotMap& ma
         cv::Scalar color;
         switch (slot.state) {
             case EMPTY:
-                color = colors[1]; break;
+                color = colors[EMPTY]; break;
             case OCCUPIED:
-                color = colors[4]; break;
+                color = colors[OCCUPIED]; break;
+            case EXITING:
+                color = colors[EXITING]; break;
             default:
-                color = colors[1]; break;
+                color = colors[0]; break;
         }
 
         cv::polylines(frame, &pts, &npts, 1, true, color, 3);

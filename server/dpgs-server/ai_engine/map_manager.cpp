@@ -220,6 +220,7 @@ bool MapManager::update_slot(int slot_id, const SlotState& state) {
     for (int i=0; i<map->total_slots; ++i) {
         if (map->slots[i].slot_id == slot_id) {
             map->slots[i].state = state;
+            save_map_data();
             return true;
         }
     }
@@ -272,7 +273,7 @@ bool MapManager::save_map_data() {
         const auto& s = map->slots[i];
         file << "    {\n";
         file << "      \"slot_id\": " << s.slot_id << ",\n";
-        file << "      \"state\": \"" << static_cast<int>(s.state) << "\",\n";
+        file << "      \"state\": " << static_cast<int>(s.state) << ",\n";
         file << "      \"poly\": [";
         for (size_t j=0; j<4; ++j) {
             file << "[" << s.poly[j].x << ", " << s.poly[j].y << "]";

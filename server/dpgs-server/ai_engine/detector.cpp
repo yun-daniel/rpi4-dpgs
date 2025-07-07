@@ -118,7 +118,7 @@ void overlay_detection(cv::Mat& frame, std::vector<Detection> &outputs, const st
         auto detection = outputs[i];
         auto box = detection.box;
         auto class_id = detection.class_id;
-        const auto color = colors[class_id % (colors.size()-1)];
+        const auto color = colors[(class_id % (colors.size()-3))+3];
         cv::rectangle(frame, box, color, 3);
 
         cv::rectangle(frame, cv::Point(box.x, box.y-20), cv::Point(box.x+box.width, box.y), color, cv::FILLED);

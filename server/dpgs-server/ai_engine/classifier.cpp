@@ -1,10 +1,11 @@
 #include "classifier.h"
 #include <deque>
 
-const float SLOT_THRESHOLD_RATIO    = 0.4;
+const float SLOT_THRESHOLD_RATIO    = 0.5;
 const int   MAX_RATIOS              = 5;
 
 
+// === Utility ===
 static float computeOverlapArea(const std::vector<cv::Point>& poly, const cv::Rect& box) {
     cv::Rect bounding = cv::boundingRect(poly) | box;
     cv::Size canvasSize(bounding.x + bounding.width + 10, bounding.y + bounding.height + 10);
@@ -24,7 +25,26 @@ static float computeOverlapArea(const std::vector<cv::Point>& poly, const cv::Re
     return intersectionArea;
 }
 
+static float get_brightness(const cv::Mat& frame, const cv::Rect& box, cv::Rect& out_rect) {
+    int h_baseline = box.height/2;
 
+    cv::Rect lower_rect(box.x, box.y+h_baseline, box.width, h_baseline);
+    lower_rect &= cv::Rect(0, 0, frame.cols, frame.rows);
+    out_rect = lower_rect;
+
+    if (lower_rect.width <= 0 || lower_rect.height <= 0) return -1.0f;
+
+    cv::Mat roi = frame(lower_rect);
+    cv::Scalar mean_bgr = cv::mean(roi);
+
+    float luminance = 0.114f * mean_bgr[0] + 0.587f * mean_bgr[1] + 0.299f * mean_bgr[2];
+
+    return luminance;
+}
+// =============
+
+
+// === ParkingStatusClassifier ===
 ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
     : mgr(_mgr), map(_mgr.getMap()) {
 
@@ -45,12 +65,29 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
             curr_state = slot.state;
         }
     }
-    
 
-    if ((max_ratio > 0.5f) && (curr_state == EMPTY)) {
+    if (max_ratio <= SLOT_THRESHOLD_RATIO) {
+        if (curr_state != EMPTY)
+            mgr.update_slot(slot_id, EMPTY);
+    }
+    else {
+        if (curr_state == EMPTY)
+            mgr.update_slot(slot_id, OCCUPIED);
+        else {
+            if (info.bright >= 100) {
+                if (curr_state == OCCUPIED)
+                    mgr.update_slot(slot_id, EXITING);
+            }
+            else if (curr_state != OCCUPIED)
+                mgr.update_slot(slot_id, OCCUPIED);
+        }
+    }
+
+
+    if ((max_ratio > SLOT_THRESHOLD_RATIO) && (curr_state == EMPTY)) {
             mgr.update_slot(slot_id, OCCUPIED);
     }
-    else if ((max_ratio <= 0.5f) && (curr_state == OCCUPIED)) {
+    else if ((max_ratio <= SLOT_THRESHOLD_RATIO) && (curr_state == OCCUPIED)) {
             mgr.update_slot(slot_id, EMPTY);
     }
 }
@@ -58,7 +95,7 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
 
 
 
-void ParkingStatusClassifier::update(const int slot_id, float ratio) {
+void ParkingStatusClassifier::update(const int slot_id, float ratio, float bright) {
 
     auto it = slot_data.find(slot_id);
     if (it == slot_data.end()) {
@@ -69,13 +106,14 @@ void ParkingStatusClassifier::update(const int slot_id, float ratio) {
     if (info.ratios.size() >= MAX_RATIOS)
         info.ratios.pop_front();
     info.ratios.push_back(ratio);
+    info.bright = bright;
 
     updateState(slot_id, info);
 
 }
 
 
-void ParkingStatusClassifier::classify(const std::vector<Detection>& detections) {
+void ParkingStatusClassifier::classify(const cv::Mat& frame, const std::vector<Detection>& detections) {
 
     for (int i=0; i<map.total_slots; ++i) {
         const auto& slot = map.slots[i];
@@ -83,16 +121,20 @@ void ParkingStatusClassifier::classify(const std::vector<Detection>& detections)
         float ratio = 0.0f;
         std::vector<cv::Point> poly(slot.poly, slot.poly+4);
         float slot_area = std::fabs(cv::contourArea(poly));
+        float bright = 0.0f;
+        cv::Rect head_rect;
 
         for (const auto& detection : detections) {
             float area = computeOverlapArea(poly, detection.box);
             if (area > max_area) {
                 max_area = area;
+                bright = get_brightness(frame, detection.box, head_rect);
             }
         }
         ratio = max_area / slot_area;
 
-        update(slot.slot_id, ratio);
+
+        update(slot.slot_id, ratio, bright);
 
 
         std::cout << "[AI][CLSF] Slot " << slot.slot_id

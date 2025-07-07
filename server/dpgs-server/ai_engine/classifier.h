@@ -11,6 +11,7 @@
 
 struct SlotInfo {
     std::deque<float>   ratios;
+    float               bright;
 };
 
 
@@ -18,16 +19,16 @@ class ParkingStatusClassifier {
  public:
     ParkingStatusClassifier(MapManager& _mgr);
 
-    void classify(const std::vector<Detection>& detections);
+    void classify(const cv::Mat& frame, const std::vector<Detection>& detections);
 
  private:
     std::unordered_map<int, SlotInfo> slot_data;
     MapManager& mgr;
     const SharedParkingLotMap& map;
 
-
     void updateState(int slot_id, SlotInfo& info);
-    void update(const int slot_id, float ratio);
+    void update(const int slot_id, float ratio, float brightness);
+
 
 };
 

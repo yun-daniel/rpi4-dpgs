@@ -34,11 +34,12 @@ const float         CONFIDENCE_THRESHOLD    = 0.4;
 
 
 const std::vector<cv::Scalar> colors = {
+                                    cv::Scalar(0, 255, 0),      // EMPTY
+                                    cv::Scalar(0, 0, 255),      // OCCUPIED
+                                    cv::Scalar(0, 165, 255),    // EXITING
                                     cv::Scalar(255, 255, 0),
-                                    cv::Scalar(0, 255, 0),
                                     cv::Scalar(0, 255, 255),
-                                    cv::Scalar(255, 0, 0),
-                                    cv::Scalar(0, 0, 255)};
+                                    cv::Scalar(255, 0, 0)};
 
 
 class AIEngine::Impl {
