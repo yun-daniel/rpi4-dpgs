@@ -24,7 +24,7 @@ void AIEngine::Impl::run() {
     init_dnn();
 //    init_test_video();
 
-    const ParkingLotMap& map = mgr.getMap();
+    const SharedParkingLotMap& map = mgr.getMap();
     ParkingStatusClassifier classifier(mgr);
 
     is_running = true;
@@ -40,7 +40,7 @@ void AIEngine::Impl::run() {
         detector(frame, net, detections, class_list);
         classifier.classify(detections);
 
-        overlay_slots(frame, map.slots);
+        overlay_slots(frame, map);
         overlay_detection(frame, detections, class_list);
         print_frame(frame);
 
@@ -92,16 +92,24 @@ cv::Mat AIEngine::Impl::frame_sampling() {
 }
 
 
-void AIEngine::Impl::overlay_slots(cv::Mat& frame, const std::vector<Slot>& slots) {
+void AIEngine::Impl::overlay_slots(cv::Mat& frame, const SharedParkingLotMap& map) {
 
-    for (const auto& slot : slots) {
+    for (int i=0; i<map.total_slots; ++i) {
+        const auto& slot = map.slots[i];
 
-        if (slot.poly.size() != 4) continue;
+        const cv::Point* pts = slot.poly;
+        int npts = 4;
 
-        const cv::Point* pts = slot.poly.data();
-        int npts = static_cast<int>(slot.poly.size());
+        cv::Scalar color;
+        switch (slot.state) {
+            case EMPTY:
+                color = colors[1]; break;
+            case OCCUPIED:
+                color = colors[4]; break;
+            default:
+                color = colors[1]; break;
+        }
 
-        const auto color = (slot.state == "occupied")? colors[4] : colors[1];
         cv::polylines(frame, &pts, &npts, 1, true, color, 3);
     }
 }

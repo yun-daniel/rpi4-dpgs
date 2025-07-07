@@ -14,7 +14,6 @@ static float computeOverlapArea(const std::vector<cv::Point>& poly, const cv::Re
 
     std::vector<std::vector<cv::Point>> polys = { poly };
     cv::fillPoly(mask1, polys, cv::Scalar(255));
-
     cv::rectangle(mask2, box, cv::Scalar(255), cv::FILLED);
 
     cv::Mat intersection;
@@ -29,7 +28,8 @@ static float computeOverlapArea(const std::vector<cv::Point>& poly, const cv::Re
 ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
     : mgr(_mgr), map(_mgr.getMap()) {
 
-    for (const auto& slot : map.slots) {
+    for (int i=0; i<map.total_slots; ++i) {
+        const auto& slot = map.slots[i];
         slot_data[slot.slot_id] = SlotInfo();
     }
 }
@@ -37,20 +37,21 @@ ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
 
 void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     float max_ratio = *std::max_element(info.ratios.begin(), info.ratios.end());
-    std::string curr_state;
+    SlotState curr_state;
 
-    for (auto& slot : map.slots) {
+    for (int i=0; i<map.total_slots; ++i) {
+        const Slot& slot = map.slots[i];
         if (slot_id == slot.slot_id) {
             curr_state = slot.state;
         }
     }
     
 
-    if ((max_ratio > 0.5f) && (curr_state == "vacant")) {
-            mgr.update_slot(slot_id, "occupied");
+    if ((max_ratio > 0.5f) && (curr_state == EMPTY)) {
+            mgr.update_slot(slot_id, OCCUPIED);
     }
-    else if ((max_ratio <= 0.5f) && (curr_state == "occupied")) {
-            mgr.update_slot(slot_id, "vacant");
+    else if ((max_ratio <= 0.5f) && (curr_state == OCCUPIED)) {
+            mgr.update_slot(slot_id, EMPTY);
     }
 }
 
@@ -76,13 +77,15 @@ void ParkingStatusClassifier::update(const int slot_id, float ratio) {
 
 void ParkingStatusClassifier::classify(const std::vector<Detection>& detections) {
 
-    for (const auto& slot : map.slots) {
+    for (int i=0; i<map.total_slots; ++i) {
+        const auto& slot = map.slots[i];
         float max_area = 0.0f;
         float ratio = 0.0f;
-        float slot_area = std::fabs(cv::contourArea(slot.poly));
+        std::vector<cv::Point> poly(slot.poly, slot.poly+4);
+        float slot_area = std::fabs(cv::contourArea(poly));
 
         for (const auto& detection : detections) {
-            float area = computeOverlapArea(slot.poly, detection.box);
+            float area = computeOverlapArea(poly, detection.box);
             if (area > max_area) {
                 max_area = area;
             }

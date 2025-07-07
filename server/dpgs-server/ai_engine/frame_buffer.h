@@ -8,8 +8,8 @@
 
 
 constexpr int BUFFER_SIZE       = 5;
-constexpr int FRAME_WIDTH       = 1920; // 640;
-constexpr int FRAME_HEIGHT      = 1080; //480;
+constexpr int FRAME_WIDTH       = 1792; //1920; // 640;
+constexpr int FRAME_HEIGHT      = 1344; //1080; //480;
 constexpr int FRAME_CHANNELS    = 3;
 constexpr int FRAME_MAX_SIZE    = FRAME_WIDTH * FRAME_HEIGHT * FRAME_CHANNELS;
 

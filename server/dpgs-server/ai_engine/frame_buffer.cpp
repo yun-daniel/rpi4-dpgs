@@ -12,12 +12,17 @@ FrameBuffer::FrameBuffer(const std::string& _shm_name)
 }
 
 FrameBuffer::~FrameBuffer() {
-    if (shm_ptr) munmap(shm_ptr, shm_total_size);
-    if (shm_fd >= 0) close (shm_fd);
+    if (shm_ptr) {
+        munmap(shm_ptr, shm_total_size);
+        buffer = nullptr;
+    }
+    if (shm_fd >= 0) close(shm_fd);
 }
 
 
 bool FrameBuffer::initialize() {
+    std::cout << "[FB] Start to initialize...\n";
+
     shm_total_size = sizeof(SharedFrameBuffer);
 
     shm_fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, 0666);
@@ -28,12 +33,14 @@ bool FrameBuffer::initialize() {
 
     if (ftruncate(shm_fd, shm_total_size) != 0) {
         std::cerr << "[FB] Error: Fail to ftruncate\n";
+        close(shm_fd);
         return false;
     }
 
     shm_ptr = mmap(nullptr, shm_total_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (shm_ptr == MAP_FAILED) {
         std::cerr << "[FB] Error: Fail to mmap\n";
+        close(shm_fd);
         return false;
     }
 
@@ -46,7 +53,7 @@ bool FrameBuffer::initialize() {
     sem_init(&buffer->sem_ready, 1, 0);
     sem_init(&buffer->sem_mutex, 1, 1);
 
-    std::cout << "[FB] Success: FrameBuffer Initialize\n";
+    std::cout << "[FB] Success: FrameBuffer Initialized\n";
 
     return true;
 }

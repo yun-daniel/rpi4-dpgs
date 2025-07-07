@@ -16,10 +16,16 @@ int main(int argc, char **argv) {
         std::cerr << "Failed to initialize FrameBuffer\n";
         return 1;
     }
+
     MapManager mgr("config/map.json");
+    if (!mgr.initialize()) {
+        std::cerr << "Failed to initialize MapManager\n";
+        return 1;
+    }
 
 
-    VpeDummy vpe("tb/test_640x360.mp4", fb);
+//    VpeDummy vpe("tb/test_640x360.mp4", fb);
+    VpeDummy vpe("tb/test_a.mp4", fb);
     std::thread vpe_thread([&]() {
         vpe.start();
     });

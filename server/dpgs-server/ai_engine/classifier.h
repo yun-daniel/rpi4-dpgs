@@ -23,7 +23,7 @@ class ParkingStatusClassifier {
  private:
     std::unordered_map<int, SlotInfo> slot_data;
     MapManager& mgr;
-    const ParkingLotMap& map;
+    const SharedParkingLotMap& map;
 
 
     void updateState(int slot_id, SlotInfo& info);

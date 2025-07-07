@@ -63,7 +63,7 @@ class AIEngine::Impl {
     MapManager&                 mgr;
 
     // For Debug
-    void overlay_slots(cv::Mat& frame, const std::vector<Slot>& slots);
+    void overlay_slots(cv::Mat& frame, const SharedParkingLotMap& map);
     void print_frame(const cv::Mat& frame);
 
     // For Test
