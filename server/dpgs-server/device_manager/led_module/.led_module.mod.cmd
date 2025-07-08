@@ -1,0 +1,1 @@
+savedcmd_/home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/led_module.mod := printf '%s\n'   led_module.o | awk '!x[$$0]++ { print("/home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/"$$0) }' > /home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/led_module.mod

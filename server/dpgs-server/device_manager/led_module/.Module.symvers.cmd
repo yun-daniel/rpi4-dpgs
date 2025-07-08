@@ -1,0 +1,1 @@
+savedcmd_/home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/Module.symvers -T /home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/modules.order -i Module.symvers -e 

@@ -1,0 +1,1 @@
+savedcmd_/home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/modules.order := {   echo /home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/led_module.o; :; } > /home/veda/rpi4-dpgs/server/dpgs-server/src/device_manager/led_module/modules.order
