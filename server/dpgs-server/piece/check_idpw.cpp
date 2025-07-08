@@ -140,6 +140,29 @@ int check_idpw (int clnt_sock) {
     return 0;
 }
 
+/*
+ * Detect logout from client.
+ * If logout_msg is 1, the client has disconnected. 
+ * Returns 0 on success, 1 on failure.
+ */
+int detect_logout (int clnt_sock) {
+    char logout_msg;
+
+    // Receive logout_msg from client
+    if (recv_bytes(clnt_sock, &logout_msg, 1) < 0) {
+        return 1;
+    }
+
+    if (logout_msg = '1') {
+        printf("pthread_exit and call cleanup handler\n");
+    }
+    else {
+        return 1;
+    }
+
+    return 0;
+}
+
 int main (void) {
     
     if (make_connection(9999) == 1) {
@@ -161,6 +184,11 @@ int main (void) {
 
     if (check_idpw(clnt_sock) == 1) {
         fprintf(stderr, "Error: check_idpw failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (detect_logout(clnt_sock) == 1) {
+        fprintf(stderr, "Error: detect_logout failed\n");
         exit(EXIT_FAILURE);
     }
 
