@@ -309,3 +309,9 @@ const SharedParkingLotMap& MapManager::getMap() const {
     return *map;
 }
 
+
+void MapManager::destroyShm() {
+    sem_destroy(&map->sem_mutex);
+    shm_unlink(shm_name.c_str());
+}
+

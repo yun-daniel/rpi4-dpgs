@@ -1,7 +1,7 @@
-#ifndef __VPE_DUMMY_H__
-#define __VPE_DUMMY_H__
+#ifndef __VP_ENGINE_H__
+#define __VP_ENGINE_H__
 
-#include "../frame_buffer.h"
+#include "frame_buffer.h"
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>
@@ -24,4 +24,4 @@ class VpeDummy {
 
 
 
-#endif // __VPE_DUMMY_H__
+#endif // __VP_ENGINE_H__

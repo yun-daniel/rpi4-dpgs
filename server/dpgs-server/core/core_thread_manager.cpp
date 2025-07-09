@@ -1,15 +1,55 @@
 #include "core_thread_manager.h"
+#include "vp_engine_dummy.h"
 
-CoreThreadManager::CoreThreadManager() : thread_cnt(0) {
+#include <iostream>
+
+
+CoreThreadManager::CoreThreadManager(FrameBuffer& _fb, MapManager& _map_mgr)
+    : fb(_fb), map_mgr(_map_mgr) {
 }
 
 CoreThreadManager::~CoreThreadManager() {
 }
 
+
+void CoreThreadManager::start() {
+    std::cout << "[THREAD_MGR] Start Thread Manager\n";
+
+    thread_vpe = std::thread([this]() {
+        VpeDummy vpe("tb/test_a.mp4", fb);
+        vpe.start();
+    });
+        
+
+}
+
+
+void CoreThreadManager::stop() {
+    std::cout << "[THREAD_MGR] Stop Thread Manager\n";
+
+}
+
+
+bool CoreThreadManager::create_thread(void *(*fptr)(void *arg)) {
+    std::cout << "[THREAD_MGR] Create Thread...\n";
+
+
+
+    std::cout << "[THREAD_MGR] Success: Thread created\n";
+    return true;
+}
+
+
+bool CoreThreadManager::clear() {
+    std::cout << "[THREAD_MGR] Cleanning...\n";
+
+
+    std::cout << "[THREAD_MGR] Success: Thread clear\n";
+    return true;
+}
+
+
 /*
- * Creates a pthread that executes the function pointed to by fptr.
- * Returns 0 on success, 1 on failure.
- */
 int CoreThreadManager::add_thread(void *(*fptr)(void *arg)) {
 
     if (thread_cnt >= MAX_THREAD) {
@@ -27,10 +67,7 @@ int CoreThreadManager::add_thread(void *(*fptr)(void *arg)) {
     return 0;
 }
 
-/*
- * Terminate the threads[].
- * Returns 0 on success, 1 on failure.
- */
+
 int CoreThreadManager::clear() {
 
     int i;
@@ -50,6 +87,6 @@ int CoreThreadManager::clear() {
 
     return 0;
 }
-
+*/
 
 

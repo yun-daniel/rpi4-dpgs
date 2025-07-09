@@ -40,7 +40,7 @@ class MapManager {
 
     bool initialize();
     bool initialize_as_new();
-
+    void destroyShm();
 
     void printMap();
     const SharedParkingLotMap& getMap() const;
