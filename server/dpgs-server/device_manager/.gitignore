@@ -1,0 +1,4 @@
+# build artifacts
+device_manager/device_manager
+device_manager/*.o
+    
