@@ -1,13 +1,16 @@
+#include "device_manager.h"
 #include "sender/sender.h"
-#include <thread>
 
-int main() {
-    Sender sender("map.json", "192.168.0.54", 8888);
+#include <iostream>
 
-    std::thread sender_thread([&]() {
-        sender.run();
-    });
+DeviceManager::DeviceManager() {
+    // 필요 시 초기화
+}
 
-    sender_thread.join();
-    return 0;
+void DeviceManager::run() {
+    std::cout << "[DM] Running Device Manager\n";
+
+    // map.json → 직접 파싱하는 sender
+    Sender sender("map.json", "192.168.0.54");
+    sender.run();
 }

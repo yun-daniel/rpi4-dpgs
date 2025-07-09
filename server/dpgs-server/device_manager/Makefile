@@ -1,18 +1,17 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -O2
-INCLUDES = -Isender
-
-SRCS = device_manager.cpp sender/sender.cpp
-OBJS = $(SRCS:.cpp=.o)
+CXXFLAGS = -std=c++17 -Wall
 TARGET = device_manager
+
+SRCS = main.cpp device_manager.cpp sender/sender.cpp
+OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o sender/*.o $(TARGET)
+	rm -f $(OBJS) $(TARGET)
