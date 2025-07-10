@@ -7,17 +7,12 @@ const int target_fps = 30;
 const int delay_ms = 1000 / target_fps;
 
 
-VpeDummy::VpeDummy(const std::string& _path, FrameBuffer& _fb)
+VPEngine::VPEngine(const std::string& _path, FrameBuffer& _fb)
     : path(_path), fb(_fb) {
 }
 
 
-void VpeDummy::start() {
-    run();
-}
-
-
-void VpeDummy::run() {
+void VPEngine::run() {
     cv::VideoCapture test_video(path);
     if (!test_video.isOpened()) {
         std::cerr << "[VPED] Error: Failed to open video: " << path << "\n";
@@ -27,7 +22,9 @@ void VpeDummy::run() {
     std::cout << "[VPED] Success: test_video is opened and start to push\n";
 
     cv::Mat frame;
-    while (true) {
+
+    is_running = true;
+    while (is_running) {
         if (!test_video.read(frame)) {
             test_video.set(cv::CAP_PROP_POS_FRAMES, 0);
             continue;
@@ -44,3 +41,9 @@ void VpeDummy::run() {
 
     test_video.release();
 }
+
+
+void VPEngine::stop() {
+    is_running = false;
+}
+

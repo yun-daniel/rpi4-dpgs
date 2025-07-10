@@ -7,10 +7,10 @@
 #include <sys/types.h>
 
 
-class CoreProcessSupervisor {
+class CoreProcSupv {
  public:
-    CoreProcessSupervisor(FrameBuffer& _fb, MapManager& _map_mgr);
-    ~CoreProcessSupervisor();
+    CoreProcSupv(FrameBuffer& _fb, MapManager& _map_mgr);
+    ~CoreProcSupv();
 
     void start();
     void stop();
@@ -24,8 +24,7 @@ class CoreProcessSupervisor {
     FrameBuffer&    fb;
     MapManager&     map_mgr;
 
-    bool create_process();
-    bool clear();
+    void clear();
 
 };
 

@@ -43,16 +43,16 @@ endif
 # Source files
 CORE_SRCS		= \
 					$(CORE_DIR)/main.cpp \
-					$(CORE_DIR)/system_controller.cpp \
-					$(CORE_DIR)/core_process_supervisor.cpp \
-					$(CORE_DIR)/core_thread_manager.cpp \
+					$(CORE_DIR)/dpgs_server.cpp \
+					$(CORE_DIR)/core_proc_supv.cpp \
+					$(CORE_DIR)/core_thr_supv.cpp \
 					$(CORE_DIR)/frame_buffer.cpp
 AI_ENGINE_SRCS	= \
 					$(AI_ENGINE_DIR)/ai_engine.cpp \
 					$(AI_ENGINE_DIR)/detector.cpp \
 					$(AI_ENGINE_DIR)/classifier.cpp
 VP_ENGINE_SRCS	= \
-					$(VP_ENGINE_DIR)/vpe_dummy.cpp
+					$(VP_ENGINE_DIR)/vp_engine_dummy.cpp
 MAP_MGR_SRCS	= \
 					$(MAP_MGR_DIR)/map_manager.cpp
 DEVICE_MGR_SRCS	=

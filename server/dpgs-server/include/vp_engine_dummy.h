@@ -8,17 +8,18 @@
 #include <atomic>
 
 
-class VpeDummy {
+class VPEngine {
  public:
-    VpeDummy(const std::string& _path, FrameBuffer& _fb);
+    VPEngine(const std::string& _path, FrameBuffer& _fb);
 
-    void start();
+    void run();
+    void stop();
 
  private:
-    void run();
+    std::string         path;
+    FrameBuffer&        fb;
 
-    std::string path;
-    FrameBuffer& fb; 
+    std::atomic<bool>   is_running;
 
 };
 

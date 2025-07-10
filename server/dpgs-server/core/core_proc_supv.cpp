@@ -1,4 +1,4 @@
-#include "core_process_supervisor.h"
+#include "core_proc_supv.h"
 #include "ai_engine.h"
 
 #include <iostream>
@@ -6,26 +6,43 @@
 #include <unistd.h>
 
 
-CoreProcessSupervisor::CoreProcessSupervisor(FrameBuffer& _fb, MapManager& _map_mgr)
+// === Signal Handler ===
+static AIEngine* g_engine = nullptr;
+
+void sigterm_handler(int) {
+    if (g_engine) {
+        std::cout << "[PROC_AI] sig_handler: SIGTERM receviced. Stopping AIEngine...\n";
+        g_engine->stop();
+    }
+}
+// ===================
+
+
+// === CoreProcSupv ===
+CoreProcSupv::CoreProcSupv(FrameBuffer& _fb, MapManager& _map_mgr)
     : fb(_fb), map_mgr(_map_mgr) {
 }
 
-CoreProcessSupervisor::~CoreProcessSupervisor() {
+CoreProcSupv::~CoreProcSupv() {
 }
 
 
-void CoreProcessSupervisor::start() {
+void CoreProcSupv::start() {
     std::cout << "[PROC_SUPV] Start Process Supervisor\n";
 
     pid_t pid = fork();
 
     if (pid == 0) {
-        std::cout << "[PROC_AI] Subprocess startd (PID: " << getpid() << ")\n";
+        std::cout << "[PROC_AI] Sub-process startd (PID: " << getpid() << ")\n";
 
         AIEngine engine(fb, map_mgr);
+        g_engine = &engine;
+
+        signal(SIGTERM, sigterm_handler);
+
         engine.run();
 
-        std::cout << "[PROC_AI] Subprocess exiting...\n";
+        std::cout << "[PROC_AI] Sub-process exiting...\n";
         ::exit(0);
     }
     else if (pid > 0) {
@@ -40,13 +57,23 @@ void CoreProcessSupervisor::start() {
 }
 
 
-void CoreProcessSupervisor::stop() {
-    std::cout << "[PROC_SUPV] Stop Process Supervisor\n";
+void CoreProcSupv::stop() {
+    std::cout << "[PROC_SUPV] Process Supervisor Terminating...\n";
 
+    if (is_running_ai && (pid_ai > 0)) {
+        std::cout << "[PROC_SUPV] stop: Sending SIGTERM to AIEngine (PID: " << pid_ai << ")\n";
+        kill(pid_ai, SIGTERM);
+        waitpid(pid_ai, nullptr, 0);
+        is_running_ai = false;
+    }
+
+    clear();
+
+    std::cout << "[PROC_SUPV] Process Supervisor Terminated\n";
 }
 
 
-bool CoreProcessSupervisor::monitor() {
+bool CoreProcSupv::monitor() {
     if (!is_running_ai || pid_ai <= 0) return false;
 
     int status;
@@ -75,20 +102,10 @@ bool CoreProcessSupervisor::monitor() {
 }
 
 
-bool CoreProcessSupervisor::create_process() {
-    std::cout << "[PROC_SUPV] Create Process...\n";
+void CoreProcSupv::clear() {
+    std::cout << "[PROC_SUPV] clear: Cleanning...\n";
 
 
-    std::cout << "[PROC_SUPV] Success: Process created\n";
-    return true;
-}
-
-
-bool CoreProcessSupervisor::clear() {
-    std::cout << "[PROC_SUPV] Cleanning...\n";
-
-
-    std::cout << "[PROC_SUPV] Success: Process clear\n";
-    return true;
+    std::cout << "[PROC_SUPV] clear: Cleanning Success\n";
 }
 
