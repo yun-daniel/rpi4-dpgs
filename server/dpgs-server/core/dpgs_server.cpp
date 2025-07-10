@@ -20,7 +20,7 @@ bool DPGSServer::initialize() {
     fb = std::make_unique<FrameBuffer>("FB");
     if (!fb->initialize()) {
         std::cerr << "[SYS] Error: Failed to initialize FrameBuffer\n";
-        return 1;
+        return false;
     }
     std::cout << "[SYS] Success: FrameBuffer Initialized\n";
 
@@ -29,18 +29,7 @@ bool DPGSServer::initialize() {
     map_mgr = std::make_unique<MapManager>("config/map.json");
     if (!map_mgr->initialize()) {
         std::cerr << "[SYS] Error: Failed to initialize MapManager\n";
-        return 1;
-    }
-
-
-    std::cout << "[SYS] Initialize Process Supervisor...\n";
-    proc_supv = std::make_unique<CoreProcSupv>(*fb, *map_mgr);
-
-    std::cout << "[SYS] Initialize Thread Supervisor...\n";
-    thr_supv = std::make_unique<CoreThrSupv>(*fb, *map_mgr);
-    if (!thr_supv->initialize()) {
-        std::cerr << "[SYS] Error: Failed to initialize CoreThrSupv\n";
-        return 1;
+        return false;
     }
 
 
@@ -52,13 +41,21 @@ bool DPGSServer::initialize() {
 void DPGSServer::start() {
     std::cout << "[SYS] Application Start.\n";
 
-    thr_supv->start();
+    if(!initialize_proc_supv()) {
+        std::cerr << "[SYS] Error: Failed to initialize Process Supervisor\n";
+        return;
+    }
     proc_supv->start();
 
-
-    while (proc_supv->monitor()) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+    if(!initialize_thr_supv()) {
+        std::cerr << "[SYS] Error: Failed to initialize Thread Supervisor\n";
+        return;
     }
+    thr_supv->start();
+
+//    while (proc_supv->monitor()) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+//    }
 
 
 }
@@ -76,6 +73,25 @@ void DPGSServer::stop() {
 }
 
 
+bool DPGSServer::initialize_proc_supv() {
+    std::cout << "[SYS] Initialize Process Supervisor...\n";
+    proc_supv = std::make_unique<CoreProcSupv>(*fb, *map_mgr);
+
+    return true;
+}
+
+bool DPGSServer::initialize_thr_supv() {
+    std::cout << "[SYS] Initialize Thread Supervisor...\n";
+    thr_supv = std::make_unique<CoreThrSupv>(*fb, *map_mgr);
+    if (!thr_supv->initialize()) {
+        std::cerr << "[SYS] Error: Failed to initialize CoreThrSupv\n";
+        return false;
+    }
+
+    return true;
+}
+
+
 void DPGSServer::clear() {
     std::cout << "[SYS] clear: Cleanning...\n";
 
@@ -84,3 +100,4 @@ void DPGSServer::clear() {
 
     std::cout << "[SYS] clear: Cleanning Success\n";
 }
+

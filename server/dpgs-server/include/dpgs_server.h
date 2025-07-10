@@ -9,8 +9,6 @@
 #include <cstdio>
 #include <pthread.h>
 
-#define MAX_TASK    5
-
 
 class DPGSServer {
  public:
@@ -27,6 +25,8 @@ class DPGSServer {
     std::unique_ptr<CoreThrSupv>    thr_supv;
     std::unique_ptr<CoreProcSupv>   proc_supv;
 
+    bool initialize_proc_supv();
+    bool initialize_thr_supv();
     void clear();
 
 };
