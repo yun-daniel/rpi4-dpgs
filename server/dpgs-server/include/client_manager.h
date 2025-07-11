@@ -52,7 +52,6 @@ public:
     static void unlock_mutex (void * arg);
 
     static void set_cm (ClientManager * ptr);
-    static void signal_handler (int sig);
 };
 
 #endif  // CLIENT_MANAGER_H

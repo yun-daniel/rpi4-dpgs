@@ -248,7 +248,10 @@ void * ClientManager::client_thread (void * arg) {
     RD * rd_ptr = (RD *)malloc(sizeof(RD));
     rd_ptr->rtd_ptr = rtd_ptr;
 
+    // Add cleanup_push
     pthread_cleanup_push(remove, (void *)rd_ptr);
+
+    // Check id and pw
 
     if (pthread_create(&rd_ptr->tid_arr[0], NULL, send_mapdata, NULL) != 0) {
         fprintf(stderr, "Error: %d's pthread_create of send_mapdata failed\n", clnt_sock);
@@ -263,7 +266,7 @@ void * ClientManager::client_thread (void * arg) {
     printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, rd_ptr->tid_arr[1]);
 
 
-    // detect logout, cam_rq
+    // Detect logout, cam_rq
     /*
     if logout : pthread_exit(1)
     if cam_rq : pthread_kill(tid_arr[1])
@@ -275,8 +278,8 @@ void * ClientManager::client_thread (void * arg) {
             rtd_ptr->cam_rq = clnt_sock++;
         pthread_mutex_unlock(&rtd_ptr->m_cam_rq); 
     
-        pthread_kill(rd_ptr->tid_arr[0], SIGUSR1);
-        pthread_kill(rd_ptr->tid_arr[1], SIGUSR1);
+        // pthread_kill(rd_ptr->tid_arr[0], SIGUSR1);
+        // pthread_kill(rd_ptr->tid_arr[1], SIGUSR1);
         i++;
         sleep(1);
     }
@@ -302,8 +305,3 @@ void ClientManager::set_cm (ClientManager * ptr) {
     cm_ptr = ptr;
 }
 
-void ClientManager::signal_handler (int sig) {
-    if (sig == SIGUSR1 && cm_ptr != nullptr) {
-        fprintf(stderr, "SIGUSER1[%lx] >> SIGUSR1 received\n", pthread_self());
-    }
-}

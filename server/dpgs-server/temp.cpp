@@ -2,14 +2,6 @@
 
 #include <cstdio>
 
-void setup_sig_handler() {
-    struct sigaction sa;
-    sa.sa_handler = ClientManager::signal_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGUSR1, &sa, NULL);
-}
-
 void * func (void * arg) {
     ClientManager * cm_ptr = (ClientManager *)arg;
     ClientManager::set_cm(cm_ptr);
@@ -24,8 +16,6 @@ int main (void) {
         sigemptyset(&set);
         sigaddset(&set, SIGUSR1);
         pthread_sigmask(SIG_BLOCK, &set, NULL);
-
-        setup_sig_handler();
     /* Setting Signal */
 
     ClientManager cm(9090);
