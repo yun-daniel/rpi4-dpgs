@@ -55,7 +55,9 @@ VP_ENGINE_SRCS	= \
 					$(VP_ENGINE_DIR)/vp_engine_dummy.cpp
 MAP_MGR_SRCS	= \
 					$(MAP_MGR_DIR)/map_manager.cpp
-DEVICE_MGR_SRCS	=
+DEVICE_MGR_SRCS	= \
+					$(DEVICE_MGR_DIR)/device_manager.cpp \
+					$(DEVICE_MGR_DIR)/remote_led_dp.cpp
 
 SOURCES			= $(CORE_SRCS) $(AI_ENGINE_SRCS) $(VP_ENGINE_SRCS) $(MAP_MGR_SRCS) $(DEVICE_MGR_SRCS)
 
@@ -75,6 +77,7 @@ mapgen: $(BUILD_DIR)/map_gen
 
 # Rules
 $(BUILD_DIR)/$(TARGET): $(SOURCES)
+	make clean
 	mkdir -p $(dir $@)
 	$(CXX) $^ -o $@ $(CXXFLAGS) $(LDFLAGS)
 

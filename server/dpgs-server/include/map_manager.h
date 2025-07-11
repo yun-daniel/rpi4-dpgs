@@ -5,6 +5,8 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <semaphore.h>
+#include <condition_variable>
+#include <atomic>
 
 
 constexpr int LOT_NAME_SIZE     = 32;
@@ -29,6 +31,16 @@ struct SharedParkingLotMap {
     Slot    slots[SLOTS_MAX_SIZE];
 
     sem_t   sem_mutex;
+
+    // Device Manager Sync
+    pthread_mutex_t mutex_map_dev;
+    pthread_cond_t  cv_map_dev;
+    bool            flag_map_dev;
+
+    // Client Manager Sync
+//    pthread_mutex_t mutex_map_clt;
+//    pthread_cond_t  cv_map_clt;
+//    bool            flag_map_clt;
 };
 
 
@@ -45,10 +57,19 @@ class MapManager {
     void printMap();
     const SharedParkingLotMap& getMap() const;
 
-//    bool insert_slot(int slot_id, const std::string& state, const std::vector<cv::Point>& poly);
     bool update_slot(int slot_id, const SlotState& state);
-//    bool delete_slot(int slot_id);
     bool save_map_data();
+
+    // --- Map Update Sync ---
+    // Device Manager
+    pthread_mutex_t*    get_mutex_dev();
+    pthread_cond_t*     get_cv_dev();
+    bool*               get_flag_ptr_dev();
+    // Client Manager
+//    pthread_mutex_t*    get_mutex_clt();
+//    pthread_cond_t*     get_cv_clt();
+//    bool*               get_flag_ptr_clt();
+
 
  private:
     std::string file_path;
@@ -59,7 +80,6 @@ class MapManager {
 
     SharedParkingLotMap* map = nullptr;
 
-//    bool newDB();
     bool load_map_data();
     bool checksum();
     void sort_slots();

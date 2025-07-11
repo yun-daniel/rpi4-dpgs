@@ -4,10 +4,10 @@
 #include "frame_buffer.h"
 #include "map_manager.h"
 #include "vp_engine_dummy.h"
+#include "device_manager.h"
 
 #include <sys/types.h>
 #include <cstdio>
-#include <pthread.h>
 #include <thread>
 
 
@@ -22,8 +22,10 @@ class CoreThrSupv {
 
 private:
     VPEngine*       vp_engine = nullptr;
+    DeviceManager*  dev_mgr = nullptr;
 
     std::thread     thread_vpe;
+    std::thread     thread_dev;
 
 
     void clear();

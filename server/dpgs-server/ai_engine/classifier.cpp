@@ -83,13 +83,6 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
         }
     }
 
-
-    if ((max_ratio > SLOT_THRESHOLD_RATIO) && (curr_state == EMPTY)) {
-            mgr.update_slot(slot_id, OCCUPIED);
-    }
-    else if ((max_ratio <= SLOT_THRESHOLD_RATIO) && (curr_state == OCCUPIED)) {
-            mgr.update_slot(slot_id, EMPTY);
-    }
 }
 
 

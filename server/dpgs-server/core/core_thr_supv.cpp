@@ -17,6 +17,12 @@ bool CoreThrSupv::initialize() {
 
     vp_engine = new VPEngine("tb/test_a.mp4", fb);
 
+    dev_mgr = new DeviceManager(map_mgr);
+    if (!dev_mgr->initialize()) {
+        std::cerr << "[THR_SUPV] Error: Failed to initialize Device Manager\n";
+        return false;
+    }
+
     std::cout << "[THR_SUPV] Success: Thread Supervisor initialized\n";
     return true;
 }
@@ -29,7 +35,10 @@ void CoreThrSupv::start() {
     thread_vpe = std::thread([this]() {
         vp_engine->run();
     });
-        
+
+    thread_dev = std::thread([this]() {
+        dev_mgr->run();
+    });
 
 }
 
@@ -38,7 +47,7 @@ void CoreThrSupv::stop() {
     std::cout << "[THR_SUPV] Thread Supervisor Terminating...\n";
 
     if (vp_engine) vp_engine->stop();
-
+    if (dev_mgr) dev_mgr->stop();
 
     clear();
 
@@ -55,6 +64,13 @@ void CoreThrSupv::clear() {
     }
     delete vp_engine;
     vp_engine = nullptr;
+
+    if (thread_dev.joinable()) {
+        std::cout << "[THR_SUPV] Joining thread_dev\n";
+        thread_dev.join();
+    }
+    delete dev_mgr;
+    dev_mgr = nullptr;
 
 
     std::cout << "[THR_SUPV] clear: Cleanning Success\n";

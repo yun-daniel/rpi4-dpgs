@@ -92,6 +92,7 @@ bool MapManager::initialize() {
         return false;
     }
 
+
     map = reinterpret_cast<SharedParkingLotMap*>(shm_ptr);
     if (!load_map_data()) {
         std::cerr << "[MM] Error: Failed to load map data\n";
@@ -99,27 +100,26 @@ bool MapManager::initialize() {
         return false;
     }
 
+
+    pthread_mutexattr_t mtx_attr;
+    pthread_mutexattr_init(&mtx_attr);
+    pthread_mutexattr_setpshared(&mtx_attr, PTHREAD_PROCESS_SHARED);
+    pthread_mutex_init(&map->mutex_map_dev, &mtx_attr);
+
+    pthread_condattr_t cond_attr;
+    pthread_condattr_init(&cond_attr);
+    pthread_condattr_setpshared(&cond_attr, PTHREAD_PROCESS_SHARED);
+    pthread_cond_init(&map->cv_map_dev, &cond_attr);
+
+    map->flag_map_dev = false;
+
+
     sem_init(&map->sem_mutex, 1, 1);
 
     std::cout << "[MM] Success: MapManager Initialized\n";
     printMap();
 
     return true;
-}
-
-
-bool MapManager::initialize_as_new() {
-
-//    file_path = "config/tmp_map.json";
-//    map = ParkingLotMap();
-//    map.parking_lot_id = "Default";
-//    map.total_slots = map.slots.size();
-//
-////    save();
-//
-//    return true;
-
-    return false;
 }
 
 
@@ -199,28 +199,23 @@ bool MapManager::checksum() {
     return valid;
 }
 
-/*
-bool MapManager::insert_slot(int slot_id, const std::string& state, const std::vector<cv::Point>& poly) {
-    for (const auto& slot : map.slots) {
-        if (slot.slot_id == slot_id) {
-            std::cerr << "Warning: insert_slot failed: slot_id " << slot_id << " already exists.\n";
-            return false;
-        }
-    }
-
-    Slot new_slot{slot_id, state, poly};
-    map.slots.push_back(new_slot);
-    map.total_slots = map.slots.size();
-
-    return true;
-}
-*/
 
 bool MapManager::update_slot(int slot_id, const SlotState& state) {
     for (int i=0; i<map->total_slots; ++i) {
         if (map->slots[i].slot_id == slot_id) {
             map->slots[i].state = state;
             save_map_data();
+
+            std::cout << "[TEST] Success: CCCCCCCCC\n";
+            // Map Update Sync
+            pthread_mutex_lock(&map->mutex_map_dev);
+            map->flag_map_dev = true;
+            pthread_cond_signal(&map->cv_map_dev);
+            std::cout << "[TEST] MM flag: " << map->flag_map_dev << "\n";
+            pthread_mutex_unlock(&map->mutex_map_dev);
+
+            std::cout << "[TEST] Success: DDDDDD\n";
+
             return true;
         }
     }
@@ -229,22 +224,6 @@ bool MapManager::update_slot(int slot_id, const SlotState& state) {
     return false;
 }
 
-
-/*
-bool MapManager::delete_slot(int slot_id) {
-    auto it = std::remove_if(map.slots.begin(), map.slots.end(),
-                            [slot_id](const Slot& s) { return s.slot_id == slot_id; });
-    if (it == map.slots.end()) {
-        std::cerr << "Warning: slot_id not found: " << slot_id << "\n";
-        return false;
-    }
-
-    map.slots.erase(it, map.slots.end());
-    map.total_slots = map.slots.size();
-
-    return true;
-}
-*/
 
 void MapManager::sort_slots() {
     std::sort(map->slots, map->slots + map->total_slots,
@@ -309,8 +288,22 @@ const SharedParkingLotMap& MapManager::getMap() const {
     return *map;
 }
 
+pthread_mutex_t* MapManager::get_mutex_dev() {
+    return &map->mutex_map_dev;
+}
+
+pthread_cond_t* MapManager::get_cv_dev() {
+    return &map->cv_map_dev;
+}
+
+bool* MapManager::get_flag_ptr_dev() {
+    return &map->flag_map_dev;
+}
+
 
 void MapManager::destroyShm() {
+    pthread_mutex_destroy(&map->mutex_map_dev);
+    pthread_cond_destroy(&map->cv_map_dev);
     sem_destroy(&map->sem_mutex);
     shm_unlink(shm_name.c_str());
 }

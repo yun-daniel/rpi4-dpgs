@@ -13,6 +13,8 @@ VPEngine::VPEngine(const std::string& _path, FrameBuffer& _fb)
 
 
 void VPEngine::run() {
+    std::cout << "[VPED] Start VPEngine Dummy\n";
+
     cv::VideoCapture test_video(path);
     if (!test_video.isOpened()) {
         std::cerr << "[VPED] Error: Failed to open video: " << path << "\n";
@@ -44,6 +46,10 @@ void VPEngine::run() {
 
 
 void VPEngine::stop() {
+    std::cout << "[VPED] VPEngine Terminating...\n";
+
     is_running = false;
+
+    std::cout << "[VPED] VPEngine Terminated\n";
 }
 
