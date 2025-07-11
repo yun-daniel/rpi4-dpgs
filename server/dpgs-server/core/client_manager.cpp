@@ -103,7 +103,7 @@ void ClientManager::connect_client () {
     
         // add tid;
         if (pthread_create(&tid, &attr, client_thread, (void *)clnt_sock_ptr) != 0) {
-            fprintf(stderr, "Error: %d's pthread_create of mapdata failed\n", *clnt_sock_ptr);
+            fprintf(stderr, "Error: %d's pthread_create of client_thread failed\n", *clnt_sock_ptr);
             free (clnt_sock_ptr);
         }
         else {
@@ -229,6 +229,7 @@ void * rtsp (void * arg) {
 
 /*
  * Per-client main thread.
+ * ─ Allocates a per-client RD structure (each RD owns an RTD).
  * ─ Creates two worker threads:
  *     tid_arr[0] – send_mapdata()  // sends map data
  *     tid_arr[1] – rtsp()          // RTSP streaming
@@ -240,7 +241,7 @@ void * ClientManager::client_thread (void * arg) {
     
     printf("PUSH: %d\t%lx\n", clnt_sock, pthread_self());
     
-    // make data that is needed rtsp() and remove()
+    // Make data that rtsp() and remove() need
     RTD * rtd_ptr = (RTD *)malloc(sizeof(RTD));
     rtd_ptr->cam_rq = 0;
     pthread_mutex_init(&rtd_ptr->m_cam_rq, NULL);
@@ -249,8 +250,14 @@ void * ClientManager::client_thread (void * arg) {
 
     pthread_cleanup_push(remove, (void *)rd_ptr);
 
-    pthread_create(&rd_ptr->tid_arr[0], NULL, send_mapdata, NULL);
-    pthread_create(&rd_ptr->tid_arr[1], NULL, rtsp, (void *)rtd_ptr);
+    if (pthread_create(&rd_ptr->tid_arr[0], NULL, send_mapdata, NULL) != 0) {
+        fprintf(stderr, "Error: %d's pthread_create of send_mapdata failed\n", clnt_sock);
+        pthread_exit(NULL);
+    }
+    if (pthread_create(&rd_ptr->tid_arr[1], NULL, rtsp, (void *)rtd_ptr) != 0) {
+        fprintf(stderr, "Error: %d's pthread_create of rtsp failed\n", clnt_sock);
+        pthread_exit(NULL);
+    }
     
     printf("%d spawned tid_arr[0]: %lx\n", clnt_sock, rd_ptr->tid_arr[0]);
     printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, rd_ptr->tid_arr[1]);
