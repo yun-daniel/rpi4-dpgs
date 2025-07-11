@@ -39,7 +39,7 @@ private:
     pthread_mutex_t m_client_info_vec;      // Mutex for client_info_vec
     pthread_mutex_t m_cam_rq;               // Mutex for cam_rq;
 
-    static ClientManager * instance_ptr;    // Static instance pointer for static member function
+    static ClientManager * cm_ptr;    // Static instance pointer for static member function
 
 public:
     ClientManager(int port);
@@ -54,7 +54,7 @@ public:
     static void * check_map_update (void * arg);// mapdata
     static void unlock_mutex (void * arg);
 
-    static void set_instance (ClientManager * ptr);
+    static void set_cm (ClientManager * ptr);
     static void signal_handler (int sig);
 };
 

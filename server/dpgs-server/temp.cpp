@@ -12,7 +12,7 @@ void setup_sig_handler() {
 
 void * func (void * arg) {
     ClientManager * cm_ptr = (ClientManager *)arg;
-    ClientManager::set_instance(cm_ptr);
+    ClientManager::set_cm(cm_ptr);
     cm_ptr->connect_client();
 
     return nullptr;

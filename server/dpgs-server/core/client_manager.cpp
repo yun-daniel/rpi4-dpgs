@@ -1,18 +1,6 @@
 #include "client_manager.h"
 
-ClientManager* ClientManager::instance_ptr = nullptr;
-
-typedef struct remove_data {
-    ClientManager * cm_ptr;
-    pthread_t * tid_arr;        // tid_arr[2] in client thread
-                                // tid_arr[0] : MAP SEND
-                                // tid_arr[1] : RTSP
-} RD;
-
-typedef struct client_thread_data {
-    ClientManager * cm_ptr;
-    int clnt_sock;
-} CTD;
+ClientManager* ClientManager::cm_ptr = nullptr;
 
 ClientManager::ClientManager (int _port) : port(9999) {
     port = _port;
@@ -70,34 +58,33 @@ int ClientManager::initialize () {
 void ClientManager::connect_client () {
 
     ClientInfo ci;
-    CTD * ctd_ptr;
+    int * clnt_sock_ptr;
     pthread_t tid;
 
     int i = 0;
-    int a = 0;
+    // int a = 0;
 
     while (1) {
         pthread_testcancel();
 
-        ctd_ptr = (CTD *)malloc(sizeof(CTD));
-        ctd_ptr->cm_ptr = this;
-
         /*
-        if ((ctd_ptr->clnt_sock = accept(listen_fd, (struct sockaddr *) &address, (socklen_t*)&addrlen)) < 0) {
+        clnt_sock_ptr = (int *)malloc(sizeof(int));
+        if ((*clnt_sock_ptr = accept(listen_fd, (struct sockaddr *) &address, (socklen_t*)&addrlen)) < 0) {
             perror("Error: accept"); 
-            free (ctd_ptr);
+            free (clnt_sock_ptr);
             continue;
         }
 
-        printf("Connected clnt_sock_ptr : %d\n", ctd_ptr->clnt_sock);
+        printf("Connected clnt_sock_ptr : %d\n", *clnt_sock_ptr);
         */
 
-        ctd_ptr->clnt_sock = i++;
+        clnt_sock_ptr = (int *)malloc(sizeof(int));
+        *clnt_sock_ptr = i++;
     
         // add tid;
-        if (pthread_create(&tid, &attr, client_thread, (void *)ctd_ptr) != 0) {
-            fprintf(stderr, "Error: %d's pthread_create of mapdata failed\n", ctd_ptr->clnt_sock);
-            free (ctd_ptr);
+        if (pthread_create(&tid, &attr, client_thread, (void *)clnt_sock_ptr) != 0) {
+            fprintf(stderr, "Error: %d's pthread_create of mapdata failed\n", *clnt_sock_ptr);
+            free (clnt_sock_ptr);
         }
         else {
             ci.set_sent_map_flag(false);
@@ -116,7 +103,7 @@ void ClientManager::connect_client () {
         // }
     }
 
-    ClientManager::clear(ClientManager::instance_ptr);
+    ClientManager::clear(ClientManager::cm_ptr);
 }
 
 /*
@@ -134,11 +121,8 @@ vector<ClientInfo>::iterator ClientManager::find_client (pthread_t tid) {
  * tid_vec[2] cancel + join, erase tid from client_tid_vec
  */
 void ClientManager::remove (void * arg) {
-    RD * rd_ptr = (RD *)arg;
-    ClientManager * cm_ptr = rd_ptr->cm_ptr;
     pthread_t tid_arr[2];
-    memcpy(tid_arr, rd_ptr->tid_arr, sizeof(pthread_t) * 2);
-    free (rd_ptr->tid_arr);
+    memcpy(tid_arr, arg, sizeof(pthread_t) * 2);
     free (arg);
 
     // tid_arr[2] cancel + join
@@ -171,7 +155,6 @@ void ClientManager::remove (void * arg) {
  * and all cancel, flag and detach check
  */
 void ClientManager::clear (void * arg) {
-    ClientManager * cm_ptr = (ClientManager *)arg;
     pthread_t tid;
 
     pthread_mutex_lock(&(cm_ptr->m_client_info_vec));
@@ -215,19 +198,14 @@ void * rtsp (void * arg) {
 }
 
 void * ClientManager::client_thread (void * arg) {
-    CTD * ctd_ptr = (CTD *)arg;
-    ClientManager * cm_ptr = ctd_ptr->cm_ptr;
-    int clnt_sock = ctd_ptr->clnt_sock;
+    int clnt_sock = *((int *)arg);
     free (arg);
     
     printf("PUSH: %d\t%lx\n", clnt_sock, pthread_self());
 
     pthread_t * tid_arr = (pthread_t *)malloc(sizeof(pthread_t) * 2);
-    RD * rd_ptr = (RD *)malloc(sizeof(RD));
-    rd_ptr->cm_ptr = cm_ptr;
-    rd_ptr->tid_arr = tid_arr;
 
-    pthread_cleanup_push(remove, (void *)rd_ptr);
+    pthread_cleanup_push(remove, (void *)tid_arr);
 
     pthread_create(&tid_arr[0], NULL, send_mapdata, NULL);
     pthread_create(&tid_arr[1], NULL, rtsp, NULL);
@@ -240,16 +218,17 @@ void * ClientManager::client_thread (void * arg) {
     if logout : pthread_exit(1)
     if cam_rq : pthread_kill(tid_arr[1])
     */
+
     int i = 0; 
     while (i != 3) {
-        pthread_mutex_lock(&instance_ptr->m_cam_rq); 
+        pthread_mutex_lock(&cm_ptr->m_cam_rq); 
             if (i == 2) {
                 cm_ptr->cam_rq = 2;
             }
             else {
                 cm_ptr->cam_rq = 1;
             }
-        pthread_mutex_unlock(&instance_ptr->m_cam_rq); 
+        pthread_mutex_unlock(&cm_ptr->m_cam_rq); 
     
         pthread_kill(tid_arr[0], SIGUSR1);
         pthread_kill(tid_arr[1], SIGUSR1);
@@ -274,17 +253,17 @@ void ClientManager::unlock_mutex (void * arg) {
     pthread_mutex_unlock(m);
 }
 
-void ClientManager::set_instance (ClientManager * ptr) {
-    instance_ptr = ptr;
+void ClientManager::set_cm (ClientManager * ptr) {
+    cm_ptr = ptr;
 }
 
 void ClientManager::signal_handler (int sig) {
     /* DO NOT CHANGE */
     int cam_rq_cp;
-    if (sig == SIGUSR1 && instance_ptr != nullptr) {
-        pthread_mutex_lock(&instance_ptr->m_cam_rq);
-            cam_rq_cp = instance_ptr->cam_rq;
-        pthread_mutex_unlock(&instance_ptr->m_cam_rq);
+    if (sig == SIGUSR1 && cm_ptr != nullptr) {
+        pthread_mutex_lock(&cm_ptr->m_cam_rq);
+            cam_rq_cp = cm_ptr->cam_rq;
+        pthread_mutex_unlock(&cm_ptr->m_cam_rq);
         /* DO NOT CHANGE */
 
         /* Replace : Convert cam using cam_rq_cp */
