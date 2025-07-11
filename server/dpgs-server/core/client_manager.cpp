@@ -79,29 +79,26 @@ int ClientManager::initialize () {
 void ClientManager::connect_client () {
 
     ClientInfo ci;
+    int clnt_sock;
     int * clnt_sock_ptr;
     pthread_t tid;
-
-    int i = 0;
-
+    
     while (1) {
         pthread_testcancel();
 
-        /*
-        clnt_sock_ptr = (int *)malloc(sizeof(int));
-        if ((*clnt_sock_ptr = accept(listen_fd, (struct sockaddr *) &address, (socklen_t*)&addrlen)) < 0) {
+        if ((clnt_sock = accept(listen_fd, (struct sockaddr *) &address, (socklen_t*)&addrlen)) < 0) {
             perror("Error: accept"); 
-            free (clnt_sock_ptr);
             continue;
         }
 
-        printf("Connected clnt_sock_ptr : %d\n", *clnt_sock_ptr);
-        */
-
-        clnt_sock_ptr = (int *)malloc(sizeof(int));
-        *clnt_sock_ptr = i++;
+        printf("Connected clnt_sock_ptr : %d\n", clnt_sock);
+        
+        // clnt_sock_ptr = (int *)malloc(sizeof(int));
+        // *clnt_sock_ptr = i++;
     
         // add tid;
+        clnt_sock_ptr = (int *)malloc(sizeof(int));
+        *clnt_sock_ptr = clnt_sock;
         if (pthread_create(&tid, &attr, client_thread, (void *)clnt_sock_ptr) != 0) {
             fprintf(stderr, "Error: %d's pthread_create of client_thread failed\n", *clnt_sock_ptr);
             free (clnt_sock_ptr);
@@ -114,8 +111,6 @@ void ClientManager::connect_client () {
                 client_info_vec.push_back(ci);
             pthread_cleanup_pop(1);
         }
-
-        sleep(3);
     }
 }
 
@@ -142,15 +137,25 @@ void ClientManager::remove (void * arg) {
     memcpy(tid_arr, rd_ptr->tid_arr, sizeof(pthread_t) * 2);
 
     // Cancel and join the two worker threads (map-sender and RTSP)
+    int ret;
     for (pthread_t tid : tid_arr) {
-        if (pthread_cancel(tid) != 0) {
+        ret = pthread_cancel(tid);
+        if (ret == ESRCH) {
+            fprintf(stderr, "Warning: thread %lx does not exist (cancel returned ESRCH)\n", tid);
+        }
+        else if (ret != 0) {
             fprintf(stderr, "Error: %lx pthread_cancel failed\n", tid);
         }
-        if (pthread_join(tid, NULL) != 0) {
+
+        ret = pthread_join(tid, NULL);
+        if (ret == ESRCH) {
+            fprintf(stderr, "Warning: thread %lx does not exist (join returned ESRCH)\n", tid);
+        }
+        else if (ret != 0) {
             fprintf(stderr, "Error: %lx pthread_join failed\n", tid);
         }
     }
-
+    
     // Free per-client resources
     pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
     free (rd_ptr->rtd_ptr);
@@ -219,7 +224,7 @@ void * rtsp (void * arg) {
 
     /* Replace : Authentication and Cam run */
     while (1) {
-        sleep(1);
+        sleep(5);
         pthread_mutex_lock(m_cam_rq_ptr);
             printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
         pthread_mutex_unlock(m_cam_rq_ptr);
@@ -243,16 +248,21 @@ void * ClientManager::client_thread (void * arg) {
     
     // Make data that rtsp() and remove() need
     RTD * rtd_ptr = (RTD *)malloc(sizeof(RTD));
-    rtd_ptr->cam_rq = 0;
+    rtd_ptr->cam_rq = clnt_sock;
     pthread_mutex_init(&rtd_ptr->m_cam_rq, NULL);
     RD * rd_ptr = (RD *)malloc(sizeof(RD));
     rd_ptr->rtd_ptr = rtd_ptr;
 
-    // Add cleanup_push
+    // Push cleanup function
     pthread_cleanup_push(remove, (void *)rd_ptr);
 
     // Check id and pw
+    if (check_idpw(clnt_sock) == 1) {
+        fprintf(stderr, "Error: check_idpw failed\n");
+        pthread_exit(NULL); 
+    }
 
+    // Creates two worker threads
     if (pthread_create(&rd_ptr->tid_arr[0], NULL, send_mapdata, NULL) != 0) {
         fprintf(stderr, "Error: %d's pthread_create of send_mapdata failed\n", clnt_sock);
         pthread_exit(NULL);
@@ -265,29 +275,30 @@ void * ClientManager::client_thread (void * arg) {
     printf("%d spawned tid_arr[0]: %lx\n", clnt_sock, rd_ptr->tid_arr[0]);
     printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, rd_ptr->tid_arr[1]);
 
-
-    // Detect logout, cam_rq
-    /*
-    if logout : pthread_exit(1)
-    if cam_rq : pthread_kill(tid_arr[1])
-    */
-
-    int i = 0; 
-    while (i != 3) {
-        pthread_mutex_lock(&rtd_ptr->m_cam_rq); 
-            rtd_ptr->cam_rq = clnt_sock++;
-        pthread_mutex_unlock(&rtd_ptr->m_cam_rq); 
-    
-        // pthread_kill(rd_ptr->tid_arr[0], SIGUSR1);
-        // pthread_kill(rd_ptr->tid_arr[1], SIGUSR1);
-        i++;
-        sleep(1);
+    // Receive(Detect) client messages: logout and camera request(cam_rq)
+    if (recv_msg(clnt_sock, &rtd_ptr->cam_rq, rd_ptr->tid_arr, &rtd_ptr->m_cam_rq) == 1) {
+        fprintf(stderr, "Error: detect_clnt_msg failed\n");
     }
-    
-    pthread_join(rd_ptr->tid_arr[0], NULL);
-    pthread_join(rd_ptr->tid_arr[1], NULL);
 
     pthread_cleanup_pop(1);
+    printf("Client %x is logout\n", clnt_sock);
+
+    // int i = 0; 
+    // while (i != 3) {
+    //     pthread_mutex_lock(&rtd_ptr->m_cam_rq); 
+    //         rtd_ptr->cam_rq = clnt_sock++;
+    //     pthread_mutex_unlock(&rtd_ptr->m_cam_rq); 
+    
+    //     // pthread_kill(rd_ptr->tid_arr[0], SIGUSR1);
+    //     // pthread_kill(rd_ptr->tid_arr[1], SIGUSR1);
+    //     i++;
+    //     sleep(1);
+    // }
+    
+    // pthread_join(rd_ptr->tid_arr[0], NULL);
+    // pthread_join(rd_ptr->tid_arr[1], NULL);
+
+    // pthread_cleanup_pop(1);
 
     return nullptr;
 }

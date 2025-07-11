@@ -5,6 +5,7 @@
 void * func (void * arg) {
     ClientManager * cm_ptr = (ClientManager *)arg;
     ClientManager::set_cm(cm_ptr);
+    cm_ptr->initialize();
     cm_ptr->connect_client();
 
     return nullptr;
@@ -18,7 +19,7 @@ int main (void) {
         pthread_sigmask(SIG_BLOCK, &set, NULL);
     /* Setting Signal */
 
-    ClientManager cm(9090);
+    ClientManager cm(9999);
 
     pthread_t tid;
     pthread_create(&tid, NULL, func, (void *)&cm);
