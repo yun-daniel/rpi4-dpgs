@@ -123,7 +123,7 @@ int check_idpw (int clnt_sock) {
     while (fgets(buffer, 128, fp) != NULL) {
         id_ptr = strtok(buffer, ":");
         pw_ptr = strtok(NULL, "\n");
-        printf("%s\n%s\n", id_ptr, pw_ptr);
+        printf("%s\t%s\n", id_ptr, pw_ptr);
         
         if ((strcmp(id, id_ptr) == 0) && (strcmp(pw, pw_ptr) == 0)) {
             reply = '1';
@@ -132,7 +132,7 @@ int check_idpw (int clnt_sock) {
     }
 
     // Send reply to client
-    printf("%c\n", reply);
+    // printf("%c\n", reply);
     if (send_bytes(clnt_sock, &reply, 1) < 0) {
         return 1;
     }
@@ -153,12 +153,15 @@ int detect_logout (int clnt_sock) {
         return 1;
     }
 
-    if (logout_msg = '1') {
+    printf("recv msg: %c\n", logout_msg);
+
+    if (logout_msg == '1') {
         printf("pthread_exit and call cleanup handler\n");
     }
     else {
         return 1;
     }
+
 
     return 0;
 }
