@@ -1,5 +1,7 @@
 #include "client_manager.h"
 
+ClientManager* ClientManager::instance_ptr = nullptr;
+
 typedef struct remove_data {
     ClientManager * cm_ptr;
     pthread_t * tid_arr;        // tid_arr[2] in client thread
@@ -15,6 +17,9 @@ typedef struct client_thread_data {
 ClientManager::ClientManager (int _port) : port(9999) {
     port = _port;
     m_client_info_vec = PTHREAD_MUTEX_INITIALIZER;
+    m_cam_rq = PTHREAD_MUTEX_INITIALIZER;
+
+    cam_rq = 0;
 
     // Setting detach option of pthread
     if (pthread_attr_init(&attr) != 0) {
@@ -69,6 +74,7 @@ void ClientManager::connect_client () {
     pthread_t tid;
 
     int i = 0;
+    int a = 0;
 
     while (1) {
         pthread_testcancel();
@@ -103,11 +109,18 @@ void ClientManager::connect_client () {
         }
 
         sleep(3);
+
+        // a++;
+        // if (a == 3) {
+        //     break;
+        // }
     }
+
+    ClientManager::clear(ClientManager::instance_ptr);
 }
 
 /*
- * 
+ * HAVE TO STUDY!! 
  */
 vector<ClientInfo>::iterator ClientManager::find_client (pthread_t tid) {
     return std::find_if(client_info_vec.begin(), client_info_vec.end(),
@@ -179,10 +192,26 @@ void ClientManager::clear (void * arg) {
     fprintf(stderr, "Clear in client_manager\n");
 }
 
-void * func1 (void * arg) {
+void * send_mapdata (void * arg) {
     while(1) {
         sleep(1);
     }
+}
+
+void * rtsp (void * arg) {
+    /* DO NOT CHANGE */
+    // Unblock SIGUSR1
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGUSR1);
+    pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+    /* DO NOT CHANGE */
+
+    /* Replace : Authentication and Cam run */
+    while (1) {
+        sleep(1);
+    }
+    /* Replace */
 }
 
 void * ClientManager::client_thread (void * arg) {
@@ -194,20 +223,39 @@ void * ClientManager::client_thread (void * arg) {
     printf("PUSH: %d\t%lx\n", clnt_sock, pthread_self());
 
     pthread_t * tid_arr = (pthread_t *)malloc(sizeof(pthread_t) * 2);
-
     RD * rd_ptr = (RD *)malloc(sizeof(RD));
     rd_ptr->cm_ptr = cm_ptr;
     rd_ptr->tid_arr = tid_arr;
 
     pthread_cleanup_push(remove, (void *)rd_ptr);
 
-    // pthread_create 2 times
-
-    pthread_create(&tid_arr[0], NULL, func1, NULL);
-    pthread_create(&tid_arr[1], NULL, func1, NULL);
+    pthread_create(&tid_arr[0], NULL, send_mapdata, NULL);
+    pthread_create(&tid_arr[1], NULL, rtsp, NULL);
     
     printf("%d spawned tid_arr[0]: %lx\n", clnt_sock, tid_arr[0]);
     printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, tid_arr[1]);
+
+    // detect logout, cam_rq
+    /*
+    if logout : pthread_exit(1)
+    if cam_rq : pthread_kill(tid_arr[1])
+    */
+    int i = 0; 
+    while (i != 3) {
+        pthread_mutex_lock(&instance_ptr->m_cam_rq); 
+            if (i == 2) {
+                cm_ptr->cam_rq = 2;
+            }
+            else {
+                cm_ptr->cam_rq = 1;
+            }
+        pthread_mutex_unlock(&instance_ptr->m_cam_rq); 
+    
+        pthread_kill(tid_arr[0], SIGUSR1);
+        pthread_kill(tid_arr[1], SIGUSR1);
+        i++;
+        sleep(1);
+    }
 
     pthread_join(tid_arr[0], NULL);
     pthread_join(tid_arr[1], NULL);
@@ -221,7 +269,26 @@ void * ClientManager::check_map_update (void * arg) {
     return nullptr;
 }
 
-void ClientManager::unlock_mutex(void * arg) {
+void ClientManager::unlock_mutex (void * arg) {
     pthread_mutex_t * m = static_cast<pthread_mutex_t *>(arg);
     pthread_mutex_unlock(m);
+}
+
+void ClientManager::set_instance (ClientManager * ptr) {
+    instance_ptr = ptr;
+}
+
+void ClientManager::signal_handler (int sig) {
+    /* DO NOT CHANGE */
+    int cam_rq_cp;
+    if (sig == SIGUSR1 && instance_ptr != nullptr) {
+        pthread_mutex_lock(&instance_ptr->m_cam_rq);
+            cam_rq_cp = instance_ptr->cam_rq;
+        pthread_mutex_unlock(&instance_ptr->m_cam_rq);
+        /* DO NOT CHANGE */
+
+        /* Replace : Convert cam using cam_rq_cp */
+        fprintf(stderr, "SIGUSER1[%lx] >> SIGUSR1 received, cam_rq: %d\n", pthread_self(), cam_rq_cp);
+        /* Replace */
+    }
 }
