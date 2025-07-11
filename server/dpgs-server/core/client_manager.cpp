@@ -2,12 +2,33 @@
 
 ClientManager* ClientManager::cm_ptr = nullptr;
 
+/*
+ * Parameter structure passed to rtsp().
+ *   cam_rq   : Camera index requested by the client.
+ *   m_cam_rq : Mutex for cam_rq.
+ */
+typedef struct RtspData {
+    int cam_rq;                 // Cam number that received from client
+    pthread_mutex_t m_cam_rq;   // Mutex for cam_rq
+} RTD;
+
+/*
+ * Parameter structure passed to remove().
+ *   rtd_ptr : Pointer to the RtspData.
+ *   tid_arr : IDs of the two worker threads spawned by the client thread
+ *             tid_arr[0] – map-sending thread
+ *             tid_arr[1] – RTSP thread
+ */
+typedef struct RemoveData {
+    RTD * rtd_ptr;
+    pthread_t tid_arr[2];       // tid_arr[2] in client thread
+                                // tid_arr[0] : MAP SEND
+                                // tid_arr[1] : RTSP
+} RD;
+
 ClientManager::ClientManager (int _port) : port(9999) {
     port = _port;
     m_client_info_vec = PTHREAD_MUTEX_INITIALIZER;
-    m_cam_rq = PTHREAD_MUTEX_INITIALIZER;
-
-    cam_rq = 0;
 
     // Setting detach option of pthread
     if (pthread_attr_init(&attr) != 0) {
@@ -62,7 +83,6 @@ void ClientManager::connect_client () {
     pthread_t tid;
 
     int i = 0;
-    // int a = 0;
 
     while (1) {
         pthread_testcancel();
@@ -96,18 +116,12 @@ void ClientManager::connect_client () {
         }
 
         sleep(3);
-
-        // a++;
-        // if (a == 3) {
-        //     break;
-        // }
     }
-
-    ClientManager::clear(ClientManager::cm_ptr);
 }
 
 /*
- * HAVE TO STUDY!! 
+ * Returns an iterator to the ClientInfo whose thread ID matches tid.
+ * If no match is found, the iterator equals client_info_vec.end().
  */
 vector<ClientInfo>::iterator ClientManager::find_client (pthread_t tid) {
     return std::find_if(client_info_vec.begin(), client_info_vec.end(),
@@ -118,14 +132,16 @@ vector<ClientInfo>::iterator ClientManager::find_client (pthread_t tid) {
 
 /*
  * Cleanup handler for client_thread().
- * tid_vec[2] cancel + join, erase tid from client_tid_vec
+ * - Cancels and joins the two worker threads stored in rd_ptr->tid_arr.
+ * - Releases per-client resources (mutex, RtspData, RD).
+ * - Removes the current client entry from client_info_vec.
  */
 void ClientManager::remove (void * arg) {
+    RD * rd_ptr = (RD *)arg;
     pthread_t tid_arr[2];
-    memcpy(tid_arr, arg, sizeof(pthread_t) * 2);
-    free (arg);
+    memcpy(tid_arr, rd_ptr->tid_arr, sizeof(pthread_t) * 2);
 
-    // tid_arr[2] cancel + join
+    // Cancel and join the two worker threads (map-sender and RTSP)
     for (pthread_t tid : tid_arr) {
         if (pthread_cancel(tid) != 0) {
             fprintf(stderr, "Error: %lx pthread_cancel failed\n", tid);
@@ -135,9 +151,13 @@ void ClientManager::remove (void * arg) {
         }
     }
 
+    // Free per-client resources
+    pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
+    free (rd_ptr->rtd_ptr);
+    free (arg);
     printf("REMOVE: spawned %lx\t%lx\n", tid_arr[0], tid_arr[1]);
     
-    // erase pthread_self() fron this->client_tid_vec
+    // Erase this client’s record from client_info_vec
     pthread_mutex_lock(&(cm_ptr->m_client_info_vec));
         auto it = cm_ptr->find_client(pthread_self());
         if (it == cm_ptr->client_info_vec.end()) {
@@ -151,10 +171,10 @@ void ClientManager::remove (void * arg) {
 }
 
 /*
- * Delete all elements of client_tid_vec
- * and all cancel, flag and detach check
+ * Cancels every client thread, waits until client_info_vec is empty,
+ * then destroys the associated mutex(m_client_info_vec).
  */
-void ClientManager::clear (void * arg) {
+void ClientManager::clear () {
     pthread_t tid;
 
     pthread_mutex_lock(&(cm_ptr->m_client_info_vec));
@@ -167,11 +187,13 @@ void ClientManager::clear (void * arg) {
         fprintf(stderr, "Waiting clear in client_manager...\n");
     pthread_mutex_unlock(&(cm_ptr->m_client_info_vec));
 
-    // HAVE TO FIX : Mutex and Cond
+    // HAVE TO FIX : Use mutex and cond
     while (cm_ptr->client_info_vec.empty() != true) {
         usleep(10000);
     }
-    
+
+    pthread_mutex_destroy(&cm_ptr->m_client_info_vec);
+
     fprintf(stderr, "Clear in client_manager\n");
 }
 
@@ -183,35 +205,56 @@ void * send_mapdata (void * arg) {
 
 void * rtsp (void * arg) {
     /* DO NOT CHANGE */
-    // Unblock SIGUSR1
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, SIGUSR1);
-    pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+        // Unblock SIGUSR1
+        sigset_t set;
+        sigemptyset(&set);
+        sigaddset(&set, SIGUSR1);
+        pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+
+        // Unpackage RTD
+        RTD * rtd_ptr = (RTD *)arg;
+        int * cam_rq_ptr = &(rtd_ptr->cam_rq);
+        pthread_mutex_t * m_cam_rq_ptr = &(rtd_ptr->m_cam_rq);
     /* DO NOT CHANGE */
 
     /* Replace : Authentication and Cam run */
     while (1) {
         sleep(1);
+        pthread_mutex_lock(m_cam_rq_ptr);
+            printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
+        pthread_mutex_unlock(m_cam_rq_ptr);
     }
     /* Replace */
 }
 
+/*
+ * Per-client main thread.
+ * ─ Creates two worker threads:
+ *     tid_arr[0] – send_mapdata()  // sends map data
+ *     tid_arr[1] – rtsp()          // RTSP streaming
+ * ─ Monitors client messages: logout and camera request(cam_rq)
+ */
 void * ClientManager::client_thread (void * arg) {
     int clnt_sock = *((int *)arg);
     free (arg);
     
     printf("PUSH: %d\t%lx\n", clnt_sock, pthread_self());
-
-    pthread_t * tid_arr = (pthread_t *)malloc(sizeof(pthread_t) * 2);
-
-    pthread_cleanup_push(remove, (void *)tid_arr);
-
-    pthread_create(&tid_arr[0], NULL, send_mapdata, NULL);
-    pthread_create(&tid_arr[1], NULL, rtsp, NULL);
     
-    printf("%d spawned tid_arr[0]: %lx\n", clnt_sock, tid_arr[0]);
-    printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, tid_arr[1]);
+    // make data that is needed rtsp() and remove()
+    RTD * rtd_ptr = (RTD *)malloc(sizeof(RTD));
+    rtd_ptr->cam_rq = 0;
+    pthread_mutex_init(&rtd_ptr->m_cam_rq, NULL);
+    RD * rd_ptr = (RD *)malloc(sizeof(RD));
+    rd_ptr->rtd_ptr = rtd_ptr;
+
+    pthread_cleanup_push(remove, (void *)rd_ptr);
+
+    pthread_create(&rd_ptr->tid_arr[0], NULL, send_mapdata, NULL);
+    pthread_create(&rd_ptr->tid_arr[1], NULL, rtsp, (void *)rtd_ptr);
+    
+    printf("%d spawned tid_arr[0]: %lx\n", clnt_sock, rd_ptr->tid_arr[0]);
+    printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, rd_ptr->tid_arr[1]);
+
 
     // detect logout, cam_rq
     /*
@@ -221,23 +264,18 @@ void * ClientManager::client_thread (void * arg) {
 
     int i = 0; 
     while (i != 3) {
-        pthread_mutex_lock(&cm_ptr->m_cam_rq); 
-            if (i == 2) {
-                cm_ptr->cam_rq = 2;
-            }
-            else {
-                cm_ptr->cam_rq = 1;
-            }
-        pthread_mutex_unlock(&cm_ptr->m_cam_rq); 
+        pthread_mutex_lock(&rtd_ptr->m_cam_rq); 
+            rtd_ptr->cam_rq = clnt_sock++;
+        pthread_mutex_unlock(&rtd_ptr->m_cam_rq); 
     
-        pthread_kill(tid_arr[0], SIGUSR1);
-        pthread_kill(tid_arr[1], SIGUSR1);
+        pthread_kill(rd_ptr->tid_arr[0], SIGUSR1);
+        pthread_kill(rd_ptr->tid_arr[1], SIGUSR1);
         i++;
         sleep(1);
     }
-
-    pthread_join(tid_arr[0], NULL);
-    pthread_join(tid_arr[1], NULL);
+    
+    pthread_join(rd_ptr->tid_arr[0], NULL);
+    pthread_join(rd_ptr->tid_arr[1], NULL);
 
     pthread_cleanup_pop(1);
 
@@ -258,16 +296,7 @@ void ClientManager::set_cm (ClientManager * ptr) {
 }
 
 void ClientManager::signal_handler (int sig) {
-    /* DO NOT CHANGE */
-    int cam_rq_cp;
     if (sig == SIGUSR1 && cm_ptr != nullptr) {
-        pthread_mutex_lock(&cm_ptr->m_cam_rq);
-            cam_rq_cp = cm_ptr->cam_rq;
-        pthread_mutex_unlock(&cm_ptr->m_cam_rq);
-        /* DO NOT CHANGE */
-
-        /* Replace : Convert cam using cam_rq_cp */
-        fprintf(stderr, "SIGUSER1[%lx] >> SIGUSR1 received, cam_rq: %d\n", pthread_self(), cam_rq_cp);
-        /* Replace */
+        fprintf(stderr, "SIGUSER1[%lx] >> SIGUSR1 received\n", pthread_self());
     }
 }

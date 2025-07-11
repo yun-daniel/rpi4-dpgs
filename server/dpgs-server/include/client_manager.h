@@ -28,8 +28,6 @@ private:
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
-    int cam_rq;
-
     vector <ClientInfo> client_info_vec;
 
     // MapManager&  map_mgr;
@@ -37,9 +35,8 @@ private:
 
     pthread_attr_t attr;                    // Thread attributes for detach state                            
     pthread_mutex_t m_client_info_vec;      // Mutex for client_info_vec
-    pthread_mutex_t m_cam_rq;               // Mutex for cam_rq;
 
-    static ClientManager * cm_ptr;    // Static instance pointer for static member function
+    static ClientManager * cm_ptr;          // Static instance pointer for static member function
 
 public:
     ClientManager(int port);
@@ -49,7 +46,7 @@ public:
     vector<ClientInfo>::iterator find_client (pthread_t tid);
     
     static void remove (void * arg);            // tid_vec[2], client_tid_vec
-    static void clear (void * arg);             // client_tid_vec, attr
+    static void clear ();                       // client_tid_vec, attr
     static void * client_thread (void * arg);   // clnt_sock, map data
     static void * check_map_update (void * arg);// mapdata
     static void unlock_mutex (void * arg);

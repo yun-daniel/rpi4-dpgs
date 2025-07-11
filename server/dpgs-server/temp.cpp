@@ -19,7 +19,7 @@ void * func (void * arg) {
 }
 
 int main (void) {
-    // Setting Signal
+    /* Setting Signal */
     // HAVE TO STUDY!!
     sigset_t set;
     sigemptyset(&set);
@@ -27,6 +27,7 @@ int main (void) {
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
     setup_sig_handler();
+    /* Setting Signal */
 
     ClientManager cm(9090);
 
@@ -37,7 +38,7 @@ int main (void) {
     scanf("%d", &input);
     if (input > 0) {
         pthread_cancel(tid);
-        ClientManager::clear(&cm);
+        ClientManager::clear();
     }
 
     pthread_join(tid, NULL);
