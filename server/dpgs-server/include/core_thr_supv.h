@@ -3,7 +3,8 @@
 
 #include "frame_buffer.h"
 #include "map_manager.h"
-#include "vp_engine_dummy.h"
+//#include "vp_engine_dummy.h"
+#include "vp_engine.h"
 #include "device_manager.h"
 
 #include <sys/types.h>

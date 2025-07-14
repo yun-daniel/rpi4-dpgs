@@ -27,7 +27,8 @@ TARGET		= dpgs-server
 
 # Compile options
 #CXXFLAGS	= -Wall -Werror -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs opencv4`
-CXXFLAGS	= -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs opencv4`
+CXXFLAGS	= -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtsp-server-1.0 gio-2.0 opencv4`
+#CXXFLAGS	= -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs opencv4`
 
 # Linker options
 LDFLAGS		= -lpthread
@@ -52,7 +53,9 @@ AI_ENGINE_SRCS	= \
 					$(AI_ENGINE_DIR)/detector.cpp \
 					$(AI_ENGINE_DIR)/classifier.cpp
 VP_ENGINE_SRCS	= \
-					$(VP_ENGINE_DIR)/vp_engine_dummy.cpp
+					$(VP_ENGINE_DIR)/vp_engine.cpp \
+					$(VP_ENGINE_DIR)/cam_streaming_client.cpp
+#					$(VP_ENGINE_DIR)/vp_engine_dummy.cpp
 MAP_MGR_SRCS	= \
 					$(MAP_MGR_DIR)/map_manager.cpp
 DEVICE_MGR_SRCS	= \

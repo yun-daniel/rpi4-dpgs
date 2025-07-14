@@ -67,9 +67,6 @@ class AIEngine::Impl {
     void overlay_slots(cv::Mat& frame, const SharedParkingLotMap& map);
     void print_frame(const cv::Mat& frame);
 
-    // For Test
-    bool init_test_video();
-    cv::VideoCapture test_video;
 };
 
 

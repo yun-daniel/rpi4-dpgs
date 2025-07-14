@@ -1,5 +1,5 @@
 #include "core_thr_supv.h"
-#include "vp_engine_dummy.h"
+#include "vp_engine.h"
 
 #include <iostream>
 
@@ -15,7 +15,11 @@ CoreThrSupv::~CoreThrSupv() {
 bool CoreThrSupv::initialize() {
     std::cout << "[THR_SUPV] Start to initialize...\n";
 
-    vp_engine = new VPEngine("tb/test_a.mp4", fb);
+    vp_engine = new VPEngine(fb);
+    if (!vp_engine->initialize()) {
+        std::cerr << "[THR_SUPV] Error: Failed to initialzie Video Processing Engine\n";
+        return false;
+    }
 
     dev_mgr = new DeviceManager(map_mgr);
     if (!dev_mgr->initialize()) {

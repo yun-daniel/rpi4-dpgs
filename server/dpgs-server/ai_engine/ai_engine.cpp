@@ -22,7 +22,6 @@ AIEngine::Impl::~Impl() {
 void AIEngine::Impl::run() {
 
     init_dnn();
-//    init_test_video();
 
     const SharedParkingLotMap& map = mgr.getMap();
     ParkingStatusClassifier classifier(mgr);
@@ -47,7 +46,6 @@ void AIEngine::Impl::run() {
         if (cv::waitKey(1) != -1) break;
     }
 
-    test_video.release();
 }
 
 
@@ -84,8 +82,6 @@ void AIEngine::Impl::init_dnn() {
 
 cv::Mat AIEngine::Impl::frame_sampling() {
     cv::Mat image;
-
-//    test_video.read(image);
     fb.pop(image);
 
     return image;
@@ -120,22 +116,6 @@ void AIEngine::Impl::overlay_slots(cv::Mat& frame, const SharedParkingLotMap& ma
 void AIEngine::Impl::print_frame(const cv::Mat& frame) {
     cv::imshow("output", frame);
 }
-
-
-// Only for Test
-bool AIEngine::Impl::init_test_video() {
-    test_video.open("tb/test_a.mp4");
-    if (!test_video.isOpened()) {
-        char cwd[PATH_MAX];
-        getcwd(cwd, sizeof(cwd));
-        std::cerr << "[AI][ENGINE] Error: Fail to open test_video source, " << cwd << "\n";
-        return false;
-    }
-
-    std::cout << "[AI][ENGINE] Success: test_video source opened\n";
-    return true;
-}
-
 
 
 // === AIEngine ===
