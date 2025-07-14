@@ -89,6 +89,6 @@ void RemoteLedDP::send_map() {
 
 void RemoteLedDP::send_packet(const int slot_id, const int state) {
     std::string cmd = std::to_string(slot_id) + " " + std::to_string(state);
-//    sendto(sock_fd, cmd.c_str(), cmd.size(), 0, (struct sockaddr*)&target_addr, sizeof(target_addr));
+    sendto(sock_fd, cmd.c_str(), cmd.size(), 0, (struct sockaddr*)&target_addr, sizeof(target_addr));
     std::cout << "[RLDP] send cmd: " << cmd << "\n";
 }
