@@ -214,7 +214,7 @@ void * rtsp (void * arg) {
         sigset_t set;
         sigemptyset(&set);
         sigaddset(&set, SIGUSR1);
-        pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+        pthread_sigmask(SIG_BLOCK, &set, NULL);
 
         // Unpackage RTD
         RTD * rtd_ptr = (RTD *)arg;
@@ -224,10 +224,25 @@ void * rtsp (void * arg) {
 
     /* Replace : Authentication and Cam run */
     while (1) {
-        sleep(5);
-        pthread_mutex_lock(m_cam_rq_ptr);
-            printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
-        pthread_mutex_unlock(m_cam_rq_ptr);
+        struct timespec timeout = {0, 0};  // Non-blocking
+        int sig;
+        int ret = sigtimedwait(&set, nullptr, &timeout);
+
+        if (ret == -1) {
+            if (errno == EAGAIN) {
+            }
+            else {
+                perror("Error: sigtimedwait failed");
+            }
+        }
+            else if (ret == SIGUSR1) {
+            printf("SIGUSR1 Received\n");
+            
+            pthread_mutex_lock(m_cam_rq_ptr);
+                printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
+            pthread_mutex_unlock(m_cam_rq_ptr);
+
+        }
     }
     /* Replace */
 }

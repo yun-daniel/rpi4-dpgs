@@ -115,13 +115,15 @@ int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t 
             pthread_mutex_lock(m_ptr); 
                 *cam_rq = 1;
             pthread_mutex_unlock(m_ptr); 
-            // pthread_kill(tid_arr[1], SIGUSR1);
+            pthread_kill(tid_arr[0], SIGUSR1);
+            pthread_kill(tid_arr[1], SIGUSR1);
         }
         else if (logout_msg == '2') {
             pthread_mutex_lock(m_ptr); 
                 *cam_rq = 2;
             pthread_mutex_unlock(m_ptr); 
-            // pthread_kill(tid_arr[1], SIGUSR1);
+            pthread_kill(tid_arr[0], SIGUSR1);
+            pthread_kill(tid_arr[1], SIGUSR1);
         }
         else {
             fprintf(stderr, "Warning: recv msg is undefined\n");
