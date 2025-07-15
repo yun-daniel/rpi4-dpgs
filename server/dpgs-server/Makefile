@@ -4,8 +4,9 @@ LDFLAGS = -L /usr/aarch64-linux-gnu/lib -lpthread
 
 SRC := temp.cpp ./core/client_manager.cpp ./core/client_info.cpp ./core/srv_sock_utils.cpp
 
+# $(CC) $(CFLAGS) $(LDFLAGS) $(SRC) -o $@
 temp: 
-	$(CC) $(CFLAGS) $(LDFLAGS) $(SRC) -o $@
+	$(CC) -I ./include -lpthread $(SRC) -o $@
 	$(CC) $(CFLAGS) $(LDFLAGS) ./core/client.cpp -o client
 
 # ------------ Memory Check ------------- 

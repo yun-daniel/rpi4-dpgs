@@ -13,10 +13,10 @@ void * func (void * arg) {
 
 int main (void) {
     /* Setting Signal */
-        sigset_t set;
-        sigemptyset(&set);
-        sigaddset(&set, SIGUSR1);
-        pthread_sigmask(SIG_BLOCK, &set, NULL);
+        // sigset_t set;
+        // sigemptyset(&set);
+        // sigaddset(&set, SIGUSR1);
+        // pthread_sigmask(SIG_BLOCK, &set, NULL);
     /* Setting Signal */
 
     ClientManager cm(9999);

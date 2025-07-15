@@ -26,10 +26,19 @@ typedef struct RemoveData {
                                 // tid_arr[1] : RTSP
 } RD;
 
+typedef struct RstpEndData {
+    bool clean_flag;
+    pthread_t tid;
+} RED;
+
 ClientManager::ClientManager (int _port) : port(9999) {
     port = _port;
+    updated = false;
     m_client_info_vec = PTHREAD_MUTEX_INITIALIZER;
-
+    m_updated = PTHREAD_MUTEX_INITIALIZER;
+    cond_clear = PTHREAD_COND_INITIALIZER;
+    cond_updated = PTHREAD_COND_INITIALIZER;
+    
     // Setting detach option of pthread
     if (pthread_attr_init(&attr) != 0) {
         fprintf(stderr, "pthread_attr_init failure\n");
@@ -93,9 +102,6 @@ void ClientManager::connect_client () {
 
         printf("Connected clnt_sock_ptr : %d\n", clnt_sock);
         
-        // clnt_sock_ptr = (int *)malloc(sizeof(int));
-        // *clnt_sock_ptr = i++;
-    
         // add tid;
         clnt_sock_ptr = (int *)malloc(sizeof(int));
         *clnt_sock_ptr = clnt_sock;
@@ -105,6 +111,7 @@ void ClientManager::connect_client () {
         }
         else {
             ci.set_sent_map_flag(false);
+            ci.set_sock_fd(clnt_sock);
             ci.set_tid(tid);
             pthread_mutex_lock(&m_client_info_vec);
                 pthread_cleanup_push(unlock_mutex, (void *)&m_client_info_vec);
@@ -170,8 +177,15 @@ void ClientManager::remove (void * arg) {
             pthread_mutex_unlock(&(cm_ptr->m_client_info_vec));
             return;
         }
+
         fprintf(stderr, "REMOVE: %lx\n", it->get_tid());
+        close (it->get_sock_fd());
         cm_ptr->client_info_vec.erase(it);
+        pthread_cond_broadcast(&cm_ptr->cond_updated);
+        
+        if (cm_ptr->client_info_vec.empty() == true) {
+            pthread_cond_signal(&cm_ptr->cond_clear);
+        }
     pthread_mutex_unlock(&(cm_ptr->m_client_info_vec));
 }
 
@@ -182,7 +196,7 @@ void ClientManager::remove (void * arg) {
 void ClientManager::clear () {
     pthread_t tid;
 
-    pthread_mutex_lock(&(cm_ptr->m_client_info_vec));
+    pthread_mutex_lock(&cm_ptr->m_client_info_vec);
         for (auto it : cm_ptr->client_info_vec) {
             tid = it.get_tid();
             if (pthread_cancel(tid) != 0) {
@@ -190,27 +204,56 @@ void ClientManager::clear () {
             }
         }
         fprintf(stderr, "Waiting clear in client_manager...\n");
-    pthread_mutex_unlock(&(cm_ptr->m_client_info_vec));
 
-    // HAVE TO FIX : Use mutex and cond
-    while (cm_ptr->client_info_vec.empty() != true) {
-        usleep(10000);
-    }
+        while (cm_ptr->client_info_vec.empty() != true) {
+            printf("Cond waiting...\n");
+            pthread_cond_wait(&cm_ptr->cond_clear, &cm_ptr->m_client_info_vec);
+        }
+    pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
 
     pthread_mutex_destroy(&cm_ptr->m_client_info_vec);
+    pthread_mutex_destroy(&cm_ptr->m_updated);
 
     fprintf(stderr, "Clear in client_manager\n");
 }
 
 void * send_mapdata (void * arg) {
+    ClientManager * cm_ptr = ClientManager::cm_ptr;
+
     while(1) {
-        sleep(1);
+        pthread_testcancel();
+
+        // Wait for updated signal
+        pthread_mutex_lock(&cm_ptr->m_updated);
+            pthread_cleanup_push(unlock_mutex, (void *)&cm_ptr->m_updated);
+            while (updated == false) {
+                pthread_cond_wait(&cm_ptr->cond_updated, &cm_ptr->m_updated);
+            }
+        pthread_cleanup_pop(1);
+
+        // no lock here → assuming mapdata is read-only & safe
+        // send map data : send(clnt_sock, ..);
+
+        // Change sent_flag to true
+        pthread_mutex_lock(&cm_ptr->m_client_info_vec);
+            auto it = cm_ptr->find_client(pthread_self());
+            if (it == cm_ptr->client_info_vec.end()) {
+                fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will never printed
+                pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
+                return;
+            }
+            it.set_sent_map_flag = true;
+        pthread_mutex_unlock(&cm_ptr->m_client_info_vec)
+    
+        // Signal to waiting cond in check_map_update()
+        // why need mutex here?
+        pthread_cond_broadcast(&cm_ptr->cond_updated);
     }
 }
 
 void * rtsp (void * arg) {
     /* DO NOT CHANGE */
-        // Unblock SIGUSR1
+        // Block SIGUSR1
         sigset_t set;
         sigemptyset(&set);
         sigaddset(&set, SIGUSR1);
@@ -220,7 +263,7 @@ void * rtsp (void * arg) {
         RTD * rtd_ptr = (RTD *)arg;
         int * cam_rq_ptr = &(rtd_ptr->cam_rq);
         pthread_mutex_t * m_cam_rq_ptr = &(rtd_ptr->m_cam_rq);
-    /* DO NOT CHANGE */
+    /* DO NOT CHANGE */                                                            
 
     /* Replace : Authentication and Cam run */
     while (1) {
@@ -235,7 +278,7 @@ void * rtsp (void * arg) {
                 perror("Error: sigtimedwait failed");
             }
         }
-            else if (ret == SIGUSR1) {
+        else if (ret == SIGUSR1) {
             printf("SIGUSR1 Received\n");
             
             pthread_mutex_lock(m_cam_rq_ptr);
@@ -292,42 +335,62 @@ void * ClientManager::client_thread (void * arg) {
 
     // Receive(Detect) client messages: logout and camera request(cam_rq)
     if (recv_msg(clnt_sock, &rtd_ptr->cam_rq, rd_ptr->tid_arr, &rtd_ptr->m_cam_rq) == 1) {
-        fprintf(stderr, "Error: detect_clnt_msg failed\n");
+        fprintf(stderr, "Error: recv_msg failed\n");
     }
 
     pthread_cleanup_pop(1);
     printf("Client %x is logout\n", clnt_sock);
 
-    // int i = 0; 
-    // while (i != 3) {
-    //     pthread_mutex_lock(&rtd_ptr->m_cam_rq); 
-    //         rtd_ptr->cam_rq = clnt_sock++;
-    //     pthread_mutex_unlock(&rtd_ptr->m_cam_rq); 
-    
-    //     // pthread_kill(rd_ptr->tid_arr[0], SIGUSR1);
-    //     // pthread_kill(rd_ptr->tid_arr[1], SIGUSR1);
-    //     i++;
-    //     sleep(1);
-    // }
-    
-    // pthread_join(rd_ptr->tid_arr[0], NULL);
-    // pthread_join(rd_ptr->tid_arr[1], NULL);
-
-    // pthread_cleanup_pop(1);
-
     return nullptr;
 }
 
 void * ClientManager::check_map_update (void * arg) {
-    return nullptr;
-}
 
-void ClientManager::unlock_mutex (void * arg) {
-    pthread_mutex_t * m = static_cast<pthread_mutex_t *>(arg);
-    pthread_mutex_unlock(m);
+    // check map_flag
+    
+    // copy map data, (m)all clnt_sock(m)
+
+    // broadcast to cond
+
+    // Set the targets(client list that have to send mapdata)
+    vector<pthread_t> targets;
+    ClinetInfo ci;
+    pthread_mutex_lock(&cm_ptr->m_client_info_vec);
+        for (auto &ci : cm_ptr->client_info_vec) {
+            ci.set_sent_flag(false);  
+            targets.push_back(ci.get_tid());  
+        }
+    pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
+
+    // (m) while check clnt_socks sent(m)-cond_wait
+    pthread_mutex_lock(&cm_ptr->m_client_info_vec);
+        while (true) {
+            bool all_sent = true;
+            for (auto tid : targets) {
+                auto it = cm_ptr->find_client(tid);
+                if (it == cm_ptr->client_info_vec.end())  {
+                    continue;   // Ignore the erased client
+                }
+                if (it->get_sent_flag() == false) {
+                    all_sent = false;
+                    break;
+                }
+            }
+
+            if (all_sent == true)  {
+                break;
+            }
+
+            pthread_cond_wait(&cm_ptr->cond_updated, &cm_ptr->m_client_info_vec);
+        }
+    pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
+
+
+    return nullptr;
 }
 
 void ClientManager::set_cm (ClientManager * ptr) {
     cm_ptr = ptr;
 }
+
 

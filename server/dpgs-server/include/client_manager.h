@@ -32,10 +32,14 @@ private:
     vector <ClientInfo> client_info_vec;
 
     // MapManager&  map_mgr;
-    // mapdata
+    int mapdata;
+    bool updated;                           // Flag for mapdata update
 
     pthread_attr_t attr;                    // Thread attributes for detach state                            
-    pthread_mutex_t m_client_info_vec;      // Mutex for client_info_vec
+    pthread_mutex_t m_client_info_vec;      // Mutex for client_info_vec and cond_clear
+    pthread_mutex_t m_updated               // Mutex for updated 
+    pthread_cond_t cond_clear;              // Signaled when client_info_vec is empty; used to wait until all clients are removed
+    pthread_cond_t cond_updated;            // Broadcasted when the mapdata is updated
 
     static ClientManager * cm_ptr;          // Static instance pointer for static member function
 
@@ -50,7 +54,6 @@ public:
     static void clear ();                       // client_tid_vec, attr
     static void * client_thread (void * arg);   // clnt_sock, map data
     static void * check_map_update (void * arg);// mapdata
-    static void unlock_mutex (void * arg);
 
     static void set_cm (ClientManager * ptr);
 };

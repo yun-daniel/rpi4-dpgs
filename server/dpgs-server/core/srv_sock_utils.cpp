@@ -1,5 +1,10 @@
 #include "srv_sock_utils.h"
 
+void unlock_mutex (void * arg) {
+    pthread_mutex_t * m = static_cast<pthread_mutex_t *>(arg);
+    pthread_mutex_unlock(m);
+}
+
 /* 
  * Return byte of received.
  * If failed return -1.
@@ -102,10 +107,14 @@ int check_idpw (int clnt_sock) {
  */
 int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t * m_ptr) {
     char logout_msg = 0x0;
+    int ret;
 
     while (logout_msg != '0') {
         // Receive logout_msg from client
-        if (recv_bytes(clnt_sock, &logout_msg, 1) < 0) {
+        if ((ret = recv_bytes(clnt_sock, &logout_msg, 1)) < 0) {
+            if (ret == -2) {
+                fprintf(stderr, "Warning: %d is closed\n", clnt_sock);
+            }
             return 1;
         }
 
@@ -113,21 +122,22 @@ int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t 
 
         if (logout_msg == '1') {
             pthread_mutex_lock(m_ptr); 
+                pthread_cleanup_push(unlock_mutex, (void *)m_ptr);
                 *cam_rq = 1;
-            pthread_mutex_unlock(m_ptr); 
-            pthread_kill(tid_arr[0], SIGUSR1);
+            pthread_cleanup_pop(1);
             pthread_kill(tid_arr[1], SIGUSR1);
         }
         else if (logout_msg == '2') {
             pthread_mutex_lock(m_ptr); 
+                pthread_cleanup_push(unlock_mutex, (void *)m_ptr);
                 *cam_rq = 2;
-            pthread_mutex_unlock(m_ptr); 
-            pthread_kill(tid_arr[0], SIGUSR1);
+            pthread_cleanup_pop(1);
             pthread_kill(tid_arr[1], SIGUSR1);
         }
         else {
             fprintf(stderr, "Warning: recv msg is undefined\n");
         }
+
 
     }
 
