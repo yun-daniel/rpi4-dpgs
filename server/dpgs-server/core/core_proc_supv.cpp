@@ -9,11 +9,18 @@
 // === Signal Handler ===
 static AIEngine* g_engine = nullptr;
 
-void sigterm_handler(int) {
+void sigusr2_handler(int) {
     if (g_engine) {
         std::cout << "[PROC_AI] sig_handler: SIGTERM receviced. Stopping AIEngine...\n";
         g_engine->stop();
     }
+}
+
+void block_all_except_sigusr2() {
+    sigset_t sigset;
+    sigfillset(&sigset);
+    sigdelset(&sigset, SIGUSR2);
+    pthread_sigmask(SIG_SETMASK, &sigset, nullptr);
 }
 // ===================
 
@@ -35,10 +42,10 @@ void CoreProcSupv::start() {
     if (pid == 0) {
         std::cout << "[PROC_AI] Sub-process startd (PID: " << getpid() << ")\n";
 
+        block_all_except_sigusr2();
+
         AIEngine engine(fb, map_mgr);
         g_engine = &engine;
-
-        signal(SIGTERM, sigterm_handler);
 
         engine.run();
 
@@ -62,7 +69,7 @@ void CoreProcSupv::stop() {
 
     if (is_running_ai && (pid_ai > 0)) {
         std::cout << "[PROC_SUPV] stop: Sending SIGTERM to AIEngine (PID: " << pid_ai << ")\n";
-        kill(pid_ai, SIGTERM);
+        kill(pid_ai, SIGUSR2);
         waitpid(pid_ai, nullptr, 0);
         is_running_ai = false;
     }
@@ -104,7 +111,6 @@ bool CoreProcSupv::monitor() {
 
 void CoreProcSupv::clear() {
     std::cout << "[PROC_SUPV] clear: Cleanning...\n";
-
 
     std::cout << "[PROC_SUPV] clear: Cleanning Success\n";
 }

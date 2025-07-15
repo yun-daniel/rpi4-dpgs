@@ -19,6 +19,17 @@ bool VPEngine::initialize() {
         return false;
     }
 
+    clt_fb1 = new FrameBufferStr();
+    if (!clt_fb1->initialize()) {
+        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer1\n";
+        return false;
+    }
+    clt_fb2 = new FrameBufferStr();
+    if (!clt_fb2->initialize()) {
+        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer2\n";
+        return false;
+    }
+
     std::cout << "[VPE] Success: Video Processing Engine initialized\n";
     return true;
 }
@@ -39,11 +50,11 @@ void VPEngine::run() {
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
 
-        cv::imshow("RTSP Raw Video (CCTV->RPI)", resized);
+//        cv::imshow("RTSP Raw Video (CCTV->RPI)", resized);
 
         fb.push(resized);
+        clt_fb1->push(resized);
 
-//        cv::imshow("RTSP Raw Video (CCTV->RPI)", resized);
 
     }
 
@@ -51,5 +62,32 @@ void VPEngine::run() {
 
 
 void VPEngine::stop() {
+    std::cout << "[VPE] VPEngine Terminating...\n";
+
     is_running = false;
+
+    clear();
+
+    std::cout << "[VPE] VPEngine Terminated\n";
 }
+
+void VPEngine::clear() {
+    std::cout << "[VPE] clear: Cleanning...\n";
+
+    delete csc;
+    csc = nullptr;
+
+    delete clt_fb1;
+    clt_fb1 = nullptr;
+
+    delete clt_fb2;
+    clt_fb2 = nullptr;
+
+    std::cout << "[VPE] clear: Cleanning Success\n";
+}
+
+
+bool VPEngine::is_run() {
+    return is_running;
+}
+

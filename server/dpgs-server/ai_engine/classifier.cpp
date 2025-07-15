@@ -129,9 +129,10 @@ void ParkingStatusClassifier::classify(const cv::Mat& frame, const std::vector<D
 
         update(slot.slot_id, ratio, bright);
 
-
-        std::cout << "[AI][CLSF] Slot " << slot.slot_id
-            << ": " << max_area << ", ratio: " << ratio
-            << ", " << "state: " << slot.state << "\n";
+        // Debug Session
+//        std::cout << "[AI][CLSF] Slot " << slot.slot_id
+//            << ": " << max_area << ", ratio: " << ratio
+//            << ", " << "state: " << slot.state << "\n";
+        // ---
     }
 }

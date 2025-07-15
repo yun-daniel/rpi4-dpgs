@@ -80,3 +80,9 @@ void CoreThrSupv::clear() {
     std::cout << "[THR_SUPV] clear: Cleanning Success\n";
 }
 
+
+bool CoreThrSupv::monitor() {
+    if (!vp_engine->is_run()) return false;
+
+    return true;
+}

@@ -47,7 +47,8 @@ CORE_SRCS		= \
 					$(CORE_DIR)/dpgs_server.cpp \
 					$(CORE_DIR)/core_proc_supv.cpp \
 					$(CORE_DIR)/core_thr_supv.cpp \
-					$(CORE_DIR)/frame_buffer.cpp
+					$(CORE_DIR)/frame_buffer.cpp \
+					$(CORE_DIR)/frame_buffer_str.cpp
 AI_ENGINE_SRCS	= \
 					$(AI_ENGINE_DIR)/ai_engine.cpp \
 					$(AI_ENGINE_DIR)/detector.cpp \

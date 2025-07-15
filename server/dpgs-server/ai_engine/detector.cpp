@@ -99,15 +99,17 @@ void detector(cv::Mat &_frame, cv::dnn::Net &net, std::vector<Detection> &output
     
 
     // Debug Session    
-    for (int i=0; i<output.size(); ++i) {
-        std::cout << "[Output " << i
-            << "] " << "class_id: " << output[i].class_id
-            << ", " << "confidence: " << output[i].confidence
-            << ", " << "[" << output[i].box.x
-            << ", " << output[i].box.y
-            << ", " << output[i].box.width
-            << ", " << output[i].box.height << "]\n";
-    }
+//    for (int i=0; i<output.size(); ++i) {
+//        std::cout << "[AI][DETT]"
+//            << "[Output " << i
+//            << "] " << "class_id: " << output[i].class_id
+//            << ", " << "confidence: " << output[i].confidence
+//            << ", " << "[" << output[i].box.x
+//            << ", " << output[i].box.y
+//            << ", " << output[i].box.width
+//            << ", " << output[i].box.height << "]\n";
+//    }
+    // ----
 }
 
 

@@ -13,7 +13,7 @@ const int delay_ms = 1000 / target_fps;
 
 bool CamStreamingClient::initialize() {
 
-    is_test = false;
+    is_test = CAM_SRC_TEST;
 
     gst_init(nullptr, nullptr);
     std::cout << "[CSC] GStreamer init\n";

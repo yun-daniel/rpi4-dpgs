@@ -53,7 +53,7 @@ void DPGSServer::start() {
     }
     thr_supv->start();
 
-    while (proc_supv->monitor()) {
+    while (proc_supv->monitor() || thr_supv->monitor()) {
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
@@ -97,6 +97,11 @@ void DPGSServer::clear() {
 
     fb->destroyShm();
     map_mgr->destroyShm();
+
+    thr_supv.reset();
+    proc_supv.reset();
+    map_mgr.reset();
+    fb.reset();
 
     std::cout << "[SYS] clear: Cleanning Success\n";
 }
