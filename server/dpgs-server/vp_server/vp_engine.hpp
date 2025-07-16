@@ -20,21 +20,28 @@ using namespace std;
 using namespace cv;
 using namespace chrono;
 
+#define MAX_QUEUE_SIZE 30
+
 class VPEngine{
-    public:
+public:
+    VPEngine();
+    ~VPEngine();
+
     void run();
     
-    private:
+private:
+    string cctv_input_streaming_pipeline;
+
     static queue<Mat> frame_queue_1, frame_queue_2;
     static mutex queue_mutex_1, queue_mutex_2;
     static condition_variable queue_cv_1, queue_cv_2;
     
-    Mat image_processing(Mat resized);
-    void run_video_loop();
+    Mat image_processing(Mat resized_image);
+    void start();
     void send_image(const Mat& processed);
+
     
-    friend void recv_image();
-    friend class ClientIF;
+    friend class StreamingModule;
 };
 
 #endif

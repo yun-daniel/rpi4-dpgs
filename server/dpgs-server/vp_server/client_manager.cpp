@@ -212,7 +212,7 @@ void * send_mapdata (void * arg) {
 }
 
 //To Do
-void rtsp_end(void * arg){
+void end_streaming(void * arg){
     pthread_t tid = *(pthread_t *)arg;
     RED * red_ptr = (RED *)arg;
     if(red_ptr -> clean_flag == true){
@@ -237,13 +237,13 @@ void * rtsp (void * arg) {
 
     int cam_id;
     pthread_t prev_tid, tid;
+    bool flag = false; // prev_tid를 종료하기 위한 flag (첫 연결 쓰레드의 cancel을 방지하기 위함)
+    
     RED red;
     red.clean_flag = false; // 로그인 이후, 바로 로그아웃했을때 Seg Fault 뜨는걸 방지하기 위함
     red.tid = prev_tid;
     //pthread_create(&tid, NULL, &ClientIF::run, (void *) &cam_id);
-    pthread_cleanup_push(rtsp_end, (void *)&red);
-
-    bool flag = false; // prev_tid를 종료하기 위한 flag (첫 연결 쓰레드의 cancel을 방지하기 위함)
+    pthread_cleanup_push(end_streaming, (void *)&red);
 
     /* Replace : Authentication and Cam run */
     while (1) {
@@ -274,7 +274,7 @@ void * rtsp (void * arg) {
             }
             cout << "[DEBUG] TEST 2" << endl;
 
-            pthread_create(&tid, NULL, &ClientIF::run, (void *) &cam_id);
+            pthread_create(&tid, NULL, &StreamingModule::run, (void *) &cam_id);
             if(red.clean_flag == false){
                 red.clean_flag = true;
             }

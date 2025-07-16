@@ -1,10 +1,18 @@
-#include "client_if.hpp"
+#include "streaming_module.hpp"
 #include "vp_engine.hpp"
 
 GstAppSrc *global_appsrc = NULL;
 
+StreamingModule::StreamingModule(){
+    //gstreamer 초기화
+    gst_init(nullptr, nullptr);
+    //rtsps 서버 초기화
+    init_rtsps_server("8555", "/stream");
+}
 
-void ClientIF::media_configure(GstRTSPMediaFactory *factory, GstRTSPMedia *media, gpointer user_data) {
+StreamingModule::~StreamingModule(){};
+
+void StreamingModule::media_configure(GstRTSPMediaFactory *factory, GstRTSPMedia *media, gpointer user_data) {
     
     // media 객체로부터 내부 GStreamer 파이프라인을 가져옴
     GstElement *element = gst_rtsp_media_get_element(media);
@@ -32,14 +40,14 @@ void ClientIF::media_configure(GstRTSPMediaFactory *factory, GstRTSPMedia *media
     gst_object_unref(element);
 }
 
-void ClientIF::init_rtsp_server(const string& service_port, const string& path){
+void StreamingModule::init_rtsps_server(const string& service_port, const string& path){
     GstRTSPServer *server = gst_rtsp_server_new();
     gst_rtsp_server_set_service(server, service_port.c_str());
     gst_rtsp_server_set_address(server, "0.0.0.0");
 
     GTlsCertificate *cert = g_tls_certificate_new_from_files("server.crt", "server.key", NULL);
     if (!cert) {
-        g_printerr("No certificate and key!\n");
+        cerr << ("No certificate and key!") << endl;
         exit (1);
     }
 
@@ -66,7 +74,6 @@ void ClientIF::init_rtsp_server(const string& service_port, const string& path){
     gst_rtsp_media_factory_set_enable_rtcp(factory, TRUE);
     g_signal_connect(factory, "media-configure", G_CALLBACK(media_configure), NULL);
 
-
     GstRTSPPermissions *p = gst_rtsp_permissions_new();
     gst_rtsp_permissions_add_role (p, "anonymous", GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
                                     GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, TRUE, NULL);
@@ -80,10 +87,9 @@ void ClientIF::init_rtsp_server(const string& service_port, const string& path){
     //RTSP 서버를 GStreamer의 메인 루프에 등록하여 실제로 동작하게 만듦
     gst_rtsp_server_attach(server, NULL);
 
-    // cout << "RTSP Running: rtsp://192.168.0.32:8555/stream" << endl;
 }
 
-void ClientIF::push_frame_to_rtsp(const Mat& frame){
+void StreamingModule::push_frame_to_rtsp(const Mat& frame){
     if(!global_appsrc) return;
 
     GstBuffer *buffer;
@@ -107,86 +113,49 @@ void ClientIF::push_frame_to_rtsp(const Mat& frame){
 
 }
 
-Mat ClientIF::create_dummy_frame(int queue_index){
-    int width = 640, height = 360;
 
-    Mat dummy = Mat::zeros(height, width, CV_8UC3);
-
-    time_t now = time(nullptr);
-    tm* local_time = localtime(&now);
-    char time_str[32];
-    strftime(time_str, sizeof(time_str), "%Y.%m.%d %H:%M", local_time);
-
-    string message = to_string(queue_index) + " OFFLINE - " + time_str;
-
-    int fontFace = FONT_HERSHEY_SIMPLEX;
-    double fontScale = 1.0;
-    int thickness = 2;
-    Scalar textColor(255,255,255);
-
-    Size textSize = getTextSize(message, fontFace, fontScale, thickness, nullptr);
-    Point textOrg((width - textSize.width) / 2, (height + textSize.height) / 2);
-
-    putText(dummy, message, textOrg, fontFace, fontScale, textColor, thickness);
-
-    //imshow("dummy", dummy);
-    //waitKey(0);
-
-    return dummy;
-}
-
-void ClientIF::recv_image(int queue_index){
+void StreamingModule::start_streaming(int queue_index){
     queue<Mat>* selected_queue = nullptr;
     mutex* selected_mutex = nullptr;
     condition_variable* selected_cv = nullptr;
 
     if(queue_index == 1){
-        cout << "[ClientIF] selected queue_index = 1" << endl;
+        cout << "[StreamingModule] selected queue_index = 1" << endl;
         selected_queue = &VPEngine::frame_queue_1;
         selected_mutex = &VPEngine::queue_mutex_1;
         selected_cv = &VPEngine::queue_cv_1;
     }
     else if (queue_index == 2) {
-        cout << "[ClientIF] selected queue_index = 2" << endl;
+        cout << "[StreamingModule] selected queue_index = 2" << endl;
         selected_queue = &VPEngine::frame_queue_2;
         selected_mutex = &VPEngine::queue_mutex_2;
         selected_cv = &VPEngine::queue_cv_2;
-    } else {
-        std::cerr << "[ClientIF] Invalid queue_index: " << queue_index << std::endl;
+    }else {
+        std::cerr << "[StreamingModule] Invalid queue_index: " << queue_index << std::endl;
         return;
     }
 
     while(true){
-        cout << "[ClientIF] pop queue[" << queue_index << "] " << endl;
         unique_lock<mutex> lock(*selected_mutex);
         selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
         
-        Mat processed = selected_queue->front();
-        // cout << "[DEBUG] Mat is empty? : " << processed.empty() << endl;
-        selected_queue->pop();
-        lock.unlock();
+        cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
         
-        auto now = chrono::steady_clock::now();
-        cout << "[ClientIF] Frame consumed at " << chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count() << "ms\n";
+        //queue에 저장된 frame 복사
+        Mat processed_frame_copy = selected_queue->front().clone();
 
-        if(processed.empty()){
-            continue;
-        }
-        else{
-            push_frame_to_rtsp(processed);
-        }
-        
-        //push_frame_to_rtsp(processed);
+        // Mat processed = selected_queue->front();
+        // selected_queue->pop();
+        lock.unlock();
+
+        push_frame_to_rtsp(processed);
     }
 }
 
 
-void* ClientIF::run(void * args){
-    cout << "[DEBUG] clientIF TEST" << endl;
-    gst_init(nullptr, nullptr);
-    init_rtsp_server("8555", "/stream");
-
-    recv_image(*(int*)args);
+void* StreamingModule::run(void* args){
+    cout << "[StreamingModule Run]" << endl;
+    start_streaming(*(int*)args);
 
     return nullptr;
 }

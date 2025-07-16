@@ -1,5 +1,5 @@
-#ifndef __CLIENT__IF__HPP
-#define __CLIENT__IF__HPP
+#ifndef __STREAMING__MODULE__HPP
+#define __STREAMING__MODULE__HPP
 
 #include <opencv2/opencv.hpp>
 
@@ -18,17 +18,18 @@ using namespace std;
 using namespace cv;
 using namespace chrono;
 
-class ClientIF{
+class StreamingModule{
 public:
+    StreamingModule();
+    ~StreamingModule();
+
     static void* run(void* args);
 
 private:
-
     static void media_configure(GstRTSPMediaFactory *factory, GstRTSPMedia *media, gpointer user_data);
-    static void init_rtsp_server(const string& service_port, const string& path);
-    static void push_frame_to_rtsp(const Mat& frame);
-    static void recv_image(int queue_index);
-    Mat create_dummy_frame(int queue_index);
+    void init_rtsps_server(const string& service_port, const string& path);
+    void push_frame_to_rtsp(const Mat& frame);
+    void start_streaming(int queue_index);
 };
 
 #endif

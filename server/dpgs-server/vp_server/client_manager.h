@@ -20,7 +20,7 @@
 
 // #include "map_manager.h"
 #include "client_info.h"
-#include "client_if.hpp"
+#include "streaming_module.hpp"
 #include "vp_engine.hpp"
 #include "srv_sock_utils.h"
 
