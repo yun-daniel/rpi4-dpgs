@@ -38,6 +38,7 @@ ClientManager::ClientManager (int _port) : port(9999) {
     m_updated = PTHREAD_MUTEX_INITIALIZER;
     cond_clear = PTHREAD_COND_INITIALIZER;
     cond_updated = PTHREAD_COND_INITIALIZER;
+    cond_all_sent = PTHREAD_COND_INITIALIZER;
     
     // Setting detach option of pthread
     if (pthread_attr_init(&attr) != 0) {
@@ -181,8 +182,8 @@ void ClientManager::remove (void * arg) {
         fprintf(stderr, "REMOVE: %lx\n", it->get_tid());
         close (it->get_sock_fd());
         cm_ptr->client_info_vec.erase(it);
-        pthread_cond_broadcast(&cm_ptr->cond_updated);
-        
+        pthread_cond_broadcast(&cm_ptr->cond_all_sent);      // Signal to cond_updated in check_map_update()
+
         if (cm_ptr->client_info_vec.empty() == true) {
             pthread_cond_signal(&cm_ptr->cond_clear);
         }
@@ -217,8 +218,7 @@ void ClientManager::clear () {
     fprintf(stderr, "Clear in client_manager\n");
 }
 
-void * send_mapdata (void * arg) {
-    ClientManager * cm_ptr = ClientManager::cm_ptr;
+void * ClientManager::send_mapdata (void * arg) {
 
     while(1) {
         pthread_testcancel();
@@ -226,7 +226,7 @@ void * send_mapdata (void * arg) {
         // Wait for updated signal
         pthread_mutex_lock(&cm_ptr->m_updated);
             pthread_cleanup_push(unlock_mutex, (void *)&cm_ptr->m_updated);
-            while (updated == false) {
+            while (cm_ptr->updated == false) {
                 pthread_cond_wait(&cm_ptr->cond_updated, &cm_ptr->m_updated);
             }
         pthread_cleanup_pop(1);
@@ -240,18 +240,22 @@ void * send_mapdata (void * arg) {
             if (it == cm_ptr->client_info_vec.end()) {
                 fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will never printed
                 pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
-                return;
+                return nullptr;
             }
-            it.set_sent_map_flag = true;
-        pthread_mutex_unlock(&cm_ptr->m_client_info_vec)
+            it->set_sent_map_flag(true);
+        pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
     
         // Signal to waiting cond in check_map_update()
         // why need mutex here?
-        pthread_cond_broadcast(&cm_ptr->cond_updated);
+        pthread_cond_broadcast(&cm_ptr->cond_all_sent);
     }
 }
 
-void * rtsp (void * arg) {
+void end_streaming (void * arg) {
+    
+
+}
+void * ClientManager::rtsp (void * arg) {
     /* DO NOT CHANGE */
         // Block SIGUSR1
         sigset_t set;
@@ -346,23 +350,31 @@ void * ClientManager::client_thread (void * arg) {
 
 void * ClientManager::check_map_update (void * arg) {
 
-    // check map_flag
-    
-    // copy map data, (m)all clnt_sock(m)
+    bool map_flag = true;
+    while (map_flag == false) {
+        // check map_flag
+    }
 
-    // broadcast to cond
+    // copy map data
+    int map_data = 1;
 
     // Set the targets(client list that have to send mapdata)
     vector<pthread_t> targets;
-    ClinetInfo ci;
+    ClientInfo ci;
     pthread_mutex_lock(&cm_ptr->m_client_info_vec);
         for (auto &ci : cm_ptr->client_info_vec) {
-            ci.set_sent_flag(false);  
+            ci.set_sent_map_flag(false);  
             targets.push_back(ci.get_tid());  
         }
     pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
 
-    // (m) while check clnt_socks sent(m)-cond_wait
+    // Broadcast to cond
+    pthread_mutex_lock(&cm_ptr->m_updated);
+        cm_ptr->updated = true;
+        pthread_cond_broadcast(&cm_ptr->cond_updated);
+    pthread_mutex_unlock(&cm_ptr->m_updated);
+
+    // 
     pthread_mutex_lock(&cm_ptr->m_client_info_vec);
         while (true) {
             bool all_sent = true;
@@ -371,7 +383,7 @@ void * ClientManager::check_map_update (void * arg) {
                 if (it == cm_ptr->client_info_vec.end())  {
                     continue;   // Ignore the erased client
                 }
-                if (it->get_sent_flag() == false) {
+                if (it->get_sent_map_flag() == false) {
                     all_sent = false;
                     break;
                 }
@@ -381,7 +393,7 @@ void * ClientManager::check_map_update (void * arg) {
                 break;
             }
 
-            pthread_cond_wait(&cm_ptr->cond_updated, &cm_ptr->m_client_info_vec);
+            pthread_cond_wait(&cm_ptr->cond_all_sent, &cm_ptr->m_client_info_vec);
         }
     pthread_mutex_unlock(&cm_ptr->m_client_info_vec);
 
