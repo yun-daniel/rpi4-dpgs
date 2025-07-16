@@ -91,3 +91,11 @@ bool VPEngine::is_run() {
     return is_running;
 }
 
+FrameBufferStr* VPEngine::get_clt_fb(int idx) {
+    if (idx == 1)
+        return clt_fb1;
+    else if (idx == 2)
+        return clt_fb2;
+    else
+        return nullptr;
+}

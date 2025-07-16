@@ -36,9 +36,20 @@ void FrameBufferStr::push(const cv::Mat& frame) {
 cv::Mat FrameBufferStr::pop() {
     sem_wait(&sem_ready);
 
+    if (notified) {
+        notified = false;
+        return cv::Mat();
+    }
+
     std::unique_lock<std::mutex> lock(sem_mutex);
     cv::Mat frame = buffer.front();
 //    buffer.pop_front();
 
     return frame;
+}
+
+
+void FrameBufferStr::notify() {
+    notified = true;
+    sem_post(&sem_ready);
 }

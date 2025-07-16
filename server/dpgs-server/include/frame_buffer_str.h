@@ -5,6 +5,7 @@
 #include <deque>
 #include <mutex>
 #include <semaphore.h>
+#include <atomic>
 
 constexpr int STR_BUFFER_SIZE       = 5;
 
@@ -18,6 +19,7 @@ class FrameBufferStr {
 
     void push(const cv::Mat& frame);
     cv::Mat pop();
+    void notify();
 
  private:
     std::deque<cv::Mat> buffer;
@@ -25,6 +27,7 @@ class FrameBufferStr {
 
     std::mutex  sem_mutex;
     sem_t       sem_ready;
+    std::atomic<bool> notified;
 
 };
 

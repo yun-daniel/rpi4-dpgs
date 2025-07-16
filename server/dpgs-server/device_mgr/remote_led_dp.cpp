@@ -53,6 +53,7 @@ void RemoteLedDP::run() {
         }
         *map_mgr.get_flag_ptr_dev() = false;
         pthread_mutex_unlock(map_mgr.get_mutex_dev());
+        if (!is_running) break;
 
         std::cout << "[RLDP] Updated Map Sending...\n";
         send_map();
@@ -72,7 +73,10 @@ void RemoteLedDP::stop() {
     pthread_cond_signal(map_mgr.get_cv_dev());
     pthread_mutex_unlock(map_mgr.get_mutex_dev());
 
-    if (sock_fd >= 0) close(sock_fd);
+    if (sock_fd >= 0) {
+        close(sock_fd);
+        sock_fd = -1;
+    }
 }
 
 

@@ -12,6 +12,7 @@ class CoreProcSupv {
     CoreProcSupv(FrameBuffer& _fb, MapManager& _map_mgr);
     ~CoreProcSupv();
 
+    bool initialize();
     void start();
     void stop();
 

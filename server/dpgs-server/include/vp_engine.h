@@ -19,6 +19,9 @@ class VPEngine {
 
     bool is_run();
 
+    FrameBufferStr* get_clt_fb(int idx);
+
+
  private:
     std::atomic<bool>       is_running;
 

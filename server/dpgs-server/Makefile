@@ -19,6 +19,7 @@ AI_ENGINE_DIR	= ai_engine
 VP_ENGINE_DIR	= vp_engine
 MAP_MGR_DIR		= map_mgr
 DEVICE_MGR_DIR	= device_mgr
+CLIENT_MGR_DIR	= client_mgr
 
 
 # Output file
@@ -56,14 +57,18 @@ AI_ENGINE_SRCS	= \
 VP_ENGINE_SRCS	= \
 					$(VP_ENGINE_DIR)/vp_engine.cpp \
 					$(VP_ENGINE_DIR)/cam_streaming_client.cpp
-#					$(VP_ENGINE_DIR)/vp_engine_dummy.cpp
 MAP_MGR_SRCS	= \
 					$(MAP_MGR_DIR)/map_manager.cpp
 DEVICE_MGR_SRCS	= \
 					$(DEVICE_MGR_DIR)/device_manager.cpp \
 					$(DEVICE_MGR_DIR)/remote_led_dp.cpp
+CLIENT_MGR_SRCS	= \
+					$(CLIENT_MGR_DIR)/client_manager.cpp \
+					$(CLIENT_MGR_DIR)/client_info.cpp \
+					$(CLIENT_MGR_DIR)/srv_sock_utils.cpp \
+					$(CLIENT_MGR_DIR)/streaming_module.cpp
 
-SOURCES			= $(CORE_SRCS) $(AI_ENGINE_SRCS) $(VP_ENGINE_SRCS) $(MAP_MGR_SRCS) $(DEVICE_MGR_SRCS)
+SOURCES			= $(CORE_SRCS) $(AI_ENGINE_SRCS) $(VP_ENGINE_SRCS) $(MAP_MGR_SRCS) $(DEVICE_MGR_SRCS) $(CLIENT_MGR_SRCS)
 
 
 MAP_GEN_SRC		= $(TB_DIR)/map_gen.cpp

@@ -45,7 +45,7 @@ void DPGSServer::start() {
         std::cerr << "[SYS] Error: Failed to initialize Process Supervisor\n";
         return;
     }
-    proc_supv->start();
+//    proc_supv->start();
 
     if(!initialize_thr_supv()) {
         std::cerr << "[SYS] Error: Failed to initialize Thread Supervisor\n";
@@ -76,6 +76,10 @@ void DPGSServer::stop() {
 bool DPGSServer::initialize_proc_supv() {
     std::cout << "[SYS] Initialize Process Supervisor...\n";
     proc_supv = std::make_unique<CoreProcSupv>(*fb, *map_mgr);
+    if (!proc_supv->initialize()) {
+        std::cerr << "[SYS] Error: Failed to initialize CoreProcSupv\n";
+        return false;
+    }
 
     return true;
 }

@@ -34,6 +34,14 @@ CoreProcSupv::~CoreProcSupv() {
 }
 
 
+bool CoreProcSupv::initialize() {
+    std::cout << "[PROC_SUPV] Start to initialize...\n";
+
+    std::cout << "[PROC_SUPV] Success: Process Supervisor initialized\n";
+    return true;
+}
+
+
 void CoreProcSupv::start() {
     std::cout << "[PROC_SUPV] Start Process Supervisor\n";
 

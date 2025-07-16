@@ -5,6 +5,7 @@
 #include "map_manager.h"
 #include "vp_engine.h"
 #include "device_manager.h"
+#include "client_manager.h"
 
 #include <sys/types.h>
 #include <cstdio>
@@ -25,10 +26,11 @@ class CoreThrSupv {
 private:
     VPEngine*       vp_engine = nullptr;
     DeviceManager*  dev_mgr = nullptr;
-//    ClientManager*  clt_mgr = nullptr;
+    ClientManager*  clt_mgr = nullptr;
 
     std::thread     thread_vpe;
     std::thread     thread_dev;
+    std::thread     thread_clt;
 
 
     void clear();

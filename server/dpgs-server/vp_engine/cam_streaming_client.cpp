@@ -24,12 +24,8 @@ bool CamStreamingClient::initialize() {
     }
     else {
         stream_src = RTSP_SRC_PIPE;
-        std::cout << "[CSC] test0\n";
         cap.open(stream_src, cv::CAP_GSTREAMER);
-        std::cout << "[CSC] test2\n";
     }
-
-    std::cout << "[CSC] test1\n";
 
     if (!cap.isOpened()) {
         std::cerr << "[CSC] initialize: Failed to open input stream: " << stream_src << "\n";
@@ -48,7 +44,7 @@ bool CamStreamingClient::frame_sampling(cv::Mat& frame) {
     }
 
     if (!cap.read(frame)) {
-        std::cerr << "[CSC] sampling: Faile to read frame from stream\n";
+        std::cerr << "[CSC] sampling: Failed to read frame from stream\n";
         return false;
     }
 

@@ -27,6 +27,13 @@ bool CoreThrSupv::initialize() {
         return false;
     }
 
+    clt_mgr = new ClientManager(map_mgr, *vp_engine->get_clt_fb(1), *vp_engine->get_clt_fb(2), 9999);
+    if (!clt_mgr->initialize()) {
+        std::cerr << "[THR_SUPV] Error: Failed to initialize Client Manager\n";
+        return false;
+    }
+
+
     std::cout << "[THR_SUPV] Success: Thread Supervisor initialized\n";
     return true;
 }
@@ -44,6 +51,10 @@ void CoreThrSupv::start() {
         dev_mgr->run();
     });
 
+    thread_clt = std::thread([this]() {
+        clt_mgr->run();
+    });
+
 }
 
 
@@ -52,6 +63,7 @@ void CoreThrSupv::stop() {
 
     if (vp_engine) vp_engine->stop();
     if (dev_mgr) dev_mgr->stop();
+    if (clt_mgr) clt_mgr->stop();
 
     clear();
 
@@ -75,6 +87,13 @@ void CoreThrSupv::clear() {
     }
     delete dev_mgr;
     dev_mgr = nullptr;
+
+    if (thread_clt.joinable()) {
+        std::cout << "[THR_SUPV] Joining thread_clt\n";
+        thread_clt.join();
+    }
+    delete clt_mgr;
+    clt_mgr = nullptr;
 
 
     std::cout << "[THR_SUPV] clear: Cleanning Success\n";
