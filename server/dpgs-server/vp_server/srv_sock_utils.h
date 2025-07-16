@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <signal.h>
 
+void unlock_mutex(void * arg);
 int recv_bytes(int fd, void * buf, size_t len);
 int send_bytes(int fd, void * buf, size_t len);
 int check_idpw (int clnt_sock);

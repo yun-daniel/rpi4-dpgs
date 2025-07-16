@@ -3,6 +3,12 @@
 
 GstAppSrc *global_appsrc = NULL;
 
+
+typedef struct StreamingModuleData {
+    StreamingModule streaming_module_;
+    int cam_id_;
+} SMD;
+
 StreamingModule::StreamingModule(){
     //gstreamer 초기화
     gst_init(nullptr, nullptr);
@@ -139,7 +145,7 @@ void StreamingModule::start_streaming(int queue_index){
         unique_lock<mutex> lock(*selected_mutex);
         selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
         
-        cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
+        // cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
         
         //queue에 저장된 frame 복사
         Mat processed_frame_copy = selected_queue->front().clone();
@@ -148,14 +154,17 @@ void StreamingModule::start_streaming(int queue_index){
         // selected_queue->pop();
         lock.unlock();
 
-        push_frame_to_rtsp(processed);
+        push_frame_to_rtsp(processed_frame_copy);
     }
 }
 
 
 void* StreamingModule::run(void* args){
     cout << "[StreamingModule Run]" << endl;
-    start_streaming(*(int*)args);
+    SMD * smd_p = (SMD *)args;
+    
+    smd_p ->streaming_module_.start_streaming(smd_p ->cam_id_);
+    //start_streaming(*(int*)args);
 
     return nullptr;
 }

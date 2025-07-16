@@ -37,9 +37,15 @@ private:
 
     // MapManager&  map_mgr;
     // mapdata
+    int mapdata;
+    bool updated;
 
     pthread_attr_t attr;                    // Thread attributes for detach state                            
     pthread_mutex_t m_client_info_vec;      // Mutex for client_info_vec
+    pthread_mutex_t m_updated;
+    pthread_cond_t cond_clear;
+    pthread_cond_t cond_updated;
+    pthread_cond_t cond_all_sent;
 
     static ClientManager * cm_ptr;          // Static instance pointer for static member function
 
@@ -54,7 +60,9 @@ public:
     static void clear ();                       // client_tid_vec, attr
     static void * client_thread (void * arg);   // clnt_sock, map data
     static void * check_map_update (void * arg);// mapdata
-    static void unlock_mutex (void * arg);
+    //static void unlock_mutex (void * arg);
+    static void * send_mapdata (void * arg);
+    static void * rtsp (void * arg);
 
     static void set_cm (ClientManager * ptr);
 };
