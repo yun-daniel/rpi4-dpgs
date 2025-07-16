@@ -1,5 +1,5 @@
 #include "streaming_module.hpp"
-#include "vp_engine.hpp"
+
 
 GstAppSrc *global_appsrc = NULL;
 
@@ -14,6 +14,11 @@ StreamingModule::StreamingModule(){
     gst_init(nullptr, nullptr);
     //rtsps 서버 초기화
     init_rtsps_server("8555", "/stream");
+    
+    cam_id_ = -1;
+    selected_queue = nullptr;
+    selected_mutex = nullptr;
+    selected_cv = nullptr;
 }
 
 StreamingModule::~StreamingModule(){};
@@ -119,52 +124,62 @@ void StreamingModule::push_frame_to_rtsp(const Mat& frame){
 
 }
 
-
-void StreamingModule::start_streaming(int queue_index){
-    queue<Mat>* selected_queue = nullptr;
-    mutex* selected_mutex = nullptr;
-    condition_variable* selected_cv = nullptr;
-
-    if(queue_index == 1){
+void StreamingModule::update(int cam_id){
+    // pthread_mutex_lock(cam_mutex_);
+    cam_id_ = cam_id;
+    if(cam_id_ == 1){
         cout << "[StreamingModule] selected queue_index = 1" << endl;
         selected_queue = &VPEngine::frame_queue_1;
         selected_mutex = &VPEngine::queue_mutex_1;
         selected_cv = &VPEngine::queue_cv_1;
     }
-    else if (queue_index == 2) {
+    else if (cam_id_ == 2) {
         cout << "[StreamingModule] selected queue_index = 2" << endl;
         selected_queue = &VPEngine::frame_queue_2;
         selected_mutex = &VPEngine::queue_mutex_2;
         selected_cv = &VPEngine::queue_cv_2;
-    }else {
-        std::cerr << "[StreamingModule] Invalid queue_index: " << queue_index << std::endl;
+    }
+    else {
+        std::cerr << "[StreamingModule] Invalid queue_index"<< std::endl;
         return;
     }
+    // pthread_mutex_unlock(cam_mutex_);
+}
 
+// void StreamingModule::clear(){
+//     pthread_mutex_destroy(&cam_mutex_);
+// }
+
+void StreamingModule::run(){
+    cout << "[DEBUG] Test1\n";
+    cout << "[DEBUG] cam_id_ : " << cam_id_ << endl;
     while(true){
-        unique_lock<mutex> lock(*selected_mutex);
-        selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
-        
-        // cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
-        
-        //queue에 저장된 frame 복사
-        Mat processed_frame_copy = selected_queue->front().clone();
-
-        // Mat processed = selected_queue->front();
-        // selected_queue->pop();
-        lock.unlock();
-
-        push_frame_to_rtsp(processed_frame_copy);
+        if(cam_id_ != -1){
+            cout << "[DEBUG] Test2\n";
+            unique_lock<mutex> lock(*selected_mutex);
+            cout << "[DEBUG] Test3\n";
+            selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
+            
+            // cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
+            cout << "[DEBUG] Test4\n";
+            //queue에 저장된 frame 복사
+            Mat processed_frame_copy = selected_queue->front().clone();
+            cout << "[DEBUG] Test5\n";
+            // Mat processed = selected_queue->front();
+            // selected_queue->pop();
+            lock.unlock();
+            cout << "[DEBUG] Test6\n";
+            push_frame_to_rtsp(processed_frame_copy);
+        }
     }
 }
 
-
-void* StreamingModule::run(void* args){
-    cout << "[StreamingModule Run]" << endl;
-    SMD * smd_p = (SMD *)args;
+// void* StreamingModule::run(){
+//     cout << "[StreamingModule Run]" << endl;
+//     SMD * smd_p = (SMD *)args;
     
-    smd_p ->streaming_module_.start_streaming(smd_p ->cam_id_);
-    //start_streaming(*(int*)args);
+//     smd_p ->streaming_module_.start_streaming(smd_p ->cam_id_);
+//     //start_streaming(*(int*)args);
 
-    return nullptr;
-}
+//     return nullptr;
+// }

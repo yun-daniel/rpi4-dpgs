@@ -2,17 +2,6 @@
 
 ClientManager* ClientManager::cm_ptr = nullptr;
 
-/*
- * Parameter structure passed to rtsp().
- *   cam_rq   : Camera index requested by the client.
- *   m_cam_rq : Mutex for cam_rq.
- */
-typedef struct RtspData {
-    int cam_rq;                 // Cam number that received from client
-    pthread_mutex_t m_cam_rq;   // Mutex for cam_rq
-} RTD;
-
-
 typedef struct RtspEndData {
     bool init_flag;                 
     pthread_t tid;   
@@ -25,12 +14,13 @@ typedef struct RtspEndData {
  *             tid_arr[1] – RTSP thread
  */
 typedef struct RemoveData {
-    RTD * rtd_ptr;
+    StreamingModule * sm_ptr;
     pthread_t tid_arr[2];       // tid_arr[2] in client thread
                                 // tid_arr[0] : MAP SEND
                                 // tid_arr[1] : RTSP
 } RD;
 
+// Delete
 typedef struct StreamingModuleData {
     StreamingModule streaming_module_;
     int cam_id_;
@@ -168,10 +158,13 @@ void ClientManager::remove (void * arg) {
         }
     }
     // Free per-client resources
-    pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
-    free (rd_ptr->rtd_ptr);
+    // rd_ptr->sm_ptr -> clear();
+    // pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
+    // free (rd_ptr->sm_ptr);
+    delete(rd_ptr->sm_ptr);
     free (arg);
     printf("REMOVE: spawned %lx\t%lx\n", tid_arr[0], tid_arr[1]);
+
     // Erase this client’s record from client_info_vec
     pthread_mutex_lock(&(cm_ptr->m_client_info_vec));
         auto it = cm_ptr->find_client(pthread_self());
@@ -238,70 +231,14 @@ void * ClientManager::rtsp (void * arg) {
         sigaddset(&set, SIGUSR1);
         pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-        // Unpackage RTD
-        RTD * rtd_ptr = (RTD *)arg;
-        int * cam_rq_ptr = &(rtd_ptr->cam_rq);
-        pthread_mutex_t * m_cam_rq_ptr = &(rtd_ptr->m_cam_rq);
+        // Unpackage SM
+        StreamingModule * sm_ptr = (StreamingModule *)arg;
+        cout << "[DEBUG] Test\n";
+        sm_ptr->run();
     /* DO NOT CHANGE */
 
     
-    int prev_cam_id;
-    pthread_t tid, prev_tid;
-    StreamingModule streaming_module;
     
-    RED red;
-    red.init_flag = false;
-    red.tid = prev_tid;
-
-    SMD smd;
-    smd.cam_id_ = -1;
-
-    //pthread_create(&tid, NULL, &ClientIF::run, (void *) &cam_id);
-    pthread_cleanup_push(end_streaming, (void *)&red);
-
-    /* Replace : Authentication and Cam run */
-    while (1) {
-        struct timespec timeout = {0, 0};  // Non-blocking
-        int sig;
-        int ret = sigtimedwait(&set, nullptr, &timeout);
-
-        if (ret == -1) {
-            if (errno == EAGAIN) {
-            }
-            else {
-                perror("Error: sigtimedwait failed");
-            }
-        }
-        else if (ret == SIGUSR1) {
-            cout << "[SIGUSR1 Received]\n";
-            prev_cam_id = smd.cam_id_;
-            prev_tid = tid;
-
-            pthread_mutex_lock(m_cam_rq_ptr);
-                pthread_cleanup_push(unlock_mutex, m_cam_rq_ptr);
-                printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
-                smd.cam_id_ = *cam_rq_ptr;
-            // pthread_mutex_unlock(m_cam_rq_ptr);
-            pthread_cleanup_pop(1);
-            
-            cout << "[DEBUG] prev_cam_id : " << prev_cam_id << endl;
-            cout << "[DEBUG] smd.cam_id_ : " << smd.cam_id_ << endl;
-            if((prev_cam_id != -1) && (prev_cam_id != smd.cam_id_)){
-                pthread_cancel(prev_tid);
-                cout << "[DEBUG] TEST\n";
-                pthread_join(prev_tid, NULL);
-                cout << "[DEBUG] TEST2\n";
-                pthread_create(&tid, NULL, streaming_module.run, (void *) &smd);
-
-                if(red.init_flag == false){
-                    red.init_flag = true;
-                }
-            }
-            
-        }
-    }
-    pthread_cleanup_pop(1);
-    /* Replace */
     return nullptr;
 }
 
@@ -317,12 +254,11 @@ void * ClientManager::client_thread (void * arg) {
     int clnt_sock = *((int *)arg);
     free (arg);
     printf("PUSH: %d\t%lx\n", clnt_sock, pthread_self());
+
     // Make data that rtsp() and remove() need
-    RTD * rtd_ptr = (RTD *)malloc(sizeof(RTD));
-    rtd_ptr->cam_rq = clnt_sock;
-    pthread_mutex_init(&rtd_ptr->m_cam_rq, NULL);
     RD * rd_ptr = (RD *)malloc(sizeof(RD));
-    rd_ptr->rtd_ptr = rtd_ptr;
+    rd_ptr->sm_ptr = new StreamingModule();
+    
     // Push cleanup function
     pthread_cleanup_push(remove, (void *)rd_ptr);
     // Check id and pw
@@ -335,14 +271,14 @@ void * ClientManager::client_thread (void * arg) {
         fprintf(stderr, "Error: %d's pthread_create of send_mapdata failed\n", clnt_sock);
         pthread_exit(NULL);
     }
-    if (pthread_create(&rd_ptr->tid_arr[1], NULL, rtsp, (void *)rtd_ptr) != 0) {
+    if (pthread_create(&rd_ptr->tid_arr[1], NULL, rtsp, (void *)rd_ptr->sm_ptr) != 0) {
         fprintf(stderr, "Error: %d's pthread_create of rtsp failed\n", clnt_sock);
         pthread_exit(NULL);
     }
     printf("%d spawned tid_arr[0]: %lx\n", clnt_sock, rd_ptr->tid_arr[0]);
     printf("%d spawned tid_arr[1]: %lx\n", clnt_sock, rd_ptr->tid_arr[1]);
     // Receive(Detect) client messages: logout and camera request(cam_rq)
-    if (recv_msg(clnt_sock, &rtd_ptr->cam_rq, rd_ptr->tid_arr, &rtd_ptr->m_cam_rq) == 1) {
+    if (recv_msg(clnt_sock, rd_ptr->sm_ptr) == 1) {
         fprintf(stderr, "Error: recv_msg failed\n");
     }
     pthread_cleanup_pop(1);
