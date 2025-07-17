@@ -134,18 +134,18 @@ void StreamingModule::update(int cam_id){
     if(cam_id_ == 1){
         cout << "[StreamingModule] selected queue_index = 1" << endl;
 //	selected_fb->notify();
-//        selected_fb = &clt_fb1;
-        selected_queue = &vp_engine.frame_queue_1;
-        selected_mutex = &vp_engine.queue_mutex_1;
-        selected_cv = &vp_engine.queue_cv_1;
+        selected_fb = vp_engine.clt_fb1;
+//        selected_queue = &vp_engine.frame_queue_1;
+//        selected_mutex = &vp_engine.queue_mutex_1;
+//        selected_cv = &vp_engine.queue_cv_1;
     }
     else if (cam_id_ == 2) {
         cout << "[StreamingModule] selected queue_index = 2" << endl;
 //	selected_fb->notify();
-//        selected_fb = &clt_fb2;
-        selected_queue = &vp_engine.frame_queue_2;
-        selected_mutex = &vp_engine.queue_mutex_2;
-        selected_cv = &vp_engine.queue_cv_2;
+        selected_fb = vp_engine.clt_fb2;
+//        selected_queue = &vp_engine.frame_queue_2;
+//        selected_mutex = &vp_engine.queue_mutex_2;
+//        selected_cv = &vp_engine.queue_cv_2;
     }
     else {
         std::cerr << "[StreamingModule] Invalid queue_index"<< std::endl;
@@ -173,12 +173,16 @@ void StreamingModule::run(){
 //            cout << "[DEBUG] Test5\n";
             //queue에 저장된 frame 복사
 //            Mat processed_frame_copy = selected_queue->front().clone();
-		if (selected_queue->empty()) {
-			continue;
-		}
+//        if (selected_queue->empty()) {
+//            continue;
+//        }
 //	    cv::Mat processed_frame = selected_fb->pop();
 	    std::cout << "[DEBUG] Test4\n";
-	    cv::Mat processed_frame = selected_queue->front();
+        if (selected_fb == nullptr) {
+            continue;
+        }
+        cv::Mat processed_frame = selected_fb->pop();
+//        cv::Mat processed_frame = selected_queue->front();
 //	    if (processed_frame.empty()) {
 //		std::cout << "[DEBUG] Empty\n";
 //		continue;

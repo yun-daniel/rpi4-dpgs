@@ -7,7 +7,7 @@
 const std::string RTSP_SRC_PIPE = "rtspsrc location=rtsp://admin:Veda123%21@192.168.0.86:554/profile2/media.smp latency=30 ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink drop=true max-buffers=1";
 
 // Only for Test
-#define CAM_SRC_TEST    false
+#define CAM_SRC_TEST    true
 const std::string test_video = "tb/test_a.mp4";
 
 

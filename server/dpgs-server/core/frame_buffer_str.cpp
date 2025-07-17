@@ -21,9 +21,13 @@ bool FrameBufferStr::initialize() {
 
 
 void FrameBufferStr::push(const cv::Mat& frame) {
-//	std::cout << "[FB_STR][DEBUG] push called\n";
-//    std::unique_lock<std::mutex> lock(sem_mutex);
-
+//    std::cout << "[FB_STR][DEBUG] push called\n";
+    std::unique_lock<std::mutex> lock(sem_mutex);
+	
+    if (frame.empty()) {
+        std::cout << "[FB_STR] Empty Frame pushed\n";
+        return;
+    }
 	cv::Mat cloned = frame.clone();
 
     if (buffer.size() >= max_size) {
@@ -40,24 +44,29 @@ void FrameBufferStr::push(const cv::Mat& frame) {
 
 
 cv::Mat FrameBufferStr::pop() {
+//    std::cout << "[FB_STR][DEBUG] pop called\n";
     sem_wait(&sem_ready);
 
-	std::cout << "[FB_STR][DEBUG] pop called\n";
+    std::unique_lock<std::mutex> lock(sem_mutex);
+    if (buffer.empty()) {
+        std::cout << "[FB_STR] Buffer is empty\n";
+        return cv::Mat();
+    }
+
 
     if (notified) {
         notified = false;
         return cv::Mat();
     }
 
-    	std::cout << "[FB_STR][DEBUG] pop test1\n";
-//    std::unique_lock<std::mutex> lock(sem_mutex);
+//    	std::cout << "[FB_STR][DEBUG] pop test1\n";
     cv::Mat frame = buffer.front();
-    	std::cout << "[FB_STR][DEBUG] pop test2\n";
+//    	std::cout << "[FB_STR][DEBUG] pop test2\n";
     cv::Mat cloned = frame.clone();
-    	std::cout << "[FB_STR][DEBUG] pop test3\n";
+//    	std::cout << "[FB_STR][DEBUG] pop test3\n";
 //    cv::imshow("FB_STR_POP", frame);
 //    cv::imshow("FB_STR_POP_cloned", cloned);
-    	std::cout << "[FB_STR][DEBUG] pop test4\n";
+//    	std::cout << "[FB_STR][DEBUG] pop test4\n";
 
 	return cloned;
 //    return frame;

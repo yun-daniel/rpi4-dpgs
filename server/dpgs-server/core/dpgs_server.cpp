@@ -45,7 +45,7 @@ void DPGSServer::start() {
         std::cerr << "[SYS] Error: Failed to initialize Process Supervisor\n";
         return;
     }
-//    proc_supv->start();
+    proc_supv->start();
 
     if(!initialize_thr_supv()) {
         std::cerr << "[SYS] Error: Failed to initialize Thread Supervisor\n";

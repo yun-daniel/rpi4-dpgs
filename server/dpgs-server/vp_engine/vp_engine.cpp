@@ -19,16 +19,16 @@ bool VPEngine::initialize() {
         return false;
     }
 
-//    clt_fb1 = new FrameBufferStr();
-//    if (!clt_fb1->initialize()) {
-//        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer1\n";
-//        return false;
-//    }
-//    clt_fb2 = new FrameBufferStr();
-//    if (!clt_fb2->initialize()) {
-//        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer2\n";
-//        return false;
-//    }
+    clt_fb1 = new FrameBufferStr();
+    if (!clt_fb1->initialize()) {
+        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer1\n";
+        return false;
+    }
+    clt_fb2 = new FrameBufferStr();
+    if (!clt_fb2->initialize()) {
+        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer2\n";
+        return false;
+    }
 
     std::cout << "[VPE] Success: Video Processing Engine initialized\n";
     return true;
@@ -47,15 +47,19 @@ void VPEngine::run() {
             std::cerr << "[VPE] sampling: Failed to read frame from input stream.\n";
             break;
         }
+        if (frame.empty()) {
+            continue;
+        }
+
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
 
-//	std::cout << "[VPE][DEBUG] push frame\n";
-//        cv::imshow("RTSP Raw Video (CCTV->RPI)", resized);
-
+        std::cout << "[VPE][DEBUG] Frame Info: rows: " << resized.rows << " cols: " << resized.cols << " size: " << resized.size << "\n";
 
         fb.push(resized);
+        clt_fb1->push(resized);
 
+/*
 	{
 	std::lock_guard<std::mutex> lock(queue_mutex_1);
 	if (frame_queue_1.size() > 30) {
@@ -64,8 +68,8 @@ void VPEngine::run() {
 	frame_queue_1.push(resized.clone());
 	queue_cv_1.notify_one();
 	}
+*/
 
-//        clt_fb1->push(resized);
 
 
     }

@@ -95,6 +95,23 @@ void ClientManager::run() {
 
     is_running = true;
     while (is_running) {
+//        std::cout << "[DEBUG][CLT_MGR] Is Running!\n";
+//        cv::Mat sampled = vp_engine.clt_fb1->pop();
+//        if (sampled.empty()) {
+//            continue;
+//        }
+//        cv::Mat cloned = sampled.clone();
+//        std::cout << "[DEBUG][CLT_MGR] Test1\n";
+//        if (cloned.empty()) {
+//            continue;
+//        }
+//
+//        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
+//
+//        std::cout << "[DEBUG][CLT_MGR] Test2\n";
+//        cv::imshow("STRM", cloned);
+//        cv::waitKey(1);
+
         pthread_testcancel();
 
         if ((clnt_sock = accept(listen_fd, (struct sockaddr *) &address, (socklen_t*)&addrlen)) < 0) {
@@ -120,7 +137,9 @@ void ClientManager::run() {
                 client_info_vec.push_back(ci);
             pthread_cleanup_pop(1);
         }
+
     }
+
 }
 
 void ClientManager::stop() {

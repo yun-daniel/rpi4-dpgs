@@ -47,8 +47,8 @@ CORE_SRCS		= \
 					$(CORE_DIR)/dpgs_server.cpp \
 					$(CORE_DIR)/core_proc_supv.cpp \
 					$(CORE_DIR)/core_thr_supv.cpp \
-					$(CORE_DIR)/frame_buffer.cpp 
-#					$(CORE_DIR)/frame_buffer_str.cpp
+					$(CORE_DIR)/frame_buffer.cpp \
+					$(CORE_DIR)/frame_buffer_str.cpp
 AI_ENGINE_SRCS	= \
 					$(AI_ENGINE_DIR)/ai_engine.cpp \
 					$(AI_ENGINE_DIR)/detector.cpp \
@@ -68,6 +68,7 @@ CLIENT_MGR_SRCS	= \
 					$(CLIENT_MGR_DIR)/streaming_module.cpp
 
 SOURCES			= $(CORE_SRCS) $(AI_ENGINE_SRCS) $(VP_ENGINE_SRCS) $(MAP_MGR_SRCS) $(DEVICE_MGR_SRCS) $(CLIENT_MGR_SRCS)
+OBJS			:= $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SOURCES))
 
 
 MAP_GEN_SRC		= $(TB_DIR)/map_gen.cpp
@@ -86,9 +87,16 @@ mapgen: $(BUILD_DIR)/map_gen
 
 
 # Rules
-$(BUILD_DIR)/$(TARGET): $(SOURCES)
-	mkdir -p $(dir $@)
+$(BUILD_DIR)/$(TARGET): $(OBJS)
 	$(CXX) $^ -o $@ $(CXXFLAGS) $(LDFLAGS)
+
+$(BUILD_DIR)/%.o: %.cpp
+	mkdir -p $(dir $@)
+	$(CXX) -c $< -o $@ $(CXXFLAGS)
+
+#$(BUILD_DIR)/$(TARGET): $(SOURCES)
+#	mkdir -p $(dir $@)
+#	$(CXX) $^ -o $@ $(CXXFLAGS) $(LDFLAGS)
 
 $(BUILD_DIR)/map_gen: $(MAP_GEN_SRC)
 	mkdir -p $(dir $@)

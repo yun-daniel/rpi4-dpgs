@@ -43,7 +43,7 @@ private:
     std::mutex* selected_mutex;
     std::condition_variable* selected_cv;
 
-//    FrameBufferStr* selected_fb;
+    FrameBufferStr* selected_fb;
 
 
     // External Interface
