@@ -9,17 +9,17 @@ typedef struct StreamingModuleData {
     int cam_id_;
 } SMD;
 
-StreamingModule::StreamingModule(FrameBufferStr& _clt_fb1, FrameBufferStr& _clt_fb2)
-    : clt_fb1(_clt_fb1), clt_fb2(_clt_fb2) {
+StreamingModule::StreamingModule(VPEngine& _vp_engine)
+    : vp_engine(_vp_engine) {
     //gstreamer 초기화
     gst_init(nullptr, nullptr);
     //rtsps 서버 초기화
     init_rtsps_server("8555", "/stream");
     
     cam_id_ = -1;
-//    selected_queue = nullptr;
-//    selected_mutex = nullptr;
-//    selected_cv = nullptr;
+    selected_queue = nullptr;
+    selected_mutex = nullptr;
+    selected_cv = nullptr;
 }
 
 StreamingModule::~StreamingModule(){};
@@ -102,7 +102,10 @@ void StreamingModule::init_rtsps_server(const string& service_port, const string
 }
 
 void StreamingModule::push_frame_to_rtsp(const Mat& frame){
+	std::cout << "[DEBUG] RTSP frame push called\n";
     if(!global_appsrc) return;
+
+	std::cout << "[DEBUG] RTSP frame push called2\n";
 
     GstBuffer *buffer;
     GstFlowReturn ret;
@@ -130,17 +133,19 @@ void StreamingModule::update(int cam_id){
     cam_id_ = cam_id;
     if(cam_id_ == 1){
         cout << "[StreamingModule] selected queue_index = 1" << endl;
-        selected_fb = &clt_fb1;
-//        selected_queue = &VPEngine::frame_queue_1;
-//        selected_mutex = &VPEngine::queue_mutex_1;
-//        selected_cv = &VPEngine::queue_cv_1;
+//	selected_fb->notify();
+//        selected_fb = &clt_fb1;
+        selected_queue = &vp_engine.frame_queue_1;
+        selected_mutex = &vp_engine.queue_mutex_1;
+        selected_cv = &vp_engine.queue_cv_1;
     }
     else if (cam_id_ == 2) {
         cout << "[StreamingModule] selected queue_index = 2" << endl;
-        selected_fb = &clt_fb2;
-//        selected_queue = &VPEngine::frame_queue_2;
-//        selected_mutex = &VPEngine::queue_mutex_2;
-//        selected_cv = &VPEngine::queue_cv_2;
+//	selected_fb->notify();
+//        selected_fb = &clt_fb2;
+        selected_queue = &vp_engine.frame_queue_2;
+        selected_mutex = &vp_engine.queue_mutex_2;
+        selected_cv = &vp_engine.queue_cv_2;
     }
     else {
         std::cerr << "[StreamingModule] Invalid queue_index"<< std::endl;
@@ -157,25 +162,41 @@ void StreamingModule::run(){
     cout << "[DEBUG] Test1\n";
     cout << "[DEBUG] cam_id_ : " << cam_id_ << endl;
     while(true){
+//	std::cout << "[DEBUG] Test2 cam_id: " << cam_id_ << "\n";
         if(cam_id_ != -1){
-            cout << "[DEBUG] Test2\n";
+            cout << "[DEBUG] Test3 cam_id: " << cam_id_ << "\n";
 //            unique_lock<mutex> lock(*selected_mutex);
-//            cout << "[DEBUG] Test3\n";
+//            cout << "[DEBUG] Test4\n";
 //            selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
             
             // cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
-//            cout << "[DEBUG] Test4\n";
+//            cout << "[DEBUG] Test5\n";
             //queue에 저장된 frame 복사
 //            Mat processed_frame_copy = selected_queue->front().clone();
-            Mat processed_frame_copy = selected_fb->pop().clone();
-            cout << "[DEBUG] Test5\n";
+		if (selected_queue->empty()) {
+			continue;
+		}
+//	    cv::Mat processed_frame = selected_fb->pop();
+	    std::cout << "[DEBUG] Test4\n";
+	    cv::Mat processed_frame = selected_queue->front();
+//	    if (processed_frame.empty()) {
+//		std::cout << "[DEBUG] Empty\n";
+//		continue;
+//	    }
+//	    cv::imshow("STRM pop", processed_frame);
+	    std::cout << "[DEBUG] Test5\n";
+            Mat processed_frame_copy = processed_frame.clone();
+            cout << "[DEBUG] Test6\n";
+//	    cv::imshow("STRM Test", processed_frame_copy);
             // Mat processed = selected_queue->front();
             // selected_queue->pop();
 //            lock.unlock();
-            cout << "[DEBUG] Test6\n";
+            cout << "[DEBUG] Test7\n";
             push_frame_to_rtsp(processed_frame_copy);
         }
     }
+
+    std::cout << "[STRM] Run End\n";
 }
 
 // void* StreamingModule::run(){

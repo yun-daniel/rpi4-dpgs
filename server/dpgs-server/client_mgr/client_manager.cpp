@@ -28,8 +28,8 @@ typedef struct StreamingModuleData {
 } SMD;
 
 
-ClientManager::ClientManager (MapManager& _map_mgr, FrameBufferStr& _clt_fb1, FrameBufferStr& _clt_fb2, int _port)
-    : map_mgr(_map_mgr), clt_fb1(_clt_fb1), clt_fb2(_clt_fb2), port(_port) {
+ClientManager::ClientManager (MapManager& _map_mgr, VPEngine& _vp_engine, int _port)
+    : map_mgr(_map_mgr), vp_engine(_vp_engine), port(_port) {
     updated = false;
     m_client_info_vec = PTHREAD_MUTEX_INITIALIZER;
     m_updated = PTHREAD_MUTEX_INITIALIZER;
@@ -52,6 +52,8 @@ ClientManager::ClientManager (MapManager& _map_mgr, FrameBufferStr& _clt_fb1, Fr
  * Returns 0 on success, 1 on failure. 
  */
 bool ClientManager::initialize() {
+    ClientManager::set_cm(this);
+
     listen_fd = socket(AF_INET /*IPv4*/, SOCK_STREAM /*TCP*/, 0 /*IP*/) ;
 	if (listen_fd == 0)  { 
 		perror("socket failed : "); 
@@ -285,6 +287,8 @@ void * ClientManager::rtsp (void * arg) {
         sm_ptr->run();
     /* DO NOT CHANGE */
 
+    std::cout << "[CLT_MGR] RTSP terminated\n";
+
     return nullptr;
 }
 
@@ -304,8 +308,9 @@ void * ClientManager::client_thread (void * arg) {
     
     // Make data that rtsp() and remove() need
     RD * rd_ptr = (RD *)malloc(sizeof(RD));
-    rd_ptr->sm_ptr = new StreamingModule(cm_ptr->clt_fb1, cm_ptr->clt_fb2);
+    rd_ptr->sm_ptr = new StreamingModule(cm_ptr->vp_engine);
 
+    std::cout << "[CLT_MGR][DEBUG] Try Test00\n";
     // Push cleanup function
     pthread_cleanup_push(remove, (void *)rd_ptr);
 

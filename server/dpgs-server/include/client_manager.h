@@ -2,7 +2,7 @@
 #define __CLIENT_MANAGER_H__
 
 #include "map_manager.h"
-#include "frame_buffer_str.h"
+#include "vp_engine.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -29,7 +29,7 @@
 
 class ClientManager {
  public:
-    ClientManager(MapManager& _map_mgr, FrameBufferStr& _clt_fb1, FrameBufferStr& _clt_fb2, int _port);
+    ClientManager(MapManager& _map_mgr, VPEngine& _vp_engine, int _port);
 //    ~ClientManager();
 
     bool initialize();
@@ -73,8 +73,9 @@ class ClientManager {
 
     // External Interface
     MapManager&     map_mgr;
-    FrameBufferStr& clt_fb1;
-    FrameBufferStr& clt_fb2;
+    VPEngine&	    vp_engine;
+//    FrameBufferStr& clt_fb1;
+//    FrameBufferStr& clt_fb2;
 
 
 };

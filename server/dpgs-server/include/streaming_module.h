@@ -1,7 +1,7 @@
 #ifndef __STREAMING_MODULE_H__
 #define __STREAMING_MODULE_H__
 
-#include "frame_buffer_str.h"
+#include "vp_engine.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -23,7 +23,7 @@ using namespace chrono;
 
 class StreamingModule{
 public:
-    StreamingModule(FrameBufferStr& _clt_fb1, FrameBufferStr& _clt_fb2);
+    StreamingModule(VPEngine& _vp_engine);
     ~StreamingModule();
 
     // static void* run(void* args);
@@ -39,16 +39,17 @@ private:
     int cam_id_;
     pthread_mutex_t cam_mutex_;
 
-//    queue<Mat>* selected_queue;
-//    mutex* selected_mutex;
-//    condition_variable* selected_cv;
+    std::queue<cv::Mat>* selected_queue;
+    std::mutex* selected_mutex;
+    std::condition_variable* selected_cv;
 
-    FrameBufferStr* selected_fb;
+//    FrameBufferStr* selected_fb;
 
 
     // External Interface
-    FrameBufferStr& clt_fb1;
-    FrameBufferStr& clt_fb2;
+//    FrameBufferStr& clt_fb1;
+//    FrameBufferStr& clt_fb2;
+    VPEngine& vp_engine;
 
 };
 

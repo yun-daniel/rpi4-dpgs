@@ -19,16 +19,16 @@ bool VPEngine::initialize() {
         return false;
     }
 
-    clt_fb1 = new FrameBufferStr();
-    if (!clt_fb1->initialize()) {
-        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer1\n";
-        return false;
-    }
-    clt_fb2 = new FrameBufferStr();
-    if (!clt_fb2->initialize()) {
-        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer2\n";
-        return false;
-    }
+//    clt_fb1 = new FrameBufferStr();
+//    if (!clt_fb1->initialize()) {
+//        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer1\n";
+//        return false;
+//    }
+//    clt_fb2 = new FrameBufferStr();
+//    if (!clt_fb2->initialize()) {
+//        std::cerr << "[VPE] Error: Failed to initialize Streaming Frame Buffer2\n";
+//        return false;
+//    }
 
     std::cout << "[VPE] Success: Video Processing Engine initialized\n";
     return true;
@@ -50,10 +50,22 @@ void VPEngine::run() {
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
 
+//	std::cout << "[VPE][DEBUG] push frame\n";
 //        cv::imshow("RTSP Raw Video (CCTV->RPI)", resized);
 
+
         fb.push(resized);
-        clt_fb1->push(resized);
+
+	{
+	std::lock_guard<std::mutex> lock(queue_mutex_1);
+	if (frame_queue_1.size() > 30) {
+		frame_queue_1.pop();
+	}
+	frame_queue_1.push(resized.clone());
+	queue_cv_1.notify_one();
+	}
+
+//        clt_fb1->push(resized);
 
 
     }
@@ -77,11 +89,11 @@ void VPEngine::clear() {
     delete csc;
     csc = nullptr;
 
-    delete clt_fb1;
-    clt_fb1 = nullptr;
-
-    delete clt_fb2;
-    clt_fb2 = nullptr;
+//    delete clt_fb1;
+//    clt_fb1 = nullptr;
+//
+//    delete clt_fb2;
+//    clt_fb2 = nullptr;
 
     std::cout << "[VPE] clear: Cleanning Success\n";
 }
@@ -91,11 +103,11 @@ bool VPEngine::is_run() {
     return is_running;
 }
 
-FrameBufferStr* VPEngine::get_clt_fb(int idx) {
-    if (idx == 1)
-        return clt_fb1;
-    else if (idx == 2)
-        return clt_fb2;
-    else
-        return nullptr;
-}
+//FrameBufferStr* VPEngine::get_clt_fb(int idx) {
+//    if (idx == 1)
+//        return clt_fb1;
+//    else if (idx == 2)
+//        return clt_fb2;
+//    else
+//        return nullptr;
+//}

@@ -27,9 +27,8 @@ TARGET		= dpgs-server
 
 
 # Compile options
-#CXXFLAGS	= -Wall -Werror -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs opencv4`
-CXXFLAGS	= -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtsp-server-1.0 gio-2.0 opencv4`
-#CXXFLAGS	= -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs opencv4`
+#CXXFLAGS	= -O3 -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtsp-server-1.0 gio-2.0 opencv4`
+CXXFLAGS	= -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtsp-server-1.0 gio-2.0 opencv4`
 
 # Linker options
 LDFLAGS		= -lpthread
@@ -48,8 +47,8 @@ CORE_SRCS		= \
 					$(CORE_DIR)/dpgs_server.cpp \
 					$(CORE_DIR)/core_proc_supv.cpp \
 					$(CORE_DIR)/core_thr_supv.cpp \
-					$(CORE_DIR)/frame_buffer.cpp \
-					$(CORE_DIR)/frame_buffer_str.cpp
+					$(CORE_DIR)/frame_buffer.cpp 
+#					$(CORE_DIR)/frame_buffer_str.cpp
 AI_ENGINE_SRCS	= \
 					$(AI_ENGINE_DIR)/ai_engine.cpp \
 					$(AI_ENGINE_DIR)/detector.cpp \
@@ -76,7 +75,9 @@ MAP_GEN_SRC		= $(TB_DIR)/map_gen.cpp
 
 
 # targets
-all: $(BUILD_DIR)/$(TARGET)
+all:
+	+$(MAKE) clean
+	+$(MAKE) $(BUILD_DIR)/$(TARGET)
 
 release:
 	$(MAKE) BUILD_TYPE=release all
@@ -86,7 +87,6 @@ mapgen: $(BUILD_DIR)/map_gen
 
 # Rules
 $(BUILD_DIR)/$(TARGET): $(SOURCES)
-	make clean
 	mkdir -p $(dir $@)
 	$(CXX) $^ -o $@ $(CXXFLAGS) $(LDFLAGS)
 
