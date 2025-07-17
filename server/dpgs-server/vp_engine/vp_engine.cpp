@@ -54,7 +54,10 @@ void VPEngine::run() {
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
 
-        std::cout << "[VPE][DEBUG] Frame Info: rows: " << resized.rows << " cols: " << resized.cols << " size: " << resized.size << "\n";
+//        std::cout << "[VPE][DEBUG] Frame Info: rows: " << resized.rows << " cols: " << resized.cols << " size: " << resized.size << "\n";
+
+//        cv::imshow("[VPE] resized", resized);
+//        cv::waitKey(1);
 
         fb.push(resized);
         clt_fb1->push(resized);

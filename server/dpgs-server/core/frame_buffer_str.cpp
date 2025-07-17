@@ -48,16 +48,16 @@ cv::Mat FrameBufferStr::pop() {
     sem_wait(&sem_ready);
 
     std::unique_lock<std::mutex> lock(sem_mutex);
+    if (notified) {
+        notified = false;
+        return cv::Mat();
+    }
     if (buffer.empty()) {
         std::cout << "[FB_STR] Buffer is empty\n";
         return cv::Mat();
     }
 
 
-    if (notified) {
-        notified = false;
-        return cv::Mat();
-    }
 
 //    	std::cout << "[FB_STR][DEBUG] pop test1\n";
     cv::Mat frame = buffer.front();

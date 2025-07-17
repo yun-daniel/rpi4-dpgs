@@ -77,7 +77,7 @@ MAP_GEN_SRC		= $(TB_DIR)/map_gen.cpp
 
 # targets
 all:
-	+$(MAKE) clean
+#	+$(MAKE) clean
 	+$(MAKE) $(BUILD_DIR)/$(TARGET)
 
 release:

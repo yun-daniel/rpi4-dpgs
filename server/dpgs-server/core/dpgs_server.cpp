@@ -17,7 +17,7 @@ bool DPGSServer::initialize() {
 
 
     std::cout << "[SYS] Initialize FrameBuffer...\n";
-    fb = std::make_unique<FrameBuffer>("FB");
+    fb = std::make_unique<FrameBuffer>("DPGS_FB");
     if (!fb->initialize()) {
         std::cerr << "[SYS] Error: Failed to initialize FrameBuffer\n";
         return false;
@@ -45,7 +45,7 @@ void DPGSServer::start() {
         std::cerr << "[SYS] Error: Failed to initialize Process Supervisor\n";
         return;
     }
-    proc_supv->start();
+//    proc_supv->start();
 
     if(!initialize_thr_supv()) {
         std::cerr << "[SYS] Error: Failed to initialize Thread Supervisor\n";

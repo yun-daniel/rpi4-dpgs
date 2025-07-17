@@ -26,6 +26,7 @@ StreamingModule::~StreamingModule(){};
 
 void StreamingModule::media_configure(GstRTSPMediaFactory *factory, GstRTSPMedia *media, gpointer user_data) {
     
+	std::cout << "[STRM][DEBUG] media_configure: started\n";
     // media 객체로부터 내부 GStreamer 파이프라인을 가져옴
     GstElement *element = gst_rtsp_media_get_element(media);
     // mysrc라는 이름의 요소(appsrc)를 재귀적으로 탐색
@@ -53,6 +54,7 @@ void StreamingModule::media_configure(GstRTSPMediaFactory *factory, GstRTSPMedia
 }
 
 void StreamingModule::init_rtsps_server(const string& service_port, const string& path){
+	std::cout << "[STRM][DEBUG] Start to initialize\n";
     GstRTSPServer *server = gst_rtsp_server_new();
     gst_rtsp_server_set_service(server, service_port.c_str());
     gst_rtsp_server_set_address(server, "0.0.0.0");
@@ -103,7 +105,10 @@ void StreamingModule::init_rtsps_server(const string& service_port, const string
 
 void StreamingModule::push_frame_to_rtsp(const Mat& frame){
 	std::cout << "[DEBUG] RTSP frame push called\n";
-    if(!global_appsrc) return;
+    if(!global_appsrc) {
+	    std::cout << "[STRM][DEBUG] No global appsrc\n";
+	    return;
+    }
 
 	std::cout << "[DEBUG] RTSP frame push called2\n";
 
@@ -132,23 +137,29 @@ void StreamingModule::update(int cam_id){
     // pthread_mutex_lock(cam_mutex_);
     cam_id_ = cam_id;
     if(cam_id_ == 1){
-        cout << "[StreamingModule] selected queue_index = 1" << endl;
+        cout << "[StreamingModule] selected queue_index = 1\n";
 //	selected_fb->notify();
+	if (selected_fb != nullptr) {
+		selected_fb->notify();
+	}
         selected_fb = vp_engine.clt_fb1;
 //        selected_queue = &vp_engine.frame_queue_1;
 //        selected_mutex = &vp_engine.queue_mutex_1;
 //        selected_cv = &vp_engine.queue_cv_1;
     }
     else if (cam_id_ == 2) {
-        cout << "[StreamingModule] selected queue_index = 2" << endl;
+        cout << "[StreamingModule] selected queue_index = 2\n";
 //	selected_fb->notify();
+	if (selected_fb != nullptr) {
+		selected_fb->notify();
+	}
         selected_fb = vp_engine.clt_fb2;
 //        selected_queue = &vp_engine.frame_queue_2;
 //        selected_mutex = &vp_engine.queue_mutex_2;
 //        selected_cv = &vp_engine.queue_cv_2;
     }
     else {
-        std::cerr << "[StreamingModule] Invalid queue_index"<< std::endl;
+        std::cerr << "[StreamingModule] Invalid queue_index\n";
         return;
     }
     // pthread_mutex_unlock(cam_mutex_);
@@ -177,25 +188,33 @@ void StreamingModule::run(){
 //            continue;
 //        }
 //	    cv::Mat processed_frame = selected_fb->pop();
-	    std::cout << "[DEBUG] Test4\n";
+//	    std::cout << "[DEBUG] Test4\n";
         if (selected_fb == nullptr) {
             continue;
         }
         cv::Mat processed_frame = selected_fb->pop();
+	if (processed_frame.empty()) {
+		continue;
+	}
 //        cv::Mat processed_frame = selected_queue->front();
 //	    if (processed_frame.empty()) {
 //		std::cout << "[DEBUG] Empty\n";
 //		continue;
 //	    }
 //	    cv::imshow("STRM pop", processed_frame);
-	    std::cout << "[DEBUG] Test5\n";
+//	    std::cout << "[DEBUG] Test5\n";
             Mat processed_frame_copy = processed_frame.clone();
-            cout << "[DEBUG] Test6\n";
+//        std::cout << "[STRM][DEBUG] Frame Info: rows: " << processed_frame_copy.rows << " cols: " << processed_frame_copy.cols << " size: " << processed_frame_copy.size << "\n";
+//            cout << "[DEBUG] Test6\n";
 //	    cv::imshow("STRM Test", processed_frame_copy);
             // Mat processed = selected_queue->front();
             // selected_queue->pop();
 //            lock.unlock();
-            cout << "[DEBUG] Test7\n";
+//            cout << "[DEBUG] Test7\n";
+
+		cv::imshow("[STRM] Streaming", processed_frame_copy);
+		cv::waitKey(1);
+
             push_frame_to_rtsp(processed_frame_copy);
         }
     }
