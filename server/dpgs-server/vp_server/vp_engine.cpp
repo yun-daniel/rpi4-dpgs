@@ -74,7 +74,7 @@ Mat VPEngine::image_processing(Mat input_image){
     merge(lab_channels,lab);
     cvtColor(lab,clahe_result,COLOR_Lab2BGR);
 
-    imshow("Processed Video (CCTV -> RPI)", clahe_result);
+    imshow("[VP_ENGINE] Processed Video (CCTV -> RPI)", clahe_result);
     waitKey(1);
 
     return clahe_result;

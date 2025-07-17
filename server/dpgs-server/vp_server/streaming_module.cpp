@@ -4,11 +4,6 @@
 GstAppSrc *global_appsrc = NULL;
 
 
-typedef struct StreamingModuleData {
-    StreamingModule streaming_module_;
-    int cam_id_;
-} SMD;
-
 StreamingModule::StreamingModule(){
     //gstreamer 초기화
     gst_init(nullptr, nullptr);
@@ -103,6 +98,8 @@ void StreamingModule::init_rtsps_server(const string& service_port, const string
 void StreamingModule::push_frame_to_rtsp(const Mat& frame){
     if(!global_appsrc) return;
 
+    auto t0 = std::chrono::high_resolution_clock::now();
+
     GstBuffer *buffer;
     GstFlowReturn ret;
     int size = frame.total() * frame.elemSize();
@@ -116,6 +113,10 @@ void StreamingModule::push_frame_to_rtsp(const Mat& frame){
 
     //GStreamer 파이프라인에 현재 버퍼 삽입(RTSP 송출 시작), 결과는 ret으로 전달
     g_signal_emit_by_name(global_appsrc, "push-buffer", buffer, &ret);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    std::cout << "[SM] [PUSH_FRAME] elapsed = "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+              << " ms" << std::endl;
     gst_buffer_unref(buffer);
 
     //if (ret != GST_FLOW_OK) {
@@ -151,24 +152,36 @@ void StreamingModule::update(int cam_id){
 // }
 
 void StreamingModule::run(){
-    cout << "[DEBUG] Test1\n";
+    // cout << "[DEBUG] Test1\n";
     cout << "[DEBUG] cam_id_ : " << cam_id_ << endl;
     while(true){
         if(cam_id_ != -1){
-            cout << "[DEBUG] Test2\n";
-            unique_lock<mutex> lock(*selected_mutex);
-            cout << "[DEBUG] Test3\n";
-            selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
+            // cout << "[DEBUG] cam_id_ : " << cam_id_ << endl;
+            // cout << "[DEBUG] Test2\n";
+            // unique_lock<mutex> lock(*selected_mutex);
+            // cout << "[DEBUG] Test3\n";
+            // selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });
             
+            if(selected_queue ->empty()){
+                continue;
+            }
             // cout << "[StreamingModule] pop queue[" << queue_index << "] " << endl;
-            cout << "[DEBUG] Test4\n";
+            // cout << "[DEBUG] Test4\n";
             //queue에 저장된 frame 복사
-            Mat processed_frame_copy = selected_queue->front().clone();
-            cout << "[DEBUG] Test5\n";
+            Mat processed_frame = selected_queue->front();
+            // if (processed_frame.empty()) {
+                // continue;
+            // }
+            // imshow("[Streaming Module] Pop Video", processed_frame);
+            // waitKey(1);
+
+            Mat processed_frame_copy = processed_frame.clone();
+
+            // cout << "[DEBUG] Test5\n";
             // Mat processed = selected_queue->front();
             // selected_queue->pop();
-            lock.unlock();
-            cout << "[DEBUG] Test6\n";
+            // lock.unlock();
+            // cout << "[DEBUG] Test6\n";
             push_frame_to_rtsp(processed_frame_copy);
         }
     }
