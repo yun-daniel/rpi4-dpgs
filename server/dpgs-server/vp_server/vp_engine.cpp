@@ -129,7 +129,7 @@ void VPEngine::start() {
         auto elapsed = duration_cast<seconds>(now - start).count();
         if (elapsed >= 5) {
             double fps = frame_count / static_cast<double>(elapsed);
-            cout << "Average FPS over last " << elapsed << " seconds: " << fps << endl;
+            // cout << "Average FPS over last " << elapsed << " seconds: " << fps << endl;
             frame_count = 0;
             start = now;
         }

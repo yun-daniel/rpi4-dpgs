@@ -20,7 +20,7 @@ using namespace std;
 using namespace cv;
 using namespace chrono;
 
-#define MAX_QUEUE_SIZE 30
+#define MAX_QUEUE_SIZE 1
 
 class VPEngine{
 public:
