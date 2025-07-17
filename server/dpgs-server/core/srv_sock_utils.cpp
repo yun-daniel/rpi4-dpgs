@@ -105,6 +105,7 @@ int check_idpw (int clnt_sock) {
  * 0:logout, 1:change cam1, 2:change cam2
  * Returns 0 on success, 1 on failure.
  */
+//StreamingModule * stm_ptr
 int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t * m_ptr) {
     char logout_msg = 0x0;
     int ret;
@@ -135,10 +136,13 @@ int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t 
             pthread_kill(tid_arr[1], SIGUSR1);
         }
         else {
-            fprintf(stderr, "Warning: recv msg is undefined\n");
+            if (logout_msg == '0') {
+                printf("Client %x is logout\n", clnt_sock);
+            }
+            else {
+                fprintf(stderr, "Warning: recv msg is undefined\n");
+            }
         }
-
-
     }
 
     return 0;
