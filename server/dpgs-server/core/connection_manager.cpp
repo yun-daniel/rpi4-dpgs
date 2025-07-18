@@ -259,6 +259,10 @@ void ConnectionManager::remove (void * arg) {
 
 /* Static Function */
 void * ConnectionManager::send_mapdata (void * arg) {
+    SFA * sfa_ptr = (SFA *)arg;
+    ClientManager * clnt_mgr_ptr = sfa_ptr->clnt_mgr_ptr;
+    ConnectionManager * conn_mgr_ptr = sfa_ptr->conn_mgr_ptr;  
+
     while (1) {
         sleep(1);
     }
