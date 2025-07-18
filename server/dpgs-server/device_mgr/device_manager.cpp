@@ -6,7 +6,10 @@
 DeviceManager::DeviceManager(MapManager& _map_mgr)
     : map_mgr(_map_mgr) {
 
-    enabled_rldp = REMOTE_LED_DP;
+ #if ENABLE_REMOTED_LED_DP
+    enable_rldp = true;
+ #endif
+
 
 }
 
@@ -18,7 +21,7 @@ bool DeviceManager::initialize() {
     std::cout << "[DEV] Start to initialize...\n";
 
 
-    if (enabled_rldp) {
+    if (enable_rldp) {
         rldp = new RemoteLedDP(map_mgr);
         if (!rldp->initialize()) {
             std::cerr << "[DEV] Error: Failed to initialize Remoted LED Display\n";
@@ -35,9 +38,11 @@ bool DeviceManager::initialize() {
 void DeviceManager::run() {
     std::cout << "[DEV] Start Device Manager\n";
 
-    thread_rldp = std::thread([this]() {
-        rldp->run();
-    });
+    if (enable_rldp) {
+        thread_rldp = std::thread([this]() {
+            rldp->run();
+        });
+    }
 
 }
 

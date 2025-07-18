@@ -38,9 +38,9 @@ struct SharedParkingLotMap {
     bool            flag_map_dev;
 
     // Client Manager Sync
-//    pthread_mutex_t mutex_map_clt;
-//    pthread_cond_t  cv_map_clt;
-//    bool            flag_map_clt;
+    pthread_mutex_t mutex_map_clt;
+    pthread_cond_t  cv_map_clt;
+    bool            flag_map_clt;
 };
 
 
@@ -66,9 +66,9 @@ class MapManager {
     pthread_cond_t*     get_cv_dev();
     bool*               get_flag_ptr_dev();
     // Client Manager
-//    pthread_mutex_t*    get_mutex_clt();
-//    pthread_cond_t*     get_cv_clt();
-//    bool*               get_flag_ptr_clt();
+    pthread_mutex_t*    get_mutex_clt();
+    pthread_cond_t*     get_cv_clt();
+    bool*               get_flag_ptr_clt();
 
 
  private:

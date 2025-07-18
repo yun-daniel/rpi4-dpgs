@@ -46,10 +46,9 @@ void DPGSServer::start() {
         return;
     }
 
- #if DISABLE_AI_ENGINE
- #else
+ #if ENABLE_AI_ENGINE
     proc_supv->start();
- #endif // DISABLE_AI_ENGINE
+ #endif
 
     if(!initialize_thr_supv()) {
         std::cerr << "[SYS] Error: Failed to initialize Thread Supervisor\n";

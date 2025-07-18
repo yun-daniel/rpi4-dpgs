@@ -54,25 +54,17 @@ void VPEngine::run() {
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
 
+        // [Debug Session]
+        // Check input frame before pushing buffers
 //        std::cout << "[VPE][DEBUG] Frame Info: rows: " << resized.rows << " cols: " << resized.cols << " size: " << resized.size << "\n";
 
 //        cv::imshow("[VPE] resized", resized);
 //        cv::waitKey(1);
+//        cv::imwrite("for_mapgen.jpg", resized);
+        // ----------
 
         fb.push(resized);
         clt_fb1->push(resized);
-
-/*
-	{
-	std::lock_guard<std::mutex> lock(queue_mutex_1);
-	if (frame_queue_1.size() > 30) {
-		frame_queue_1.pop();
-	}
-	frame_queue_1.push(resized.clone());
-	queue_cv_1.notify_one();
-	}
-*/
-
 
 
     }
@@ -96,11 +88,11 @@ void VPEngine::clear() {
     delete csc;
     csc = nullptr;
 
-//    delete clt_fb1;
-//    clt_fb1 = nullptr;
-//
-//    delete clt_fb2;
-//    clt_fb2 = nullptr;
+    delete clt_fb1;
+    clt_fb1 = nullptr;
+
+    delete clt_fb2;
+    clt_fb2 = nullptr;
 
     std::cout << "[VPE] clear: Cleanning Success\n";
 }

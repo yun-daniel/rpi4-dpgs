@@ -1,15 +1,13 @@
 #ifndef __DEVICE_MANAGER_H__
 #define __DEVICE_MANAGER_H__
 
+#include "config.h"
 #include "map_manager.h"
 #include "remote_led_dp.h"
 
 #include <sys/types.h>
 #include <thread>
 #include <atomic>
-
-#define LOCAL_LED_DP    false
-#define REMOTE_LED_DP   true
 
 
 class DeviceManager {
@@ -22,8 +20,8 @@ class DeviceManager {
     void stop();
 
  private:
-    std::atomic<bool>   is_running;
-    bool        enabled_rldp = false;
+    std::atomic<bool> is_running;
+    bool enable_rldp = false;
 
     RemoteLedDP*    rldp = nullptr;
 

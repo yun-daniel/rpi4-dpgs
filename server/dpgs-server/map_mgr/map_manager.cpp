@@ -206,15 +206,20 @@ bool MapManager::update_slot(int slot_id, const SlotState& state) {
             map->slots[i].state = state;
             save_map_data();
 
-            std::cout << "[TEST] Success: CCCCCCCCC\n";
-            // Map Update Sync
+            // Map Update Sync for Device
             pthread_mutex_lock(&map->mutex_map_dev);
             map->flag_map_dev = true;
             pthread_cond_signal(&map->cv_map_dev);
-            std::cout << "[TEST] MM flag: " << map->flag_map_dev << "\n";
+            std::cout << "[TEST] MM dev flag: " << map->flag_map_dev << "\n";
             pthread_mutex_unlock(&map->mutex_map_dev);
 
-            std::cout << "[TEST] Success: DDDDDD\n";
+            // Map Update Sync for Client
+            pthread_mutex_lock(&map->mutex_map_clt);
+            map->flag_map_clt = true;
+            pthread_cond_signal(&map->cv_map_clt);
+            std::cout << "[TEST] MM clt flag: " << map->flag_map_dev << "\n";
+            pthread_mutex_unlock(&map->mutex_map_clt);
+
 
             return true;
         }
