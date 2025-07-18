@@ -27,7 +27,7 @@ bool CoreThrSupv::initialize() {
         return false;
     }
 
-    clt_mgr = new ClientManager(map_mgr, *vp_engine, 9999);
+    clt_mgr = new ClientManager(map_mgr, *vp_engine);
     if (!clt_mgr->initialize()) {
         std::cerr << "[THR_SUPV] Error: Failed to initialize Client Manager\n";
         return false;

@@ -1,14 +1,19 @@
 #ifndef __CAM_STREAMING_CLIENT_H__
 #define __CAM_STREAMING_CLIENT_H__
 
+#include "config.h"
 #include <opencv2/opencv.hpp>
 
 
 const std::string RTSP_SRC_PIPE = "rtspsrc location=rtsp://admin:Veda123%21@192.168.0.86:554/profile2/media.smp latency=30 ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink drop=true max-buffers=1";
 
 // Only for Test
-#define CAM_SRC_TEST    false
-const std::string test_video = "tb/test_a.mp4";
+#if TEST_CAM_SRC
+ #include <thread>
+ #include <chrono>
+ const int target_fps = 30;
+ const int delay_ms = 1000 / target_fps;
+#endif // TEST_CAM_SRC
 
 
 class CamStreamingClient {

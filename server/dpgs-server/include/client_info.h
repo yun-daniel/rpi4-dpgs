@@ -1,8 +1,7 @@
-#ifndef __CLIENT_INFO_H__
-#define __CLIENT_INFO_H__
+#ifndef CLIENT_INFO_H
+#define CLIENT_INFO_H
 
 #include <pthread.h>
-
 
 class ClientInfo
 {
@@ -22,5 +21,4 @@ public:
     int set_tid (pthread_t tid);
 };
 
-
-#endif  // __CLIENT_INFO_H__
+#endif  // CLIENT_INFO_H

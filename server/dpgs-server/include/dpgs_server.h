@@ -1,6 +1,7 @@
 #ifndef __DPGS_SERVER_H__
 #define __DPGS_SERVER_H__
 
+#include "config.h"
 #include "frame_buffer.h"
 #include "map_manager.h"
 #include "core_thr_supv.h"

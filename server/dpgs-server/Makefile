@@ -63,6 +63,8 @@ DEVICE_MGR_SRCS	= \
 					$(DEVICE_MGR_DIR)/remote_led_dp.cpp
 CLIENT_MGR_SRCS	= \
 					$(CLIENT_MGR_DIR)/client_manager.cpp \
+					$(CLIENT_MGR_DIR)/connection_manager.cpp \
+					$(CLIENT_MGR_DIR)/map_monitor.cpp \
 					$(CLIENT_MGR_DIR)/client_info.cpp \
 					$(CLIENT_MGR_DIR)/srv_sock_utils.cpp \
 					$(CLIENT_MGR_DIR)/streaming_module.cpp
