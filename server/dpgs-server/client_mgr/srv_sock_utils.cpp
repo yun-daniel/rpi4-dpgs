@@ -106,7 +106,7 @@ int check_idpw (int clnt_sock) {
  * Returns 0 on success, 1 on failure.
  */
 //StreamingModule * stm_ptr
-int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t * m_ptr) {
+int recv_msg (int clnt_sock, StreamingModule* sm_ptr) {
     char logout_msg = 0x0;
     int ret;
 
@@ -122,18 +122,10 @@ int recv_msg (int clnt_sock, int * cam_rq, pthread_t * tid_arr, pthread_mutex_t 
         printf("recv msg: %c\n", logout_msg);
 
         if (logout_msg == '1') {
-            pthread_mutex_lock(m_ptr); 
-                pthread_cleanup_push(unlock_mutex, (void *)m_ptr);
-                *cam_rq = 1;
-            pthread_cleanup_pop(1);
-            pthread_kill(tid_arr[1], SIGUSR1);
+	    sm_ptr->update(1);
         }
         else if (logout_msg == '2') {
-            pthread_mutex_lock(m_ptr); 
-                pthread_cleanup_push(unlock_mutex, (void *)m_ptr);
-                *cam_rq = 2;
-            pthread_cleanup_pop(1);
-            pthread_kill(tid_arr[1], SIGUSR1);
+	    sm_ptr->update(2);
         }
         else {
             if (logout_msg == '0') {

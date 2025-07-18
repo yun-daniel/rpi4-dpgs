@@ -22,6 +22,7 @@ typedef struct RemoveData {
 } RD;
 
 bool ConnectionManager::initialize(ClientManager* _clt_mgr, VPEngine* _vp_engine) {
+    std::cout << "[CNT_MGR] Start to initialize...\n";
 
     if (_clt_mgr == nullptr) {
         fprintf(stderr, "Failed to connect clt_mgr\n");
@@ -79,11 +80,14 @@ bool ConnectionManager::initialize(ClientManager* _clt_mgr, VPEngine* _vp_engine
         return false;
     } 
 
+    std::cout << "[CNT_MGR] Success: Connection Manager initialized\n";
     return true;
 }
 
 
 void ConnectionManager::run() {
+    std::cout << "[CNT_MGR] Connection Manager Running...\n";
+
     int clnt_sock;
     pthread_t tid;
     CTA* cta_ptr;
@@ -116,6 +120,7 @@ void ConnectionManager::run() {
         }
     }
 
+    std::cout << "[CNT_MGR] Connection Manager Stopped\n";
 
 }
 
@@ -191,7 +196,7 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
         pthread_exit(NULL);
     }
 
-    if (pthread_create(&rd_ptr->tid_arr[1], NULL, streaming, (void*)rtd_ptr) != 0) {
+    if (pthread_create(&rd_ptr->tid_arr[1], NULL, streaming, (void*)rd_ptr->sm_ptr) != 0) {
         fprintf(stderr, "Error: %d's pthread_create of rtsp failed\n", clnt_sock);
         pthread_exit(NULL);
     }
@@ -199,7 +204,7 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
     std::cout << "[CNT_MGR] " << clnt_sock << " spawned tid_arr[0]: " << rd_ptr->tid_arr[0] << "\n";
     std::cout << "[CNT_MGR] " << clnt_sock << " spawned tid_arr[1]: " << rd_ptr->tid_arr[1] << "\n";
 
-    if (recv_msg(clnt_sock, &rtd_ptr->cam_rq, rd_ptr->tid_arr, &rtd_ptr->m_cam_rq) == 1) {
+    if (recv_msg(clnt_sock, rd_ptr->sm_ptr) == 1) {
         fprintf(stderr, "Error: recv_msg failed\n");
     }
 
@@ -383,39 +388,42 @@ void * ConnectionManager::send_mapdata (void * arg) {
 void * ConnectionManager::streaming (void * arg) {
     /* DO NOT CHANGE */
         // Block SIGUSR1
-        sigset_t set;
-        sigemptyset(&set);
-        sigaddset(&set, SIGUSR1);
-        pthread_sigmask(SIG_BLOCK, &set, NULL);
+//        sigset_t set;
+//        sigemptyset(&set);
+//        sigaddset(&set, SIGUSR1);
+//        pthread_sigmask(SIG_BLOCK, &set, NULL);
 
         // Unpackage RTD
-        RTD * rtd_ptr = (RTD *)arg;
-        int * cam_rq_ptr = &(rtd_ptr->cam_rq);
-        pthread_mutex_t * m_cam_rq_ptr = &(rtd_ptr->m_cam_rq);
+//        RTD * rtd_ptr = (RTD *)arg;
+//        int * cam_rq_ptr = &(rtd_ptr->cam_rq);
+//        pthread_mutex_t * m_cam_rq_ptr = &(rtd_ptr->m_cam_rq);
     /* DO NOT CHANGE */  
 
+    StreamingModule* sm_ptr = (StreamingModule*)arg;
+    sm_ptr->run();
+
     /* Replace : Authentication and Cam run */
-    while (1) {
-        struct timespec timeout = {0, 0};  // Non-blocking
-        int sig;
-        int ret = sigtimedwait(&set, nullptr, &timeout);
-
-        if (ret == -1) {
-            if (errno == EAGAIN) {
-            }
-            else {
-                perror("Error: sigtimedwait failed");
-            }
-        }
-        else if (ret == SIGUSR1) {
-            printf("SIGUSR1 Received\n");
-            
-            pthread_mutex_lock(m_cam_rq_ptr);
-                printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
-            pthread_mutex_unlock(m_cam_rq_ptr);
-
-        }
-    }
+//    while (1) {
+//        struct timespec timeout = {0, 0};  // Non-blocking
+//        int sig;
+//        int ret = sigtimedwait(&set, nullptr, &timeout);
+//
+//        if (ret == -1) {
+//            if (errno == EAGAIN) {
+//            }
+//            else {
+//                perror("Error: sigtimedwait failed");
+//            }
+//        }
+//        else if (ret == SIGUSR1) {
+//            printf("SIGUSR1 Received\n");
+//            
+//            pthread_mutex_lock(m_cam_rq_ptr);
+//                printf("CAM_RQ[%lx]: %d\n", pthread_self(), *cam_rq_ptr);
+//            pthread_mutex_unlock(m_cam_rq_ptr);
+//
+//        }
+//    }
     /* Replace */
 
     return nullptr;
