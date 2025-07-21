@@ -1,7 +1,6 @@
 #include "client_manager.h"
 
 int ClientManager::initialize () {
-    is_running = true;
     is_updated = false;
     updated_mutex = PTHREAD_MUTEX_INITIALIZER;
     updated_cv = PTHREAD_COND_INITIALIZER;
@@ -17,15 +16,13 @@ int ClientManager::initialize () {
 
 int ClientManager::run () {
 
+    is_running = true;
+
     if (pthread_create(&tid_arr[0], NULL, ConnectionManager::run, (void *)&sfa)) {
         return 1;
     }
-    if (pthread_create(&tid_arr[1], NULL, MapMonitor::run, (void *)this)) {
+    if (pthread_create(&tid_arr[1], NULL, MapMonitor::run, (void *)&sfa)) {
         return 1;
-    }
-
-    // is this necessary..?
-    while (is_running == true) {
     }
 
     printf("ClientManager Run End\n");
@@ -34,7 +31,8 @@ int ClientManager::run () {
 }
 
 int ClientManager::stop () {
-    is_running = false;
+
+    is_running = true;
     
     if (pthread_cancel(tid_arr[0]) != 0) {
         fprintf(stderr, "Error: %lx pthread_cancel failure\n", tid_arr[0]);
@@ -45,8 +43,11 @@ int ClientManager::stop () {
     }
 
     conn_mgr.stop();
-    // map_mon.stop();
+    map_mon.stop(); 
 
+    clear();
+
+    is_running = false;
 
     return 0;
 }

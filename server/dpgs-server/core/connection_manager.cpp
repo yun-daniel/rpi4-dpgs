@@ -1,4 +1,5 @@
 #include "connection_manager.h"
+#include "client_manager.h"
 
 typedef struct RtspData {
     int cam_rq;                 // Cam number that received from client
@@ -26,6 +27,7 @@ int ConnectionManager::initialize () {
 
     client_info_vec_mutex = PTHREAD_MUTEX_INITIALIZER;
     empty_cv = PTHREAD_COND_INITIALIZER;
+    all_sent_cv = PTHREAD_COND_INITIALIZER;
 
     // Setting detach option of pthread
     if (pthread_attr_init(&attr) != 0) {
@@ -95,6 +97,7 @@ int ConnectionManager::clear () {
     pthread_attr_destroy(&attr);
     pthread_mutex_destroy(&client_info_vec_mutex);
     pthread_cond_destroy(&empty_cv);
+    pthread_cond_destroy(&all_sent_cv);
     
     return 0;
 }
@@ -104,6 +107,18 @@ vector<ClientInfo>::iterator ConnectionManager::find_client (pthread_t tid) {
         [tid](ClientInfo& ci) {
             return pthread_equal(ci.get_tid(), tid);
         });
+}
+
+vector<ClientInfo> * ConnectionManager::get_client_info_vec () {
+    return &client_info_vec;
+}
+
+pthread_mutex_t * ConnectionManager::get_client_info_vec_mutex () {
+    return &client_info_vec_mutex;
+}
+
+pthread_cond_t * ConnectionManager::get_all_sent_cv () {
+    return &all_sent_cv;
 }
 
 void * ConnectionManager::run (void * arg) {
@@ -140,6 +155,7 @@ void * ConnectionManager::run (void * arg) {
             pthread_mutex_lock(&conn_mgr_ptr->client_info_vec_mutex);
                 conn_mgr_ptr->client_info_vec.push_back(ci);
             pthread_mutex_unlock(&conn_mgr_ptr->client_info_vec_mutex);
+            printf("PUSH: %d\t%lx\n", clnt_sock, tid);
         }
     }
 
@@ -154,8 +170,6 @@ void * ConnectionManager::client_thread (void * arg) {
     ConnectionManager * conn_mgr_ptr = cta_ptr->conn_mgr_ptr; 
     free (arg);
 
-    printf("PUSH: %d\t%lx\n", clnt_sock, pthread_self());
-
     // Make data that remove() needs
     RTD * rtd_ptr = (RTD *)malloc(sizeof(RTD));
     rtd_ptr->cam_rq = clnt_sock;
@@ -163,6 +177,7 @@ void * ConnectionManager::client_thread (void * arg) {
     SFA * sfa_ptr = (SFA *)malloc(sizeof(SFA));
     sfa_ptr->clnt_mgr_ptr = clnt_mgr_ptr;
     sfa_ptr->conn_mgr_ptr = conn_mgr_ptr;
+    sfa_ptr->tid = pthread_self();
     RD * rd_ptr = (RD *)malloc(sizeof(RD));
     rd_ptr->rtd_ptr = rtd_ptr;
     rd_ptr->sfa_ptr = sfa_ptr;
@@ -219,6 +234,7 @@ void ConnectionManager::remove (void * arg) {
             fprintf(stderr, "Error: %lx pthread_cancel failed\n", tid);
         }
 
+        printf("TID: %lx cancel done\n", tid);
         ret = pthread_join(tid, NULL);
         if (ret == ESRCH) {
             fprintf(stderr, "Warning: thread %lx does not exist (join returned ESRCH)\n", tid);
@@ -226,6 +242,7 @@ void ConnectionManager::remove (void * arg) {
         else if (ret != 0) {
             fprintf(stderr, "Error: %lx pthread_join failed\n", tid);
         }
+        printf("TID: %lx join done\n", tid);
     }
 
     printf("REMOVE: spawned %lx\t%lx\n", tid_arr[0], tid_arr[1]);
@@ -243,11 +260,12 @@ void ConnectionManager::remove (void * arg) {
         close (it->get_sock_fd());
         conn_mgr_ptr->client_info_vec.erase(it);
 
-        // pthread_cond_broadcast(&conn_mgr_ptr->cond_all_sent);      // Signal to cond_updated in check_map_update()
-
+        pthread_cond_signal(&conn_mgr_ptr->all_sent_cv);      // Signal to all_sent_cv in MapMonitor
+        
         if (conn_mgr_ptr->client_info_vec.empty() == true) {
             pthread_cond_signal(&conn_mgr_ptr->empty_cv);
-        }
+        } 
+        
     pthread_mutex_unlock(&conn_mgr_ptr->client_info_vec_mutex);
 
     // Free per-client resources
@@ -263,8 +281,60 @@ void * ConnectionManager::send_mapdata (void * arg) {
     ClientManager * clnt_mgr_ptr = sfa_ptr->clnt_mgr_ptr;
     ConnectionManager * conn_mgr_ptr = sfa_ptr->conn_mgr_ptr;  
 
+    /* ClientManager */
+    int * mapdata_ptr = clnt_mgr_ptr->get_mapdata();
+    bool * is_updated_ptr = clnt_mgr_ptr->get_is_updated();     
+    pthread_mutex_t * updated_mutex_ptr = clnt_mgr_ptr->get_updated_mutex();   
+    pthread_cond_t * updated_cv_ptr = clnt_mgr_ptr->get_updated_cv();
+
+    /* ConnectionManager */
+    vector<ClientInfo> * client_info_vec_ptr = conn_mgr_ptr->get_client_info_vec();
+    pthread_mutex_t * client_info_vec_mutex_ptr = conn_mgr_ptr->get_client_info_vec_mutex();
+    pthread_cond_t * all_sent_cv_ptr = conn_mgr_ptr->get_all_sent_cv();
+
     while (1) {
-        sleep(1);
+
+        pthread_testcancel();
+
+        // Check the client already sent mapdata
+        pthread_mutex_lock(client_info_vec_mutex_ptr);
+            // pthread_cleanup_push(unlock_mutex, (void *)client_info_vec_mutex_ptr);
+            auto it = conn_mgr_ptr->find_client(sfa_ptr->tid);
+            if (it == (*client_info_vec_ptr).end()) {
+                fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will be never printed
+                pthread_mutex_unlock(client_info_vec_mutex_ptr);
+                return nullptr;
+            }
+            if (it->get_sent_map_flag() == true) {
+                pthread_mutex_unlock(client_info_vec_mutex_ptr);
+                continue;
+            }
+        pthread_mutex_unlock(client_info_vec_mutex_ptr);
+
+        // Wait for updated signal
+        pthread_mutex_lock(updated_mutex_ptr);
+            while (*is_updated_ptr == false) {
+                pthread_cond_wait(updated_cv_ptr, updated_mutex_ptr);
+            }
+        pthread_mutex_unlock(updated_mutex_ptr);
+
+        // No lock here -> assuming mapdata is read-only & safe
+        // Send map data : send(clnt_sock, ...)
+        printf("mapdata: %d in [%lx]\n", *mapdata_ptr, pthread_self());
+
+        // Change sent_flag to true
+        pthread_mutex_lock(client_info_vec_mutex_ptr);
+            pthread_cleanup_push(unlock_mutex, (void *)client_info_vec_mutex_ptr);
+            it = conn_mgr_ptr->find_client(sfa_ptr->tid);
+            if (it == (*client_info_vec_ptr).end()) {
+                fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will be never printed
+                pthread_mutex_unlock(client_info_vec_mutex_ptr);
+                return nullptr;
+            }
+            it->set_sent_map_flag(true);
+        pthread_cleanup_pop(1);
+
+        pthread_cond_signal(all_sent_cv_ptr);
     }
 
     return nullptr;

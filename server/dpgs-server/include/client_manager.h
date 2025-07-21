@@ -30,11 +30,12 @@ private:
     // VPEngine& vp_engine;
     // MapManager& map_mgr;
 
+    int clear ();
+    
 public:
     int initialize ();
     int run ();
     int stop ();
-    int clear ();
 
     int * get_mapdata ();
     bool * get_is_updated ();

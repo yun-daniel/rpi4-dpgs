@@ -31,12 +31,18 @@ private:
     pthread_attr_t attr;
     pthread_mutex_t client_info_vec_mutex;
     pthread_cond_t empty_cv;
+    pthread_cond_t all_sent_cv;
+
+    int clear ();
 
 public:
     int initialize ();
     int stop ();
-    int clear ();
     vector<ClientInfo>::iterator find_client (pthread_t tid);
+
+    vector<ClientInfo> * get_client_info_vec ();
+    pthread_mutex_t * get_client_info_vec_mutex ();
+    pthread_cond_t * get_all_sent_cv ();
 
     static void * run (void * arg);
     static void * client_thread (void * arg);
