@@ -67,7 +67,6 @@ void MapMonitor::run() {
         pthread_mutex_lock(map_mgr->get_mutex_clt());
         while ((!*(map_mgr->get_flag_ptr_clt())) && is_running) {
             std::cout << "[MAP_MON][DEBUG] MAPMON Wait...\n";
-	    std::cout << "[MAP_MON][DEBUG] &cv: " << map_mgr->get_cv_clt() << ", &mutex: " << map_mgr->get_mutex_clt() << "\n";
             pthread_cond_wait(map_mgr->get_cv_clt(), map_mgr->get_mutex_clt());
         }
         updated_map = map_mgr->getMap();

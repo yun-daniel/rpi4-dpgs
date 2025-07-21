@@ -221,7 +221,6 @@ bool MapManager::update_slot(int slot_id, const SlotState& state) {
             map->flag_map_clt = true;
             pthread_cond_signal(&map->cv_map_clt);
             std::cout << "[MAP_MGR][DEBUG] clt flag: " << map->flag_map_clt << "\n";
-	    std::cout << "[MAP_MGR][DEBUG] &cv: " << &map->cv_map_clt << ", &mutex: " << &map->mutex_map_clt << "\n";
             pthread_mutex_unlock(&map->mutex_map_clt);
 
 
