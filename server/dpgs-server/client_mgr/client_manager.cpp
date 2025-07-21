@@ -18,7 +18,7 @@ bool ClientManager::initialize() {
         std::cout << "[CLT_MGR] Error: Failed to initialize Connection Manager\n";
         return false;
     }
-    if (!map_mon.initialize(map_mgr)) {
+    if (!map_mon.initialize(this, &conn_mgr, &map_mgr)) {
         std::cout << "[CLT_MGR] Error: Failed to initialize Map Monitor\n";
         return false;
     }
@@ -34,53 +34,53 @@ bool ClientManager::initialize() {
 void ClientManager::run() {
     std::cout << "[CLT_MGR] Start Client Manager\n";
 
-//    if (pthread_create(&tid_arr[0], NULL, ConnectionManager::run, (void *)&sfa)) {
-//        return;
-//    }
-    if (pthread_create(&tid_arr[0], NULL, ClientManager::handle_ConnMgr_run, this)) {
-        return;
-    }
-
-//    if (pthread_create(&tid_arr[1], NULL, MapMonitor::run, (void *)this)) {
-//        return;
-//    }
-
-
+    
 //    is_running = true;
-//    while (is_running) {
-//        std::cout << "[DEBUG][CLT_MGR] Is Running!\n";
-//        cv::Mat sampled = vp_engine.clt_fb1->pop();
-//        if (sampled.empty()) {
-//            continue;
-//        }
-//        cv::Mat cloned = sampled.clone();
-//        std::cout << "[DEBUG][CLT_MGR] Test1\n";
-//        if (cloned.empty()) {
-//            continue;
-//        }
 //
-//        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
-//
-//        std::cout << "[DEBUG][CLT_MGR] Test2\n";
-//        cv::imshow("STRM", cloned);
-//        cv::waitKey(1);
+//    if (pthread_create(&tid_arr[0], NULL, ClientManager::handle_ConnMgr_run, this)) {
+//        return;
 //    }
+//
+//    if (pthread_create(&tid_arr[1], NULL, ClientManager::handle_MapMon_run, this)) {
+//        return;
+//    }
+
+
+    // [Debug Session]
+    // Dummy Client Manager
+    is_running = true;
+    while (is_running) {
+        cv::Mat sampled = vp_engine.clt_fb1->pop();
+        if (sampled.empty()) {
+            continue;
+        }
+        cv::Mat cloned = sampled.clone();
+        if (cloned.empty()) {
+            continue;
+        }
+
+//        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
+
+        cv::imshow("STRM", cloned);
+        cv::waitKey(1);
+    }
+    // ---------------------------
 
 }
 
 void ClientManager::stop() {
     std::cout << "[CLT_MGR] Client Manager Terminating...\n";
 
-    if (pthread_cancel(tid_arr[0]) != 0) {
-        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[0]);
-    }
-
-    if (pthread_cancel(tid_arr[1]) != 0) {
-        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[1]);
-    }
+//    if (pthread_cancel(tid_arr[0]) != 0) {
+//        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[0]);
+//    }
+//
+//    if (pthread_cancel(tid_arr[1]) != 0) {
+//        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[1]);
+//    }
 
     conn_mgr.stop();
-//    map_mon.stop();
+    map_mon.stop();
 
     clear();
     is_running = false;
@@ -92,8 +92,8 @@ void ClientManager::stop() {
 void ClientManager::clear () {
     std::cout << "[CLT_MGR] clear: Cleanning...\n";
 
-    pthread_join(tid_arr[0], NULL);
-    pthread_join(tid_arr[1], NULL);
+//    pthread_join(tid_arr[0], NULL);
+//    pthread_join(tid_arr[1], NULL);
 
     pthread_mutex_destroy(&updated_mutex);
     pthread_cond_destroy(&updated_cv);
@@ -102,7 +102,7 @@ void ClientManager::clear () {
 }
 
 
-int* ClientManager::get_mapdata() {
+SharedParkingLotMap* ClientManager::get_mapdata() {
     return &mapdata;
 }
 
@@ -124,6 +124,14 @@ void* ClientManager::handle_ConnMgr_run(void* arg) {
     ClientManager* clt_mgr_ptr = (ClientManager*)arg;
 
     clt_mgr_ptr->conn_mgr.run();
+
+    return nullptr;
+}
+
+void* ClientManager::handle_MapMon_run(void* arg) {
+    ClientManager* clt_mgr_ptr = (ClientManager*)arg;
+
+    clt_mgr_ptr->map_mon.run();
 
     return nullptr;
 }

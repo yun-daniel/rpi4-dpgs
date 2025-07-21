@@ -305,6 +305,19 @@ bool* MapManager::get_flag_ptr_dev() {
     return &map->flag_map_dev;
 }
 
+pthread_mutex_t* MapManager::get_mutex_clt() {
+    return &map->mutex_map_clt;
+}
+
+pthread_cond_t* MapManager::get_cv_clt() {
+    return &map->cv_map_clt;
+}
+
+bool* MapManager::get_flag_ptr_clt() {
+    return &map->flag_map_clt;
+}
+
+
 
 void MapManager::destroyShm() {
     pthread_mutex_destroy(&map->mutex_map_dev);

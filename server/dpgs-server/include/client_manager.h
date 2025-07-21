@@ -21,21 +21,23 @@ class ClientManager {
     void run();
     void stop();
 
-    int*                get_mapdata();
-    bool*               get_is_updated();
-    pthread_mutex_t*    get_updated_mutex();
-    pthread_cond_t*     get_updated_cv();
+    SharedParkingLotMap*    get_mapdata();
+    bool*                   get_is_updated();
+    pthread_mutex_t*        get_updated_mutex();
+    pthread_cond_t*         get_updated_cv();
 
     ConnectionManager conn_mgr;
     MapMonitor map_mon;
 
     // Thread Handler
     static void* handle_ConnMgr_run(void* arg);
+    static void* handle_MapMon_run(void* arg);
 
 
  private:
     std::atomic<bool> is_running = false;
-    int             mapdata;
+
+    SharedParkingLotMap mapdata;
     bool            is_updated;
     pthread_mutex_t updated_mutex;
     pthread_cond_t  updated_cv;

@@ -27,12 +27,16 @@ class ConnectionManager {
  public:
     bool initialize(ClientManager* _clt_mgr, VPEngine* _vp_engine);
     void stop ();
-    void clear ();
 
     vector<ClientInfo>::iterator find_client (pthread_t tid);
 
     void run();
     void exec_client_thread(int clnt_sock);
+
+    // Interface
+    std::vector<ClientInfo>* get_client_info_vec();
+    pthread_mutex_t* get_client_info_vec_mutex();
+    pthread_cond_t* get_all_sent_cv();
 
 
     // Thread Handler
@@ -56,6 +60,9 @@ class ConnectionManager {
     pthread_attr_t attr;
     pthread_mutex_t client_info_vec_mutex;
     pthread_cond_t empty_cv;
+    pthread_cond_t all_sent_cv;
+
+    void clear();
 
 
     // External Interface
