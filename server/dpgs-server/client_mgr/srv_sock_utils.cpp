@@ -90,7 +90,7 @@ int check_idpw (int clnt_sock) {
     }
 
     // Send reply to client
-    // printf("%c\n", reply);
+     printf("%c\n", reply);
     if (send_bytes(clnt_sock, &reply, 1) < 0) {
         return 1;
     }

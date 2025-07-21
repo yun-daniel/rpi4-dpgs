@@ -43,7 +43,8 @@ void AIEngine::Impl::run() {
         overlay_detection(frame, detections, class_list);
         print_frame(frame);
 
-        if (cv::waitKey(1) != -1) break;
+        cv::waitKey(1);
+//        if (cv::waitKey(1) != -1) break;
     }
 
 }

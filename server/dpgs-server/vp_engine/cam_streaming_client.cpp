@@ -30,6 +30,11 @@ bool CamStreamingClient::frame_sampling(cv::Mat& frame) {
 
  #if TEST_CAM_SRC
     std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
+    if (!cap.read(frame)) {
+        std::cout << "[CSC] sampling: Video Rewinding...\n";
+	cap.set(cv::CAP_PROP_POS_FRAMES, 0);
+        cap.read(frame);
+    }
  #endif // TEST_CAM_SRC
 
     if (!cap.read(frame)) {

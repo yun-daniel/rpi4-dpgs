@@ -48,7 +48,7 @@ void RemoteLedDP::run() {
 
         pthread_mutex_lock(map_mgr.get_mutex_dev());
         while ((!*(map_mgr.get_flag_ptr_dev())) && is_running ) {
-            std::cout << "[TEST] RLDP Wait...\n";
+            std::cout << "[RLDP][DEBUG] RLDP Wait...\n";
             pthread_cond_wait(map_mgr.get_cv_dev(), map_mgr.get_mutex_dev());
         }
         *map_mgr.get_flag_ptr_dev() = false;

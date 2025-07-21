@@ -332,6 +332,7 @@ void * ConnectionManager::send_mapdata (void * arg) {
             fprintf(stderr, "Error: %d's send error\n", clnt_sock);
             pthread_exit(NULL);
         }
+	std::cout << "[CNT_MGR][DEBUG] Updated Map Sended\n";
 
         // Change sent_flag to true
         pthread_mutex_lock(client_info_vec_mutex_ptr);

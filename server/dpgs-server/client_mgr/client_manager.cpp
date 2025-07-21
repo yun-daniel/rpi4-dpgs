@@ -35,35 +35,35 @@ void ClientManager::run() {
     std::cout << "[CLT_MGR] Start Client Manager\n";
 
     
-//    is_running = true;
-//
-//    if (pthread_create(&tid_arr[0], NULL, ClientManager::handle_ConnMgr_run, this)) {
-//        return;
-//    }
-//
-//    if (pthread_create(&tid_arr[1], NULL, ClientManager::handle_MapMon_run, this)) {
-//        return;
-//    }
+    is_running = true;
+
+    if (pthread_create(&tid_arr[0], NULL, ClientManager::handle_ConnMgr_run, this)) {
+        return;
+    }
+
+    if (pthread_create(&tid_arr[1], NULL, ClientManager::handle_MapMon_run, this)) {
+        return;
+    }
 
 
     // [Debug Session]
     // Dummy Client Manager
-    is_running = true;
-    while (is_running) {
-        cv::Mat sampled = vp_engine.clt_fb1->pop();
-        if (sampled.empty()) {
-            continue;
-        }
-        cv::Mat cloned = sampled.clone();
-        if (cloned.empty()) {
-            continue;
-        }
-
-//        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
-
-        cv::imshow("STRM", cloned);
-        cv::waitKey(1);
-    }
+//    is_running = true;
+//    while (is_running) {
+//        cv::Mat sampled = vp_engine.clt_fb1->pop();
+//        if (sampled.empty()) {
+//            continue;
+//        }
+//        cv::Mat cloned = sampled.clone();
+//        if (cloned.empty()) {
+//            continue;
+//        }
+//
+////        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
+//
+//        cv::imshow("STRM", cloned);
+//        cv::waitKey(1);
+//    }
     // ---------------------------
 
 }
@@ -71,13 +71,13 @@ void ClientManager::run() {
 void ClientManager::stop() {
     std::cout << "[CLT_MGR] Client Manager Terminating...\n";
 
-//    if (pthread_cancel(tid_arr[0]) != 0) {
-//        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[0]);
-//    }
-//
-//    if (pthread_cancel(tid_arr[1]) != 0) {
-//        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[1]);
-//    }
+    if (pthread_cancel(tid_arr[0]) != 0) {
+        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[0]);
+    }
+
+    if (pthread_cancel(tid_arr[1]) != 0) {
+        fprintf(stderr, "[CLT_MGR] Error: %lx pthread_cancel failure\n", tid_arr[1]);
+    }
 
     conn_mgr.stop();
     map_mon.stop();
@@ -92,8 +92,8 @@ void ClientManager::stop() {
 void ClientManager::clear () {
     std::cout << "[CLT_MGR] clear: Cleanning...\n";
 
-//    pthread_join(tid_arr[0], NULL);
-//    pthread_join(tid_arr[1], NULL);
+    pthread_join(tid_arr[0], NULL);
+    pthread_join(tid_arr[1], NULL);
 
     pthread_mutex_destroy(&updated_mutex);
     pthread_cond_destroy(&updated_cv);

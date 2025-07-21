@@ -104,13 +104,13 @@ void StreamingModule::init_rtsps_server(const string& service_port, const string
 }
 
 void StreamingModule::push_frame_to_rtsp(const Mat& frame){
-	std::cout << "[DEBUG] RTSP frame push called\n";
+//	std::cout << "[DEBUG] RTSP frame push called\n";
     if(!global_appsrc) {
 	    std::cout << "[STRM][DEBUG] No global appsrc\n";
 	    return;
     }
 
-	std::cout << "[DEBUG] RTSP frame push called2\n";
+//	std::cout << "[DEBUG] RTSP frame push called2\n";
 
     GstBuffer *buffer;
     GstFlowReturn ret;
@@ -175,7 +175,7 @@ void StreamingModule::run(){
     while(true){
 //	std::cout << "[DEBUG] Test2 cam_id: " << cam_id_ << "\n";
         if(cam_id_ != -1){
-            cout << "[DEBUG] Test3 cam_id: " << cam_id_ << "\n";
+//            cout << "[DEBUG] Test3 cam_id: " << cam_id_ << "\n";
 //            unique_lock<mutex> lock(*selected_mutex);
 //            cout << "[DEBUG] Test4\n";
 //            selected_cv->wait(lock, [&](){ return !selected_queue->empty(); });

@@ -105,13 +105,16 @@ bool MapManager::initialize() {
     pthread_mutexattr_init(&mtx_attr);
     pthread_mutexattr_setpshared(&mtx_attr, PTHREAD_PROCESS_SHARED);
     pthread_mutex_init(&map->mutex_map_dev, &mtx_attr);
+    pthread_mutex_init(&map->mutex_map_clt, &mtx_attr);
 
     pthread_condattr_t cond_attr;
     pthread_condattr_init(&cond_attr);
     pthread_condattr_setpshared(&cond_attr, PTHREAD_PROCESS_SHARED);
     pthread_cond_init(&map->cv_map_dev, &cond_attr);
+    pthread_cond_init(&map->cv_map_clt, &cond_attr);
 
     map->flag_map_dev = false;
+    map->flag_map_clt = false;
 
 
     sem_init(&map->sem_mutex, 1, 1);
@@ -210,14 +213,15 @@ bool MapManager::update_slot(int slot_id, const SlotState& state) {
             pthread_mutex_lock(&map->mutex_map_dev);
             map->flag_map_dev = true;
             pthread_cond_signal(&map->cv_map_dev);
-            std::cout << "[TEST] MM dev flag: " << map->flag_map_dev << "\n";
+            std::cout << "[MAP_MGR][DEBUG] dev flag: " << map->flag_map_dev << "\n";
             pthread_mutex_unlock(&map->mutex_map_dev);
 
             // Map Update Sync for Client
             pthread_mutex_lock(&map->mutex_map_clt);
             map->flag_map_clt = true;
             pthread_cond_signal(&map->cv_map_clt);
-            std::cout << "[TEST] MM clt flag: " << map->flag_map_dev << "\n";
+            std::cout << "[MAP_MGR][DEBUG] clt flag: " << map->flag_map_clt << "\n";
+	    std::cout << "[MAP_MGR][DEBUG] &cv: " << &map->cv_map_clt << ", &mutex: " << &map->mutex_map_clt << "\n";
             pthread_mutex_unlock(&map->mutex_map_clt);
 
 
@@ -321,7 +325,9 @@ bool* MapManager::get_flag_ptr_clt() {
 
 void MapManager::destroyShm() {
     pthread_mutex_destroy(&map->mutex_map_dev);
+    pthread_mutex_destroy(&map->mutex_map_clt);
     pthread_cond_destroy(&map->cv_map_dev);
+    pthread_cond_destroy(&map->cv_map_clt);
     sem_destroy(&map->sem_mutex);
     shm_unlink(shm_name.c_str());
 }
