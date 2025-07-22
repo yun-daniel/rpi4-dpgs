@@ -119,6 +119,8 @@ void VPEngine::run() {
 
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
+        // cv::imshow("[VPE] resized", resized);
+        // cv::waitKey(1);
 
         processed = image_processing(resized);
 

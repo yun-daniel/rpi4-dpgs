@@ -41,9 +41,9 @@ void AIEngine::Impl::run() {
 
         overlay_slots(frame, map);
         overlay_detection(frame, detections, class_list);
-        print_frame(frame);
+        // print_frame(frame);
 
-        cv::waitKey(1);
+        // cv::waitKey(1);
 //        if (cv::waitKey(1) != -1) break;
     }
 

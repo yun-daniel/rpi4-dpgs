@@ -101,6 +101,10 @@ void StreamingModule::init_rtsps_server(const string& service_port, const string
     //RTSP 서버를 GStreamer의 메인 루프에 등록하여 실제로 동작하게 만듦
     gst_rtsp_server_attach(server, NULL);
 
+    std::thread([]{GMainLoop* loop = g_main_loop_new(NULL,FALSE);
+                g_main_loop_run(loop);
+                g_main_loop_unref(loop);}).detach();
+
 }
 
 void StreamingModule::push_frame_to_rtsp(const Mat& frame){
@@ -212,8 +216,8 @@ void StreamingModule::run(){
 //            lock.unlock();
 //            cout << "[DEBUG] Test7\n";
 
-		cv::imshow("[STRM] Streaming", processed_frame_copy);
-		cv::waitKey(1);
+		// cv::imshow("[STRM] Streaming", processed_frame_copy);
+		// cv::waitKey(1);
 
             push_frame_to_rtsp(processed_frame_copy);
         }
