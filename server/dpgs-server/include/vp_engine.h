@@ -35,6 +35,7 @@ class VPEngine {
 
     CamStreamingClient*     csc;
 
+    cv::Mat image_processing(cv::Mat resized);
     void clear();
 
 

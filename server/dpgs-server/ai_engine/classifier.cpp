@@ -126,7 +126,7 @@ void ParkingStatusClassifier::classify(const cv::Mat& frame, const std::vector<D
         }
         ratio = max_area / slot_area;
 
-
+//	std::cout << "[AI][CLSF] slot: " << slot.slot_id << " brg: " << bright << "\n";
         update(slot.slot_id, ratio, bright);
 
         // Debug Session
