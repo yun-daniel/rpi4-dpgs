@@ -12,6 +12,7 @@ class AIEngine {
     AIEngine(FrameBuffer& _fb, MapManager& _mgr);
     ~AIEngine();
 
+    bool initialize();
     void run();
     void stop();
 

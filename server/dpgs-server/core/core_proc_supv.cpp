@@ -53,6 +53,10 @@ void CoreProcSupv::start() {
         block_all_except_sigusr2();
 
         AIEngine engine(fb, map_mgr);
+        if (!engine.initialize()) {
+            std::cout << "[PROC_AI] Error: Failed to initialize AI Engine\n";
+            ::exit(0);
+        }
         g_engine = &engine;
 
         engine.run();

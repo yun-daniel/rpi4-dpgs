@@ -5,7 +5,7 @@
 // TEST_CAM_SRC (only for test)
 //   0 : use Camera RTSP
 //   1 : use TEST_VIDEO
-#define TEST_CAM_SRC    0
+#define TEST_CAM_SRC    1
 #define TEST_VIDEO      "tb/test_a.mp4"
 // =======================
 

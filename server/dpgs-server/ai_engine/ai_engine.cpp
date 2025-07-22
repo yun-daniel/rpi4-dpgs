@@ -19,9 +19,18 @@ AIEngine::Impl::~Impl() {
 }
 
 
-void AIEngine::Impl::run() {
+bool AIEngine::Impl::initialize() {
+    std::cout << "[AI] Start to initialize...\n";
 
     init_dnn();
+
+    std::cout << "[AI] Success: AI Engine initialized\n";
+    return true;
+}
+
+
+void AIEngine::Impl::run() {
+    std::cout << "[AI] Start AI Engine\n";
 
     const SharedParkingLotMap& map = mgr.getMap();
     ParkingStatusClassifier classifier(mgr);
@@ -41,16 +50,21 @@ void AIEngine::Impl::run() {
 
         overlay_slots(frame, map);
         overlay_detection(frame, detections, class_list);
-        print_frame(frame);
 
+        // [Debug Session]
+        print_frame(frame);
         cv::waitKey(1);
-//        if (cv::waitKey(1) != -1) break;
+        // --------------
     }
+
+    std::cout << "[AI] AI Engine Terminated\n";
 
 }
 
 
 void AIEngine::Impl::stop() {
+    std::cout << "[AI] AI Engine Terminating...\n";
+
     is_running = false;
 }
 
@@ -126,6 +140,10 @@ AIEngine::AIEngine(FrameBuffer& _fb, MapManager& _mgr)
 
 AIEngine::~AIEngine() {
     delete impl;
+}
+
+bool AIEngine::initialize() {
+    return impl->initialize();
 }
 
 void AIEngine::run() {

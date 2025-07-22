@@ -50,6 +50,7 @@ class AIEngine::Impl {
     Impl(FrameBuffer& _fb, MapManager& _mgr);
     ~Impl();
 
+    bool initialize();
     void run();
     void stop();
 
