@@ -6,7 +6,10 @@
 int main (void) {
 
     ClientManager cm;
-    cm.initialize();
+    if (cm.initialize() != 0) {
+        printf("Initialize failed\n");
+        return 1;
+    }
 
     std::thread t([&cm]() {
         cm.run();

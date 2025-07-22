@@ -6,7 +6,7 @@ SRC := main.cpp ./core/client_manager.cpp ./core/connection_manager.cpp ./core/c
 
 # $(CC) $(CFLAGS) $(LDFLAGS) $(SRC) -o $@
 main: 
-	$(CC) -I ./include -lpthread $(SRC) -o $@
+	$(CC) -I ./include -lpthread $(SRC) -o $@ 
 	$(CC) $(CFLAGS) $(LDFLAGS) ./core/client.cpp -o client
 
 # ------------ Memory Check ------------- 

@@ -233,7 +233,6 @@ void ConnectionManager::remove (void * arg) {
         else if (ret != 0) {
             fprintf(stderr, "Error: %lx pthread_cancel failed\n", tid);
         }
-
         printf("TID: %lx cancel done\n", tid);
         ret = pthread_join(tid, NULL);
         if (ret == ESRCH) {
@@ -277,6 +276,9 @@ void ConnectionManager::remove (void * arg) {
 
 /* Static Function */
 void * ConnectionManager::send_mapdata (void * arg) {
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr);
+
     SFA * sfa_ptr = (SFA *)arg;
     ClientManager * clnt_mgr_ptr = sfa_ptr->clnt_mgr_ptr;
     ConnectionManager * conn_mgr_ptr = sfa_ptr->conn_mgr_ptr;  
@@ -313,10 +315,12 @@ void * ConnectionManager::send_mapdata (void * arg) {
 
         // Wait for updated signal
         pthread_mutex_lock(updated_mutex_ptr);
+            pthread_cleanup_push(unlock_mutex, (void *)updated_mutex_ptr);
             while (*is_updated_ptr == false) {
                 pthread_cond_wait(updated_cv_ptr, updated_mutex_ptr);
+                printf("cond_wait get cond signal\n");
             }
-        pthread_mutex_unlock(updated_mutex_ptr);
+        pthread_cleanup_pop(1);
 
         // No lock here -> assuming mapdata is read-only & safe
         // Send map data : send(clnt_sock, ...)
