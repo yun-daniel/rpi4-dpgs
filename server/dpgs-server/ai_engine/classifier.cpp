@@ -2,7 +2,7 @@
 #include <deque>
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
-const int   MAX_RATIOS              = 5;
+const int   MAX_RATIOS              = 3;
 
 
 // === Utility ===
@@ -58,6 +58,7 @@ ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
 void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     float max_ratio = *std::max_element(info.ratios.begin(), info.ratios.end());
     SlotState curr_state;
+    SlotState* prev_state = &info.prev_state;
 
     for (int i=0; i<map.total_slots; ++i) {
         const Slot& slot = map.slots[i];
@@ -67,21 +68,40 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     }
 
     if (max_ratio <= SLOT_THRESHOLD_RATIO) {
-        if (curr_state != EMPTY)
+        if (curr_state != EMPTY) {
             mgr.update_slot(slot_id, EMPTY);
-    }
-    else {
-        if (curr_state == EMPTY)
-            mgr.update_slot(slot_id, OCCUPIED);
-        else {
-            if (info.bright >= 100) {
-                if (curr_state == OCCUPIED)
-                    mgr.update_slot(slot_id, EXITING);
-            }
-            else if (curr_state != OCCUPIED)
-                mgr.update_slot(slot_id, OCCUPIED);
+            *prev_state = EMPTY;
         }
     }
+    else {
+        if (curr_state == EMPTY) {
+            mgr.update_slot(slot_id, OCCUPIED);
+        }
+        else {
+            if (info.bright >= 100) {
+                if (*prev_state == EMPTY) {
+                    if (curr_state != OCCUPIED)
+                        mgr.update_slot(slot_id, OCCUPIED);
+                }
+                else {
+                    if (curr_state != EXITING)
+                        mgr.update_slot(slot_id, EXITING);
+                    *prev_state = EXITING;
+                }
+            }
+            else {
+                if (*prev_state == EXITING) {
+                }
+                else {
+                    if (curr_state != OCCUPIED)
+                        mgr.update_slot(slot_id, OCCUPIED);
+                    *prev_state = OCCUPIED;
+                }
+            }
+        }
+    }
+
+    std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << "\n";
 
 }
 
