@@ -3,6 +3,7 @@
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
 const int   MAX_RATIOS              = 3;
+const int   HEADLIGHT_THRESHOLD     = 95;
 
 
 // === Utility ===
@@ -68,17 +69,16 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     }
 
     if (max_ratio <= SLOT_THRESHOLD_RATIO) {
-        if (curr_state != EMPTY) {
+        if (curr_state != EMPTY)
             mgr.update_slot(slot_id, EMPTY);
-            *prev_state = EMPTY;
-        }
+        *prev_state = EMPTY;
     }
     else {
         if (curr_state == EMPTY) {
             mgr.update_slot(slot_id, OCCUPIED);
         }
         else {
-            if (info.bright >= 100) {
+            if (info.bright >= HEADLIGHT_THRESHOLD) {
                 if (*prev_state == EMPTY) {
                     if (curr_state != OCCUPIED)
                         mgr.update_slot(slot_id, OCCUPIED);
@@ -101,7 +101,10 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
         }
     }
 
-    std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << "\n";
+    // [Debug Session]
+    if (slot_id == 1)
+        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << ", bright=" << info.bright << "\n";
+    // ---------------
 
 }
 
