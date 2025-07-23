@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 
-const std::string RTSP_SRC_PIPE = "rtspsrc location=rtsp://admin:Veda123%21@192.168.0.86:554/profile2/media.smp latency=30 ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink drop=true max-buffers=1";
+const std::string RTSP_SRC_PIPE = "rtspsrc location=rtsp://admin:Veda123%21@192.168.0.86:554/profile2/media.smp latency=30 ! queue ! rtph264depay ! h264parse ! queue ! avdec_h264 ! videoconvert ! queue ! appsink drop=true max-buffers=1";
 
 // Only for Test
 #if TEST_CAM_SRC

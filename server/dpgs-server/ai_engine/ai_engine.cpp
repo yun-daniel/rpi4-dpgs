@@ -55,6 +55,7 @@ void AIEngine::Impl::run() {
         print_frame(frame);
         cv::waitKey(1);
         // --------------
+
     }
 
     std::cout << "[AI] AI Engine Terminated\n";
