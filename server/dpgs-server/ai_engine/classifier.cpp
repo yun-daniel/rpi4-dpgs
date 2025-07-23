@@ -6,7 +6,7 @@ const int   MAX_RATIOS              = 5;
 
 
 // === Utility ===
-static float computeOverlapArea(const std::vector<cv::Point>& poly, const cv::Rect& box) {
+static float compute_overlap_area(const std::vector<cv::Point>& poly, const cv::Rect& box) {
     cv::Rect bounding = cv::boundingRect(poly) | box;
     cv::Size canvasSize(bounding.x + bounding.width + 10, bounding.y + bounding.height + 10);
 
@@ -118,7 +118,7 @@ void ParkingStatusClassifier::classify(const cv::Mat& frame, const std::vector<D
         cv::Rect head_rect;
 
         for (const auto& detection : detections) {
-            float area = computeOverlapArea(poly, detection.box);
+            float area = compute_overlap_area(poly, detection.box);
             if (area > max_area) {
                 max_area = area;
                 bright = get_brightness(frame, detection.box, head_rect);

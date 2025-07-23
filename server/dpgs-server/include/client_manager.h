@@ -1,6 +1,7 @@
 #ifndef __CLIENT_MANAGER_H__
 #define __CLIENT_MANAGER_H__
 
+#include "config.h"
 #include "map_manager.h"
 #include "vp_engine.h"
 

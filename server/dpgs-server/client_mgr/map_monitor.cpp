@@ -65,6 +65,7 @@ void MapMonitor::run() {
     while (is_running) {
 
         pthread_mutex_lock(map_mgr->get_mutex_clt());
+        pthread_cleanup_push(unlock_mutex, (void*)map_mgr->get_mutex_clt());
         while ((!*(map_mgr->get_flag_ptr_clt())) && is_running) {
             std::cout << "[MAP_MON][DEBUG] MAPMON Wait...\n";
             pthread_cond_wait(map_mgr->get_cv_clt(), map_mgr->get_mutex_clt());
@@ -72,7 +73,7 @@ void MapMonitor::run() {
         updated_map = map_mgr->getMap();
 	std::cout << "[MAP_MON][DEBUG] MAP_MON flag: " << *(map_mgr->get_flag_ptr_clt()) << " and deflag...\n";
         *(map_mgr->get_flag_ptr_clt()) = false;
-        pthread_mutex_unlock(map_mgr->get_mutex_clt());
+        pthread_cleanup_pop(1);
         if (!is_running) break;
 
 

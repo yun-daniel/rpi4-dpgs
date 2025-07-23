@@ -34,7 +34,7 @@ bool ClientManager::initialize() {
 void ClientManager::run() {
     std::cout << "[CLT_MGR] Start Client Manager\n";
 
-    
+ #if ENABLE_CLIENT_CONNECTION    
     is_running = true;
 
     if (pthread_create(&tid_arr[0], NULL, ClientManager::handle_ConnMgr_run, this)) {
@@ -44,27 +44,27 @@ void ClientManager::run() {
     if (pthread_create(&tid_arr[1], NULL, ClientManager::handle_MapMon_run, this)) {
         return;
     }
-
-
+ #else
     // [Debug Session]
     // Dummy Client Manager
-//    is_running = true;
-//    while (is_running) {
-//        cv::Mat sampled = vp_engine.clt_fb1->pop();
-//        if (sampled.empty()) {
-//            continue;
-//        }
-//        cv::Mat cloned = sampled.clone();
-//        if (cloned.empty()) {
-//            continue;
-//        }
-//
-////        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
-//
-//        cv::imshow("STRM", cloned);
-//        cv::waitKey(1);
-//    }
+    is_running = true;
+    while (is_running) {
+        cv::Mat sampled = vp_engine.clt_fb1->pop();
+        if (sampled.empty()) {
+            continue;
+        }
+        cv::Mat cloned = sampled.clone();
+        if (cloned.empty()) {
+            continue;
+        }
+
+//        std::cout << "[CLT_MGR][DEBUG] Frame Info: rows: " << cloned.rows << " cols: " << cloned.cols << " size: " << cloned.size << "\n";
+
+        cv::imshow("STRM", cloned);
+        cv::waitKey(1);
+    }
     // ---------------------------
+ #endif
 
 }
 

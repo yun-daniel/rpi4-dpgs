@@ -120,7 +120,15 @@ void VPEngine::run() {
 
         cv::resize(frame, resized, cv::Size(640, 360), 0, 0, cv::INTER_AREA);
 
+     #if ENABLE_DIST_CORRECTION
         processed = image_processing(resized);
+
+        fb.push(processed);
+        clt_fb1->push(processed);
+     #else
+        fb.push(resized);
+        clt_fb1->push(resized);
+     #endif
 
         // [Debug Session]
         // Check input frame before pushing buffers
@@ -128,14 +136,9 @@ void VPEngine::run() {
 
 //        cv::imshow("[VPE] resized", resized);
 //        cv::waitKey(1);
+//        cv::imwrite("for_mapgen.jpg", resized);
 //        cv::imwrite("for_mapgen.jpg", processed);
         // ----------
-
-//        fb.push(resized);
-//        clt_fb1->push(resized);
-        fb.push(processed);
-	clt_fb1->push(processed);
-
 
     }
 

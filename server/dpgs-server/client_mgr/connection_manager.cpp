@@ -321,10 +321,11 @@ void * ConnectionManager::send_mapdata (void * arg) {
 
         // Wait for updated signal
         pthread_mutex_lock(updated_mutex_ptr);
+        pthread_cleanup_push(unlock_mutex, (void*)updated_mutex_ptr);
         while (*is_updated_ptr == false) {
             pthread_cond_wait(updated_cv_ptr, updated_mutex_ptr);
         }
-        pthread_mutex_unlock(updated_mutex_ptr);
+        pthread_cleanup_pop(1);
 
         // No lock here -> assuming mapdata is read-only & safe
         // Send map data : send(clnt_sock, ...)

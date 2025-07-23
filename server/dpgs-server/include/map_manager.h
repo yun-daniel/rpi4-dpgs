@@ -47,7 +47,7 @@ struct SharedParkingLotMap {
 
 class MapManager {
  public:
-    MapManager(const std::string& _file_path);
+    MapManager(const std::string& _shm_name, const std::string& _file_path);
     ~MapManager();
 
     bool initialize();

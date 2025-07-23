@@ -8,9 +8,6 @@
 #include <unordered_set>
 
 
-const std::string   DEFAULT_MAP_FILE = "config/tmp_map.json";
-const std::string   DEFAULT_SHM_NAME = "DPGS_MM";
-
 // ------ Utility ------
 static std::string extract_string_value(const std::string& line) {
     auto begin = line.find('\"', line.find(':')) + 1;
@@ -54,9 +51,8 @@ static bool extract_poly_points(const std::string& line, cv::Point out[4]) {
 
 
 // === MapManager ===
-MapManager::MapManager(const std::string& _file_path)
-    : file_path(_file_path) {
-    shm_name = DEFAULT_SHM_NAME;
+MapManager::MapManager(const std::string& _shm_name, const std::string& _file_path)
+    : shm_name(_shm_name), file_path(_file_path) {
 }
 
 MapManager::~MapManager() {
