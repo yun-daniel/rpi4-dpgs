@@ -10,8 +10,8 @@
 #define MM_SHM_NAME     "DPGS_MM"
 // MM_MAP_FILE_PATH
 //   MapManager Map File Path
-//#define MM_MAP_FILE_PATH    "config/map.json"
-#define MM_MAP_FILE_PATH    "config/test_map.json"
+#define MM_MAP_FILE_PATH    "config/map.json"
+//#define MM_MAP_FILE_PATH    "config/test_map.json"
 // =====================
 
 
@@ -19,7 +19,7 @@
 // TEST_CAM_SRC (only for test)
 //   0 : use Camera RTSP
 //   1 : use TEST_VIDEO
-#define TEST_CAM_SRC    1
+#define TEST_CAM_SRC    0
 #define TEST_VIDEO      "tb/test_a.mp4"
 // =======================
 
@@ -36,7 +36,7 @@
 // ENABLE_DIST_CORRECTION
 //  0 : disable distortion correction
 //  1 : enable distortion correction
-#define ENABLE_DIST_CORRECTION  0
+#define ENABLE_DIST_CORRECTION  1
 // ===================
 
 
@@ -44,7 +44,7 @@
 // ENABLE_CLIENT_CONNECTION
 //   0 : disable client connection
 //   1 : enable client connection
-#define ENABLE_CLIENT_CONNECTION    0
+#define ENABLE_CLIENT_CONNECTION    1
 // ========================
 
 
@@ -52,7 +52,7 @@
 // ENABLE_REMOTE_LED_DP
 //   0 : disable Remoted LED Display
 //   1 : enable remoted LED Display
-#define ENABLE_REMOTED_LED_DP   0
+#define ENABLE_REMOTED_LED_DP   1
 // ========================
 
 

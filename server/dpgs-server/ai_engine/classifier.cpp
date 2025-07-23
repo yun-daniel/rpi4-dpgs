@@ -2,7 +2,7 @@
 #include <deque>
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
-const int   MAX_HISTORY             = 3;
+const int   MAX_RATIOS              = 3;
 
 
 // === Utility ===
@@ -57,7 +57,6 @@ ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
 
 void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     float max_ratio = *std::max_element(info.ratios.begin(), info.ratios.end());
-    float max_bright = *std::max_element(info.brights.begin(), info.brights.end());
     SlotState curr_state;
     SlotState* prev_state = &info.prev_state;
 
@@ -79,7 +78,7 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
             mgr.update_slot(slot_id, OCCUPIED);
         }
         else {
-            if (max_bright >= 100) {
+            if (info.bright >= 100) {
                 if (*prev_state == EMPTY) {
                     if (curr_state != OCCUPIED)
                         mgr.update_slot(slot_id, OCCUPIED);
@@ -91,18 +90,18 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
                 }
             }
             else {
-//                if (*prev_state == EXITING) {
-//                }
-//                else {
+                if (*prev_state == EXITING) {
+                }
+                else {
                     if (curr_state != OCCUPIED)
                         mgr.update_slot(slot_id, OCCUPIED);
                     *prev_state = OCCUPIED;
-//                }
+                }
             }
         }
     }
 
-//    std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << "\n";
+    std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << "\n";
 
 }
 
@@ -117,14 +116,10 @@ void ParkingStatusClassifier::update(const int slot_id, float ratio, float brigh
     }
     auto& info = it->second;
 
-    if (info.ratios.size() >= MAX_HISTORY)
+    if (info.ratios.size() >= MAX_RATIOS)
         info.ratios.pop_front();
     info.ratios.push_back(ratio);
-
-    if (info.brights.size() >= MAX_HISTORY)
-        info.brights.pop_front();
-    info.brights.push_back(bright);
-//    info.bright = bright;
+    info.bright = bright;
 
     updateState(slot_id, info);
 
