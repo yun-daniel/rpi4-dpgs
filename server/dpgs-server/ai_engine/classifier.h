@@ -11,7 +11,6 @@
 
 struct SlotInfo {
     std::deque<float>   ratios;
-//    float               bright;
     std::deque<float>   brights;
     SlotState           prev_state = OCCUPIED;
     unsigned int        state_cnt = 0;

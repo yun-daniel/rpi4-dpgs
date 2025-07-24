@@ -2,10 +2,11 @@
 #include <deque>
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
-const int   HEADLIGHT_THRESHOLD     = 95;
-const int   NUM_SLOT_INFO           = 20;
-const int   OCCUPIED_THRESHOLD      = 20;
-const int   EXITING_THRESHOLD       = 20;
+const int   HEADLIGHT_THRESHOLD     = 92;
+const int   NUM_SLOT_INFO_RATIO     = 15;
+const int   NUM_SLOT_INFO_BRIGHT    = 5;
+const int   OCCUPIED_THRESHOLD      = 45;
+const int   EXITING_THRESHOLD       = 40;
 
 
 // === Utility ===
@@ -60,7 +61,7 @@ ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
 
 void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     float max_ratio = *std::max_element(info.ratios.begin(), info.ratios.end());
-    float max_bright = *std::max_element(info.brights.begin(), info.brights.end());
+    float max_bright = *std::min_element(info.brights.begin(), info.brights.end());
     SlotState curr_state;
     SlotState* prev_state = &info.prev_state;
 
@@ -93,11 +94,11 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
                 }
                 else {
                     if (info.state_cnt >= OCCUPIED_THRESHOLD) {
-                        info.state_cnt++;
-                    }
-                    else {
                         mgr.update_slot(slot_id, EXITING);
                         info.state_cnt = 0;
+                    }
+                    else {
+                        info.state_cnt++;
                     }
                 }
             }
@@ -128,42 +129,6 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     }
 
 
-/*
-    if (max_ratio <= SLOT_THRESHOLD_RATIO) {
-        if (curr_state != EMPTY)
-            mgr.update_slot(slot_id, EMPTY);
-        *prev_state = EMPTY;
-    }
-    else {
-        if (curr_state == EMPTY) {
-            mgr.update_slot(slot_id, OCCUPIED);
-        }
-        else {
-//            if (info.bright >= HEADLIGHT_THRESHOLD) {
-            if (max_bright >= HEADLIGHT_THRESHOLD) {
-                if (*prev_state == EMPTY) {
-                    if (curr_state != OCCUPIED)
-                        mgr.update_slot(slot_id, OCCUPIED);
-                }
-                else {
-                    if (curr_state != EXITING)
-                        mgr.update_slot(slot_id, EXITING);
-                    *prev_state = EXITING;
-                }
-            }
-            else {
-                if (*prev_state == EXITING) {
-                }
-                else {
-                    if (curr_state != OCCUPIED)
-                        mgr.update_slot(slot_id, OCCUPIED);
-                    *prev_state = OCCUPIED;
-                }
-            }
-        }
-    }
-*/
-
     // [Debug Session]
     if (slot_id == 1)
         std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", state_cnt=" << info.state_cnt << ", bright=" << max_bright << "\n";
@@ -182,14 +147,13 @@ void ParkingStatusClassifier::update(const int slot_id, float ratio, float brigh
     }
     auto& info = it->second;
 
-    if (info.ratios.size() >= NUM_SLOT_INFO)
+    if (info.ratios.size() >= NUM_SLOT_INFO_RATIO)
         info.ratios.pop_front();
     info.ratios.push_back(ratio);
 
-    if (info.brights.size() >= NUM_SLOT_INFO)
+    if (info.brights.size() >= NUM_SLOT_INFO_BRIGHT)
         info.brights.pop_front();
     info.brights.push_back(bright);
-//    info.bright = bright;
 
     updateState(slot_id, info);
 
