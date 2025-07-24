@@ -2,7 +2,7 @@
 #include <deque>
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
-const int   MAX_RATIOS              = 3;
+const int   NUM_SLOT_INFO           = 20;
 const int   HEADLIGHT_THRESHOLD     = 95;
 
 
@@ -58,6 +58,7 @@ ParkingStatusClassifier::ParkingStatusClassifier(MapManager& _mgr)
 
 void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
     float max_ratio = *std::max_element(info.ratios.begin(), info.ratios.end());
+    float max_bright = *std::max_element(info.brights.begin(), info.brights.end());
     SlotState curr_state;
     SlotState* prev_state = &info.prev_state;
 
@@ -78,7 +79,8 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
             mgr.update_slot(slot_id, OCCUPIED);
         }
         else {
-            if (info.bright >= HEADLIGHT_THRESHOLD) {
+//            if (info.bright >= HEADLIGHT_THRESHOLD) {
+            if (max_bright >= HEADLIGHT_THRESHOLD) {
                 if (*prev_state == EMPTY) {
                     if (curr_state != OCCUPIED)
                         mgr.update_slot(slot_id, OCCUPIED);
@@ -103,7 +105,7 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
 
     // [Debug Session]
     if (slot_id == 1)
-        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << ", bright=" << info.bright << "\n";
+        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << ", bright=" << max_bright << "\n";
     // ---------------
 
 }
@@ -119,10 +121,14 @@ void ParkingStatusClassifier::update(const int slot_id, float ratio, float brigh
     }
     auto& info = it->second;
 
-    if (info.ratios.size() >= MAX_RATIOS)
+    if (info.ratios.size() >= NUM_SLOT_INFO)
         info.ratios.pop_front();
     info.ratios.push_back(ratio);
-    info.bright = bright;
+
+    if (info.brights.size() >= NUM_SLOT_INFO)
+        info.brights.pop_front();
+    info.brights.push_back(bright);
+//    info.bright = bright;
 
     updateState(slot_id, info);
 
