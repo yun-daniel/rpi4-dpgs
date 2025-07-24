@@ -58,7 +58,6 @@ int main(void) {
     }
     g_sys = &sys;
 
-    sys.start();
 
     if (sys.start() == false) {
         std::cerr << "[MAIN] Error: Failed to start system\n";
