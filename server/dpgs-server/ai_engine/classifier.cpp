@@ -2,7 +2,10 @@
 #include <deque>
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
+const int   HEADLIGHT_THRESHOLD     = 95;
 const int   MAX_HISTORY             = 3;
+const int   OCCUPIED_THRESHOLD      = 20;
+const int   EXITING_THRESHOLD       = 20;
 
 
 // === Utility ===
@@ -68,6 +71,64 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
         }
     }
 
+
+    switch (curr_state) {
+        case EMPTY:
+            if (max_ratio <= SLOT_THRESHOLD_RATIO) {
+//                mgr.update_slot(slot_id, EMPTY);
+//                info.state_cnt = 0;
+            }
+            else {
+                mgr.update_slot(slot_id, OCCUPIED);
+            }
+            break;
+        case OCCUPIED:
+            if (max_ratio <= SLOT_THRESHOLD_RATIO) {
+                mgr.update_slot(slot_id, EMPTY);
+                info.state_cnt = 0;
+            }
+            else {
+                if (max_bright <= HEADLIGHT_THRESHOLD) {
+                    info.state_cnt++;
+                }
+                else {
+                    if (info.state_cnt >= OCCUPIED_THRESHOLD) {
+                        info.state_cnt++;
+                    }
+                    else {
+                        mgr.update_slot(slot_id, EXITING);
+                        info.state_cnt = 0;
+                    }
+                }
+            }
+            break;
+        case EXITING:
+            if (max_ratio <= SLOT_THRESHOLD_RATIO) {
+                mgr.update_slot(slot_id, EMPTY);
+                info.state_cnt = 0;
+            }
+            else {
+                if (max_bright <= HEADLIGHT_THRESHOLD) {
+                    if (info.state_cnt >= EXITING_THRESHOLD) {
+                        mgr.update_slot(slot_id, OCCUPIED);
+                        info.state_cnt = 0;
+                    }
+                    else {
+                        info.state_cnt++;
+                    }
+                }
+                else {
+                    info.state_cnt = 0;
+                }
+            }
+            break;
+        default:
+            std::cout << "[CLSF] Warning: Unknown State\n";
+            break;
+    }
+
+
+/*
     if (max_ratio <= SLOT_THRESHOLD_RATIO) {
         if (curr_state != EMPTY) {
             mgr.update_slot(slot_id, EMPTY);
@@ -101,7 +162,7 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
             }
         }
     }
-
+*/
 //    std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << "\n";
 
 }
