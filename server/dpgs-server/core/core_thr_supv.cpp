@@ -43,6 +43,8 @@ bool CoreThrSupv::initialize() {
 void CoreThrSupv::start() {
     std::cout << "[THR_SUPV] Start Thread Supervisor\n";
 
+    is_running = true;
+
     thread_vpe = std::thread([this]() {
         vp_engine->run();
     });
@@ -66,6 +68,8 @@ void CoreThrSupv::stop() {
     if (clt_mgr) clt_mgr->stop();
 
     clear();
+
+    is_running = false;
 
     std::cout << "[THR_SUPV] Thread Supervisor Terminated\n";
 }
@@ -101,6 +105,7 @@ void CoreThrSupv::clear() {
 
 
 bool CoreThrSupv::monitor() {
+    if (!is_running) return false;
     if (!vp_engine->is_run()) return false;
 
     return true;

@@ -17,8 +17,9 @@ class DPGSServer {
     ~DPGSServer();
 
     bool initialize();
-    void start();
+    bool start();
     void stop();
+    void clear();
 
  private:
     std::unique_ptr<FrameBuffer>    fb;
@@ -28,7 +29,6 @@ class DPGSServer {
 
     bool initialize_proc_supv();
     bool initialize_thr_supv();
-    void clear();
 
 };
 

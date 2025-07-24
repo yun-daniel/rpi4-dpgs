@@ -9,12 +9,14 @@
 // ===  Server SW Signal Handle ===
 DPGSServer*         g_sys = nullptr;
 std::atomic<bool>   stopping{false};
+bool force_terminate = false;
 
 void signal_handler(int signo) {
     if (!stopping.exchange(true)) {
         std::cout << "[MAIN] Received Sig: " << signo << "\n";
         if (g_sys) {
             g_sys->stop();
+            force_terminate = true;
         }
     }
     else {
@@ -58,8 +60,15 @@ int main(void) {
 
     sys.start();
 
-    sys.stop();
+    if (sys.start() == false) {
+        std::cerr << "[MAIN] Error: Failed to start system\n";
+    }
 
+    if (force_terminate == false) {
+        sys.stop();
+    }
+
+    sys.clear();
 
     std::cout << "***********************************************\n";
     return 0;

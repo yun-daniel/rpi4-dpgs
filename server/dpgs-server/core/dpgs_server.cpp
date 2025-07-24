@@ -38,12 +38,12 @@ bool DPGSServer::initialize() {
 }
 
 
-void DPGSServer::start() {
+bool DPGSServer::start() {
     std::cout << "[SYS] Application Start.\n";
 
     if(!initialize_proc_supv()) {
         std::cerr << "[SYS] Error: Failed to initialize Process Supervisor\n";
-        return;
+        return false;
     }
 
  #if ENABLE_AI_ENGINE
@@ -52,7 +52,7 @@ void DPGSServer::start() {
 
     if(!initialize_thr_supv()) {
         std::cerr << "[SYS] Error: Failed to initialize Thread Supervisor\n";
-        return;
+        return false;
     }
     thr_supv->start();
 
@@ -60,7 +60,7 @@ void DPGSServer::start() {
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
-
+    return true;
 }
 
 
@@ -69,8 +69,6 @@ void DPGSServer::stop() {
 
     proc_supv->stop();
     thr_supv->stop();
-
-    clear();
 
     std::cout << "[SYS] Application Terminated\n";
 }

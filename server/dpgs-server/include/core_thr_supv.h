@@ -24,6 +24,8 @@ class CoreThrSupv {
     bool monitor();
 
 private:
+    bool            is_running = false;
+
     VPEngine*       vp_engine = nullptr;
     DeviceManager*  dev_mgr = nullptr;
     ClientManager*  clt_mgr = nullptr;
