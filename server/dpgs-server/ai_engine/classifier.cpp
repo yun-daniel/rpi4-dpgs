@@ -3,7 +3,7 @@
 
 const float SLOT_THRESHOLD_RATIO    = 0.5;
 const int   HEADLIGHT_THRESHOLD     = 95;
-const int   MAX_HISTORY             = 3;
+const int   NUM_SLOT_INFO           = 20;
 const int   OCCUPIED_THRESHOLD      = 20;
 const int   EXITING_THRESHOLD       = 20;
 
@@ -130,17 +130,17 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
 
 /*
     if (max_ratio <= SLOT_THRESHOLD_RATIO) {
-        if (curr_state != EMPTY) {
+        if (curr_state != EMPTY)
             mgr.update_slot(slot_id, EMPTY);
-            *prev_state = EMPTY;
-        }
+        *prev_state = EMPTY;
     }
     else {
         if (curr_state == EMPTY) {
             mgr.update_slot(slot_id, OCCUPIED);
         }
         else {
-            if (max_bright >= 100) {
+//            if (info.bright >= HEADLIGHT_THRESHOLD) {
+            if (max_bright >= HEADLIGHT_THRESHOLD) {
                 if (*prev_state == EMPTY) {
                     if (curr_state != OCCUPIED)
                         mgr.update_slot(slot_id, OCCUPIED);
@@ -152,18 +152,22 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
                 }
             }
             else {
-//                if (*prev_state == EXITING) {
-//                }
-//                else {
+                if (*prev_state == EXITING) {
+                }
+                else {
                     if (curr_state != OCCUPIED)
                         mgr.update_slot(slot_id, OCCUPIED);
                     *prev_state = OCCUPIED;
-//                }
+                }
             }
         }
     }
 */
-//    std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", prev_state=" << *prev_state << "\n";
+
+    // [Debug Session]
+    if (slot_id == 1)
+        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", state_cnt=" << info.state_cnt << ", bright=" << max_bright << "\n";
+    // ---------------
 
 }
 
@@ -178,11 +182,11 @@ void ParkingStatusClassifier::update(const int slot_id, float ratio, float brigh
     }
     auto& info = it->second;
 
-    if (info.ratios.size() >= MAX_HISTORY)
+    if (info.ratios.size() >= NUM_SLOT_INFO)
         info.ratios.pop_front();
     info.ratios.push_back(ratio);
 
-    if (info.brights.size() >= MAX_HISTORY)
+    if (info.brights.size() >= NUM_SLOT_INFO)
         info.brights.pop_front();
     info.brights.push_back(bright);
 //    info.bright = bright;
