@@ -13,13 +13,21 @@
 
 
 // YOLO Model Settings
-const std::string   ONNX_FILE               = "config/yolov5s_640.onnx";
-//const std::string   ONNX_FILE               = "config/yolov5n_320.onnx";
+// YOLOv5s 640 config
+//const std::string   ONNX_FILE               = "config/yolov5s_640.onnx";
+//constexpr int       INPUT_WIDTH             = 640;
+//constexpr int       INPUT_HEIGHT            = 640;
+
+// YOLOv5n 320 config
+const std::string   ONNX_FILE               = "config/yolov5n_320.onnx";
+constexpr int       INPUT_WIDTH             = 320;
+constexpr int       INPUT_HEIGHT            = 320;
+
+// Open Source Car
+//const std::string   ONNX_FILE               = "config/best.onnx";
+//const std::string   CLASS_LIST_FILE         = "config/best.txt";
+
 const std::string   CLASS_LIST_FILE         = "config/classes.txt";
-constexpr int       INPUT_WIDTH             = 640;
-//constexpr int       INPUT_WIDTH             = 320;
-//constexpr int       INPUT_HEIGHT            = 320;
-constexpr int       INPUT_HEIGHT            = 640;
 constexpr int       OUTPUT_DIM              = 85;
 constexpr int       ANCHORS_PER_CELL        = 3;
 constexpr int       STRIDE_1                = 8;

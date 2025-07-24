@@ -48,12 +48,12 @@ void AIEngine::Impl::run() {
         detector(frame, net, detections, class_list);
         classifier.classify(frame, detections);
 
-        overlay_slots(frame, map);
-        overlay_detection(frame, detections, class_list);
 
         // [Debug Session]
-        print_frame(frame);
-        cv::waitKey(1);
+//        overlay_slots(frame, map);
+//        overlay_detection(frame, detections, class_list);
+//        print_frame(frame);
+//        cv::waitKey(1);
         // --------------
 
     }

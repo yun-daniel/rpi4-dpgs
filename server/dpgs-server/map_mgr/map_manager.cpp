@@ -219,6 +219,8 @@ bool MapManager::update_slot(int slot_id, const SlotState& state) {
             std::cout << "[MAP_MGR][DEBUG] clt flag: " << map->flag_map_clt << "\n";
             pthread_mutex_unlock(&map->mutex_map_clt);
 
+            // [Debug Session]
+            std::cout << "[MAP_MGR][DEBUG] Slot " << map->slots[i].slot_id << ": state=" << map->slots[i].state << "\n";
 
             return true;
         }

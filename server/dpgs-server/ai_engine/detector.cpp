@@ -9,12 +9,8 @@ cv::Mat letterbox(const cv::Mat &src) {
     int row = src.rows;
     int max = std::max(col, row);
 
-//    int x_offset = (max - col) / 2;
-//    int y_offset = (max - row) / 2;
-
     cv::Mat dst = cv::Mat::zeros(max, max, CV_8UC3);
     src.copyTo(dst(cv::Rect(0, 0, col, row)));
-//    src.copyTo(dst(cv::Rect(x_offset, y_offset, col, row)));
 
     return dst;
 }
@@ -28,8 +24,10 @@ std::vector<Detection> post_detector(cv::Mat &frame, std::vector<cv::Mat> &outpu
 
     float *data = (float *)outputs[0].data;
 
-    const int dim = OUTPUT_DIM;
-    const int rows = TOTAL_PREDICTIONS;
+//    const int dim = OUTPUT_DIM;
+//    const int rows = TOTAL_PREDICTIONS;
+    const int dim = outputs[0].size[2];
+    const int rows = outputs[0].size[1];
 
     std::vector<int> class_ids;
     std::vector<float> confidences;
@@ -65,7 +63,7 @@ std::vector<Detection> post_detector(cv::Mat &frame, std::vector<cv::Mat> &outpu
             }
         }
 
-        data += OUTPUT_DIM;
+        data += dim;
     }
 
     std::vector<int> nms_result;
