@@ -56,6 +56,21 @@ bool ConnectionManager::initialize(ClientManager* _clt_mgr, VPEngine* _vp_engine
         fprintf(stderr, "pthread_attr_setdetachstate failure\n");
     }
 
+    // Initialize OpenSSL
+    SSL_library_init();
+    SSL_load_error_strings();
+    OpenSSL_add_all_algorithms();
+
+    ctx = SSL_CTX_new(TLS_server_method());
+    if (SSL_CTX_use_certificate_file(ctx, "./server2.crt", SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        return false;
+    }
+    if (SSL_CTX_use_PrivateKey_file(ctx, "./server2.key", SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        return false;
+    }
+
     // Make new socket to listen and connect with port
     listen_fd = socket(AF_INET /*IPv4*/, SOCK_STREAM /*TCP*/, 0 /*IP*/) ;
 	if (listen_fd == 0)  { 
@@ -94,7 +109,6 @@ void ConnectionManager::run() {
     int clnt_sock;
     pthread_t tid;
     CTA* cta_ptr;
-    ClientInfo ci;
 
     is_running = true;
     while (is_running) {
@@ -111,16 +125,6 @@ void ConnectionManager::run() {
         if (pthread_create(&tid, &attr, handle_client_thread, (void*)cta_ptr) != 0) {
             fprintf(stderr, "Error: %d's pthread_create of client_thread failed\n", clnt_sock);
             free(cta_ptr);
-        }
-        else {
-            ci.set_sent_map_flag(false);
-            ci.set_sock_fd(clnt_sock);
-            ci.set_tid(tid);
-
-            pthread_mutex_lock(&client_info_vec_mutex);
-            client_info_vec.push_back(ci);
-            pthread_mutex_unlock(&client_info_vec_mutex);
-            std::cout << "[CNT_MGR][DEBUG] client_info pushed: clnt_sock=" << clnt_sock << ", tid=" << tid << "\n";
         }
     }
 
@@ -139,6 +143,7 @@ void ConnectionManager::stop () {
             if (pthread_cancel(tid) != 0) {
                 fprintf(stderr, "Error: %lx pthread_cancel failure\n", tid);
             }
+            SSL_shutdown(it.get_ssl());
         }
         fprintf(stderr, "Waiting detach(remove) for stop in connection manager...\n");
 
@@ -159,6 +164,7 @@ void ConnectionManager::clear () {
     pthread_mutex_destroy(&client_info_vec_mutex);
     pthread_cond_destroy(&empty_cv);
     pthread_cond_destroy(&all_sent_cv);
+    SSL_CTX_free(ctx); 
     
 }
 
@@ -189,15 +195,27 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
     rd_ptr->rtd_ptr = rtd_ptr;
     rd_ptr->sfa_ptr = sfa_ptr;
 
+    SSL * ssl = SSL_new(ctx);
+    SSL_set_fd(ssl, clnt_sock);
+    SSL_accept(ssl);
+
+    ClientInfo ci;
+    ci.set_sent_map_flag(false);
+    ci.set_sock_fd(clnt_sock);
+    ci.set_tid(pthread_self());
+    ci.set_ssl(ssl);
+
+    pthread_mutex_lock(&client_info_vec_mutex);
+    client_info_vec.push_back(ci);
+    pthread_mutex_unlock(&client_info_vec_mutex);
+    std::cout << "[CNT_MGR][DEBUG] client_info pushed: clnt_sock=" << clnt_sock << ", tid=" << pthread_self() << "\n";
 
     pthread_cleanup_push(remove, (void*)rd_ptr);
 
-
-    if (check_idpw(clnt_sock) == 1) {
+    if (check_idpw(ssl) == 1) {
         fprintf(stderr, "Error: check_idpw failed\n");
         pthread_exit(NULL);
     }
-
 
     if (pthread_create(&rd_ptr->tid_arr[0], NULL, send_mapdata, (void*)sfa_ptr) != 0) {
         fprintf(stderr, "Error: %d's pthread_create of send_mapdata failed\n", clnt_sock);
@@ -212,7 +230,7 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
     std::cout << "[CNT_MGR] " << clnt_sock << " spawned tid_arr[0]: " << rd_ptr->tid_arr[0] << "\n";
     std::cout << "[CNT_MGR] " << clnt_sock << " spawned tid_arr[1]: " << rd_ptr->tid_arr[1] << "\n";
 
-    if (recv_msg(clnt_sock, rd_ptr->sm_ptr) == 1) {
+    if (recv_msg(clnt_sock, ssl, rd_ptr->sm_ptr) == 1) {
         fprintf(stderr, "Error: recv_msg failed\n");
     }
 
@@ -221,134 +239,136 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
 }
 
 
-
 /* Static Function */
 void ConnectionManager::remove (void * arg) {
-    RD * rd_ptr = (RD *)arg;
-    ClientManager * clnt_mgr_ptr = rd_ptr->sfa_ptr->clnt_mgr_ptr;
-    ConnectionManager * conn_mgr_ptr = rd_ptr->sfa_ptr->conn_mgr_ptr; 
-    pthread_t tid_arr[2];
-    memcpy(tid_arr, rd_ptr->tid_arr, sizeof(pthread_t) * 2);
+    
+        RD * rd_ptr = (RD *)arg;
+        ClientManager * clnt_mgr_ptr = rd_ptr->sfa_ptr->clnt_mgr_ptr;
+        ConnectionManager * conn_mgr_ptr = rd_ptr->sfa_ptr->conn_mgr_ptr; 
+        pthread_t tid_arr[2];
+        memcpy(tid_arr, rd_ptr->tid_arr, sizeof(pthread_t) * 2);
 
+        // Cancel and join the two worker threads (map-sender and RTSP)
+        int ret;
+        for (pthread_t tid : tid_arr) {
+            ret = pthread_cancel(tid);
+            if (ret == ESRCH) {
+                fprintf(stderr, "Warning: thread %lx does not exist (cancel returned ESRCH)\n", tid);
+            }
+            else if (ret != 0) {
+                fprintf(stderr, "Error: %lx pthread_cancel failed\n", tid);
+            }
+            std::cout << "[CNT_MGR][DEBUG] pthread_cancel: tid=" << tid << " done\n";
 
-    // Cancel and join the two worker threads (map-sender and RTSP)
-    int ret;
-    for (pthread_t tid : tid_arr) {
-        ret = pthread_cancel(tid);
-        if (ret == ESRCH) {
-            fprintf(stderr, "Warning: thread %lx does not exist (cancel returned ESRCH)\n", tid);
+            ret = pthread_join(tid, NULL);
+            if (ret == ESRCH) {
+                fprintf(stderr, "Warning: thread %lx does not exist (join returned ESRCH)\n", tid);
+            }
+            else if (ret != 0) {
+                fprintf(stderr, "Error: %lx pthread_join failed\n", tid);
+            }
+            std::cout << "[CNT_MGR][DEBUG] pthread_join: tid=" << tid << " done\n";
         }
-        else if (ret != 0) {
-            fprintf(stderr, "Error: %lx pthread_cancel failed\n", tid);
-        }
-        std::cout << "[CNT_MGR][DEBUG] pthread_cancel: tid=" << tid << " done\n";
 
-        ret = pthread_join(tid, NULL);
-        if (ret == ESRCH) {
-            fprintf(stderr, "Warning: thread %lx does not exist (join returned ESRCH)\n", tid);
-        }
-        else if (ret != 0) {
-            fprintf(stderr, "Error: %lx pthread_join failed\n", tid);
-        }
-        std::cout << "[CNT_MGR][DEBUG] pthread_join: tid=" << tid << " done\n";
-    }
+        printf("REMOVE: spawned %lx\t%lx\n", tid_arr[0], tid_arr[1]);
 
-    printf("REMOVE: spawned %lx\t%lx\n", tid_arr[0], tid_arr[1]);
+        // Erase this client’s record from client_info_vec
+        pthread_mutex_lock(&conn_mgr_ptr->client_info_vec_mutex);
+        auto it = conn_mgr_ptr->find_client(pthread_self());
+        if (it == conn_mgr_ptr->client_info_vec.end()) {
+            fprintf(stderr, "Error: Find(remove) failed\n");
+            pthread_mutex_unlock(&conn_mgr_ptr->client_info_vec_mutex);
+            return;
+        }
 
-    // Erase this client’s record from client_info_vec
-    pthread_mutex_lock(&conn_mgr_ptr->client_info_vec_mutex);
-    auto it = conn_mgr_ptr->find_client(pthread_self());
-    if (it == conn_mgr_ptr->client_info_vec.end()) {
-        fprintf(stderr, "Error: Find(remove) failed\n");
+        fprintf(stderr, "REMOVE: %lx\n", it->get_tid());
+        close (it->get_sock_fd());
+        SSL_free (it->get_ssl());
+        conn_mgr_ptr->client_info_vec.erase(it);
+
+        pthread_cond_signal(&conn_mgr_ptr->all_sent_cv);
+
+        if (conn_mgr_ptr->client_info_vec.empty() == true) {
+            pthread_cond_signal(&conn_mgr_ptr->empty_cv);
+        }
         pthread_mutex_unlock(&conn_mgr_ptr->client_info_vec_mutex);
-        return;
-    }
 
-    fprintf(stderr, "REMOVE: %lx\n", it->get_tid());
-    close (it->get_sock_fd());
-    conn_mgr_ptr->client_info_vec.erase(it);
-
-    pthread_cond_signal(&conn_mgr_ptr->all_sent_cv);
-
-    if (conn_mgr_ptr->client_info_vec.empty() == true) {
-        pthread_cond_signal(&conn_mgr_ptr->empty_cv);
-    }
-    pthread_mutex_unlock(&conn_mgr_ptr->client_info_vec_mutex);
-
-    // Free per-client resources
-    pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
-    free (rd_ptr->rtd_ptr);
-    free (rd_ptr->sfa_ptr);
-    free (arg);
+        // Free per-client resources
+        pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
+        free (rd_ptr->rtd_ptr);
+        free (rd_ptr->sfa_ptr);
+        free (arg);     
 }
 
 /* Static Function */
 void * ConnectionManager::send_mapdata (void * arg) {
-    SFA * sfa_ptr = (SFA *)arg;
-    ClientManager * clnt_mgr_ptr = sfa_ptr->clnt_mgr_ptr;
-    ConnectionManager * conn_mgr_ptr = sfa_ptr->conn_mgr_ptr;  
 
-    /* ClientManager */
-    SharedParkingLotMap* mapdata_ptr = clnt_mgr_ptr->get_mapdata();
-    bool* is_updated_ptr = clnt_mgr_ptr->get_is_updated();
-    pthread_mutex_t* updated_mutex_ptr = clnt_mgr_ptr->get_updated_mutex();
-    pthread_cond_t* updated_cv_ptr = clnt_mgr_ptr->get_updated_cv();
+        SFA * sfa_ptr = (SFA *)arg;
+        ClientManager * clnt_mgr_ptr = sfa_ptr->clnt_mgr_ptr;
+        ConnectionManager * conn_mgr_ptr = sfa_ptr->conn_mgr_ptr;  
 
-    /* ConnectionManager */
-    std::vector<ClientInfo>* client_info_vec_ptr = conn_mgr_ptr->get_client_info_vec();
-    pthread_mutex_t* client_info_vec_mutex_ptr = conn_mgr_ptr->get_client_info_vec_mutex();
-    pthread_cond_t* all_sent_cv_ptr = conn_mgr_ptr->get_all_sent_cv();
+        /* ClientManager */
+        SharedParkingLotMap* mapdata_ptr = clnt_mgr_ptr->get_mapdata();
+        bool* is_updated_ptr = clnt_mgr_ptr->get_is_updated();
+        pthread_mutex_t* updated_mutex_ptr = clnt_mgr_ptr->get_updated_mutex();
+        pthread_cond_t* updated_cv_ptr = clnt_mgr_ptr->get_updated_cv();
+
+        /* ConnectionManager */
+        std::vector<ClientInfo>* client_info_vec_ptr = conn_mgr_ptr->get_client_info_vec();
+        pthread_mutex_t* client_info_vec_mutex_ptr = conn_mgr_ptr->get_client_info_vec_mutex();
+        pthread_cond_t* all_sent_cv_ptr = conn_mgr_ptr->get_all_sent_cv();
 
 
-    while (1) {
-        pthread_testcancel();
+        while (1) {
+            pthread_testcancel();
 
-        // Check the client already sent mapdata
-        pthread_mutex_lock(client_info_vec_mutex_ptr);
-        // pthread_cleanup_push(unlock_mutex, (void *)client_info_vec_mutex_ptr);
-        auto it = conn_mgr_ptr->find_client(sfa_ptr->tid);
-        int clnt_sock = it->get_sock_fd();
-        if (it == (*client_info_vec_ptr).end()) {
-            fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will be never printed
+            // Check the client already sent mapdata
+            pthread_mutex_lock(client_info_vec_mutex_ptr);
+            // pthread_cleanup_push(unlock_mutex, (void *)client_info_vec_mutex_ptr);
+            auto it = conn_mgr_ptr->find_client(sfa_ptr->tid);
+            int clnt_sock = it->get_sock_fd();
+            SSL * ssl = it->get_ssl();
+            if (it == (*client_info_vec_ptr).end()) {
+                fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will be never printed
+                pthread_mutex_unlock(client_info_vec_mutex_ptr);
+                return nullptr;
+            }
+            if (it->get_sent_map_flag() == true) {
+                pthread_mutex_unlock(client_info_vec_mutex_ptr);
+                continue;
+            }
             pthread_mutex_unlock(client_info_vec_mutex_ptr);
-            return nullptr;
-        }
-        if (it->get_sent_map_flag() == true) {
-            pthread_mutex_unlock(client_info_vec_mutex_ptr);
-            continue;
-        }
-        pthread_mutex_unlock(client_info_vec_mutex_ptr);
 
-        // Wait for updated signal
-        pthread_mutex_lock(updated_mutex_ptr);
-        pthread_cleanup_push(unlock_mutex, (void*)updated_mutex_ptr);
-        while (*is_updated_ptr == false) {
-            pthread_cond_wait(updated_cv_ptr, updated_mutex_ptr);
-        }
-        pthread_cleanup_pop(1);
+            // Wait for updated signal
+            pthread_mutex_lock(updated_mutex_ptr);
+            pthread_cleanup_push(unlock_mutex, (void*)updated_mutex_ptr);
+            while (*is_updated_ptr == false) {
+                pthread_cond_wait(updated_cv_ptr, updated_mutex_ptr);
+            }
+            pthread_cleanup_pop(1);
 
-        // No lock here -> assuming mapdata is read-only & safe
-        // Send map data : send(clnt_sock, ...)
-        if (send_bytes(clnt_sock, mapdata_ptr->slots, sizeof(Slot) * SLOTS_MAX_SIZE) == -1) {
-            fprintf(stderr, "Error: %d's send error\n", clnt_sock);
-            pthread_exit(NULL);
-        }
-	std::cout << "[CNT_MGR][DEBUG] Updated Map Sended\n";
+            // No lock here -> assuming mapdata is read-only & safe
+            // Send map data : send(clnt_sock, ...)
+            if (send_bytes(ssl, mapdata_ptr->slots, sizeof(Slot) * SLOTS_MAX_SIZE) == -1) {
+                fprintf(stderr, "Error: %d's send error\n", clnt_sock);
+                pthread_exit(NULL);
+            }
+        std::cout << "[CNT_MGR][DEBUG] Updated Map Sended\n";
 
-        // Change sent_flag to true
-        pthread_mutex_lock(client_info_vec_mutex_ptr);
-        pthread_cleanup_push(unlock_mutex, (void *)client_info_vec_mutex_ptr);
-        it = conn_mgr_ptr->find_client(sfa_ptr->tid);
-        if (it == (*client_info_vec_ptr).end()) {
-            fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will be never printed
-            pthread_mutex_unlock(client_info_vec_mutex_ptr);
-            return nullptr;
-        }
-        it->set_sent_map_flag(true);
-        pthread_cleanup_pop(1);
+            // Change sent_flag to true
+            pthread_mutex_lock(client_info_vec_mutex_ptr);
+            pthread_cleanup_push(unlock_mutex, (void *)client_info_vec_mutex_ptr);
+            it = conn_mgr_ptr->find_client(sfa_ptr->tid);
+            if (it == (*client_info_vec_ptr).end()) {
+                fprintf(stderr, "Error: Find(send_mapdata) failed\n");      // This will be never printed
+                pthread_mutex_unlock(client_info_vec_mutex_ptr);
+                return nullptr;
+            }
+            it->set_sent_map_flag(true);
+            pthread_cleanup_pop(1);
 
-        pthread_cond_signal(all_sent_cv_ptr);
-    }
+            pthread_cond_signal(all_sent_cv_ptr);
+        }
 
     return nullptr;
 }

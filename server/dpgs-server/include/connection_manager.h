@@ -16,6 +16,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <unistd.h>
 #include <errno.h>
 #include <atomic>
 
@@ -54,6 +57,7 @@ class ConnectionManager {
     int listen_fd, port;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
+    SSL_CTX * ctx;
 
     vector<ClientInfo> client_info_vec;
 

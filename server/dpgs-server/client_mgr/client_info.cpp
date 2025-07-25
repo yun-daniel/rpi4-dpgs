@@ -16,6 +16,10 @@ pthread_t ClientInfo::get_tid () {
     return tid;
 }
 
+SSL * ClientInfo::get_ssl () {
+    return ssl;
+}
+
 int ClientInfo::set_sent_map_flag (bool flag) {
     sent_map_flag = flag;
 
@@ -34,3 +38,7 @@ int ClientInfo::set_tid (pthread_t _tid) {
     return 0;
 }
 
+int ClientInfo::set_ssl (SSL * _ssl) {
+    ssl = _ssl;
+    return 0;
+}

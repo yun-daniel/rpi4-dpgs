@@ -31,7 +31,7 @@ TARGET		= dpgs-server
 CXXFLAGS	= -I. -I$(INCLUDE_DIR) `pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 gstreamer-rtsp-server-1.0 gio-2.0 opencv4`
 
 # Linker options
-LDFLAGS		= -lpthread
+LDFLAGS		= -lpthread -lssl -lcrypto
 
 BUILD_TYPE	?= dev
 ifeq ($(BUILD_TYPE), release)

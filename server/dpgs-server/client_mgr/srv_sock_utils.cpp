@@ -10,42 +10,38 @@ void unlock_mutex (void * arg) {
  * If failed return -1.
  * If fd is closed return -2.
  */
-int recv_bytes(int fd, void * buf, size_t len){
-    char * p = (char *)buf ;
-    size_t acc = 0 ;
+int recv_bytes(SSL * ssl, void * buf, size_t len){
+    int ret, err;
+    size_t readbytes;
 
-    while (acc < len) {
-        size_t recved ;
-        recved = recv(fd, p, len - acc, 0) ;
-        if (recved == -1)
-            return -1 ;
-        else if (recved == 0) {
-            return -2 ;
+    if ((ret = SSL_read_ex(ssl, buf, len, &readbytes)) == 0) {
+        err = SSL_get_error(ssl, ret);
+        if (err == SSL_ERROR_SSL) {
+            return -2;
         }
-        p += recved ;
-        acc += recved ;
+        return -1;
     }
-    return acc ;
+
+    return readbytes;
 }
 
 /* 
  * Return byte of sent.
  * If failed return -1.
  */
-int send_bytes(int fd, void * buf, size_t len){
-    char * p = (char *)buf ;
-    size_t acc = 0 ;
+int send_bytes(SSL * ssl, void * buf, size_t len) {
+    int ret, err;
+    size_t written;
 
-    while (acc < len) {
-        size_t sent ;
-        sent = send(fd, p, len - acc, MSG_NOSIGNAL) ;
-        if (sent == -1) {
-            return -1 ;
+    if ((ret = SSL_write_ex(ssl, buf, len, &written)) == 0) {
+        err = SSL_get_error(ssl, ret);
+        if (err == SSL_ERROR_SSL) {
+            return -2;
         }
-        p += sent ;
-        acc += sent ;
+        return -1;
     }
-    return acc ;
+
+    return written;
 }
 
 /*
@@ -53,15 +49,17 @@ int send_bytes(int fd, void * buf, size_t len){
  * Sends a one-byte reply to the client (1 = authenticated, 0 = authentication failed).
  * Returns 0 on success, 1 on failure.
  */
-int check_idpw (int clnt_sock) {
+int check_idpw (SSL * ssl) {
     char id[16], pw[16];
     char reply = '0';
+    int ret, err;
+    size_t readbytes;
     
     // Receive id/pw from client
-    if (recv_bytes(clnt_sock, id, sizeof(id)) < 0) {
+    if (recv_bytes(ssl, id, sizeof(id)) < 0) {
         return 1;
     }
-    if (recv_bytes(clnt_sock, pw, sizeof(pw)) < 0) {
+    if (recv_bytes(ssl, pw, sizeof(pw)) < 0) {
         return 1;
     }
 
@@ -90,8 +88,8 @@ int check_idpw (int clnt_sock) {
     }
 
     // Send reply to client
-     printf("%c\n", reply);
-    if (send_bytes(clnt_sock, &reply, 1) < 0) {
+    printf("%c\n", reply);
+    if (send_bytes(ssl, &reply, 1) < 0) {
         return 1;
     }
 
@@ -106,13 +104,13 @@ int check_idpw (int clnt_sock) {
  * Returns 0 on success, 1 on failure.
  */
 //StreamingModule * stm_ptr
-int recv_msg (int clnt_sock, StreamingModule* sm_ptr) {
+int recv_msg (int clnt_sock, SSL * ssl, StreamingModule* sm_ptr) {
     char logout_msg = 0x0;
     int ret;
 
     while (logout_msg != '0') {
         // Receive logout_msg from client
-        if ((ret = recv_bytes(clnt_sock, &logout_msg, 1)) < 0) {
+        if ((ret = recv_bytes(ssl, &logout_msg, 1)) < 0) {
             if (ret == -2) {
                 fprintf(stderr, "Warning: %d is closed\n", clnt_sock);
             }
