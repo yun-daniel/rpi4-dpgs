@@ -8,11 +8,10 @@
 #define LISTEN_PORT 8888
 #define DEVICE_PATH "/dev/rgbmatrix"
 
-// 디바이스 파일 열기
 int openDevice() {
     int fd = open(DEVICE_PATH, O_WRONLY);
     if (fd < 0) {
-        perror("디바이스 열기 실패");
+        perror("Failed to open Device File\n");
     }
     return fd;
 }
@@ -20,7 +19,7 @@ int openDevice() {
 int main() {
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
-        perror("소켓 생성 실패");
+	perror("Failed to create Socket\n");
         return 1;
     }
 
@@ -30,7 +29,7 @@ int main() {
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("bind 실패");
+	perror("Failed to bind socket\n");
         close(sock);
         return 1;
     }
@@ -42,6 +41,18 @@ int main() {
         return 1;
     }
 
+    // Initialize LED Display
+    char cmd[16];
+    for (int i=0; i<29; ++i) {
+        int len = snprintf(cmd, sizeof(cmd), "%d %d", i, 1);
+        std::cout << "[INIT] " << cmd << "\n";
+        ssize_t written = write(device_fd, cmd, len);
+        if (written < 0) {
+            perror("Failed to write Device File\n");
+        }
+    }
+
+
     while (true) {
         ssize_t recv_len = recvfrom(sock, buffer, sizeof(buffer) - 1, 0, nullptr, nullptr);
         if (recv_len > 0) {
@@ -50,7 +61,7 @@ int main() {
 
             ssize_t written = write(device_fd, buffer, recv_len);
             if (written < 0) {
-                perror("디바이스 쓰기 실패");
+                perror("Failed to write Device File\n");
             }
         }
     }
