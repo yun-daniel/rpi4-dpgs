@@ -2,6 +2,9 @@
 # Build directory
 /build/
 
+# cert and key files
+*.crt
+*.key
 
 # editor backup/temp files
 *~

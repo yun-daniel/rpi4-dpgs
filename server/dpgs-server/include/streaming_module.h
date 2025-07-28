@@ -1,6 +1,7 @@
 #ifndef __STREAMING_MODULE_H__
 #define __STREAMING_MODULE_H__
 
+#include "config.h"
 #include "vp_engine.h"
 
 #include <opencv2/opencv.hpp>

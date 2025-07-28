@@ -1,6 +1,8 @@
 #ifndef SRV_SOCK_UTILS_H
 #define SRV_SOCK_UTILS_H
 
+#include "config.h"
+
 #include <cstdio>
 #include <cstring>
 

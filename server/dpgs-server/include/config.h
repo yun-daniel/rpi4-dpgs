@@ -12,6 +12,13 @@
 //   MapManager Map File Path
 #define MM_MAP_FILE_PATH    "config/map.json"
 //#define MM_MAP_FILE_PATH    "config/test_map.json"
+// CERT_FILE_PATH/KEY_FILE_PATH
+//   Certification/Key File Path
+#define CERT_FILE_PATH      "config/server.crt"
+#define KEY_FILE_PATH       "config/server.key"
+// USER_INFO_FILE_PATH
+//   User information file path
+#define USER_INFO_FILE_PATH "config/user_info"
 // =====================
 
 

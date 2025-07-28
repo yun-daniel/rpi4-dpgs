@@ -62,11 +62,11 @@ bool ConnectionManager::initialize(ClientManager* _clt_mgr, VPEngine* _vp_engine
     OpenSSL_add_all_algorithms();
 
     ctx = SSL_CTX_new(TLS_server_method());
-    if (SSL_CTX_use_certificate_file(ctx, "./server2.crt", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_file(ctx, CERT_FILE_PATH, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         return false;
     }
-    if (SSL_CTX_use_PrivateKey_file(ctx, "./server2.key", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_PrivateKey_file(ctx, KEY_FILE_PATH, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         return false;
     }

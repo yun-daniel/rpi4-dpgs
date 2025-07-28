@@ -71,7 +71,7 @@ int check_idpw (SSL * ssl) {
     char buffer[128], filename[128];
     FILE * fp;
 
-    strcpy(filename, "./user_info");
+    strcpy(filename, USER_INFO_FILE_PATH);
     if ((fp = fopen(filename, "r")) == NULL) {
         return 1;
     }

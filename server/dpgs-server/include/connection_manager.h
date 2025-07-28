@@ -1,6 +1,7 @@
 #ifndef __CONNECTION_MANAGER_H__
 #define __CONNECTION_MANAGER_H__
 
+#include "config.h"
 #include "client_info.h"
 #include "srv_sock_utils.h"
 #include "static_function_args.h"
