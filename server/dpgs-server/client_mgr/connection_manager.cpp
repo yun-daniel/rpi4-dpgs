@@ -1,12 +1,6 @@
 #include "connection_manager.h"
 #include "client_manager.h"
 
-
-typedef struct RtspData {
-    int cam_rq;                 // Cam number that received from client
-    pthread_mutex_t m_cam_rq;   // Mutex for cam_rq
-} RTD;
-
 typedef struct ClientThreadArgs {
     int clnt_sock;
 //    ClientManager * clnt_mgr_ptr;
@@ -16,7 +10,6 @@ typedef struct ClientThreadArgs {
 
 typedef struct RemoveData {
     StreamingModule * sm_ptr;
-    RTD * rtd_ptr;
     SFA * sfa_ptr;
     pthread_t tid_arr[2];       // tid_arr[2] in client thread
                                 // tid_arr[0] : SEND MAP
@@ -181,10 +174,6 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
     std::cout << "[CNT_MGR][CLT " << clnt_sock << "] pthread: " << pthread_self() << "\n";
 
 
-    RTD* rtd_ptr = (RTD*)malloc(sizeof(RTD));
-    rtd_ptr->cam_rq = clnt_sock;
-    pthread_mutex_init(&rtd_ptr->m_cam_rq, NULL);
-
     SFA* sfa_ptr = (SFA*)malloc(sizeof(SFA));
     sfa_ptr->clnt_mgr_ptr = clt_mgr_ptr;
     sfa_ptr->conn_mgr_ptr = this;
@@ -192,7 +181,6 @@ void ConnectionManager::exec_client_thread(int clnt_sock) {
 
     RD* rd_ptr = (RD*)malloc(sizeof(RD));
     rd_ptr->sm_ptr = new StreamingModule(*vp_engine_ptr);
-    rd_ptr->rtd_ptr = rtd_ptr;
     rd_ptr->sfa_ptr = sfa_ptr;
 
     SSL * ssl = SSL_new(ctx);
@@ -294,8 +282,7 @@ void ConnectionManager::remove (void * arg) {
         pthread_mutex_unlock(&conn_mgr_ptr->client_info_vec_mutex);
 
         // Free per-client resources
-        pthread_mutex_destroy(&rd_ptr->rtd_ptr->m_cam_rq);
-        free (rd_ptr->rtd_ptr);
+        delete rd_ptr->sm_ptr;
         free (rd_ptr->sfa_ptr);
         free (arg);     
 }
@@ -386,10 +373,12 @@ void * ConnectionManager::streaming (void * arg) {
 // Connection Manager Thread Handler
 void* ConnectionManager::handle_client_thread(void* arg) {
     CTA* cta_ptr = (CTA*)arg;
+    int clnt_sock = cta_ptr->clnt_sock;
+    ConnectionManager * conn_mgr_ptr = cta_ptr->conn_mgr_ptr;
+    free (arg);
 
-    cta_ptr->conn_mgr_ptr->exec_client_thread(cta_ptr->clnt_sock);
+    conn_mgr_ptr->exec_client_thread(clnt_sock);
 
-//    free(arg);
     return nullptr;
 }
 
