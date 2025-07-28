@@ -15,10 +15,10 @@ public:
     ~CCTVStreamThread();
 
     bool init(const QString &uri, const QString &certPath);
-    void stopStreaming();
+    void stop_streaming();
 
 signals:
-    void frameReady(const QImage &image);
+    void frame_ready(const QImage &image);
 
 protected:
     void run() override;
@@ -28,9 +28,9 @@ private:
 
     bool &cctv2_mode;
 
-    bool setupPipeline(const QString &uri);
-    bool setupTLS(const QString &certPath);
-    QImage convertSampleToImage(GstSample *sample);
+    bool setup_pipeline(const QString &uri);
+    bool setup_tls(const QString &certPath);
+    QImage convert_sample_to_image(GstSample *sample);
 };
 
 #endif

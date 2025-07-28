@@ -23,7 +23,8 @@ public:
     QPushButton *get_cctv1_button() {return cctv1_button;}
     QPushButton *get_cctv2_button() {return cctv2_button;}
 
-    void updateSlotState(int slot_id, SlotState state);
+    void update_slot_state(int slot_id, SlotState state);
+
 private:
     Ui::ParkingMapWidget *ui;
 

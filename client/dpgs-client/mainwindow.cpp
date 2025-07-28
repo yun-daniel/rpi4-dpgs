@@ -10,15 +10,14 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QPixmap>
-#include <QTcpSocket>
+#include <QSslSocket>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , sharedSocket(new QTcpSocket(this))
+    , sharedSocket(new QSslSocket(this))
     , page1(nullptr)
     , page2(nullptr)
-
 {
     ui->setupUi(this);
     setFixedSize(1150, 680);
@@ -28,11 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     page1 = new Page1st(ui->stackedWidget, sharedSocket, ui->page_1);
     page2 = new Page2nd(ui->stackedWidget, sharedSocket, ui->page_2);
-
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-

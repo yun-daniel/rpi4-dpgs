@@ -53,10 +53,10 @@ QPushButton {
    <widget class="QPushButton" name="cctv_button_1">
     <property name="geometry">
      <rect>
-      <x>770</x>
-      <y>230</y>
-      <width>40</width>
-      <height>21</height>
+      <x>662</x>
+      <y>160</y>
+      <width>51</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -67,14 +67,7 @@ QPushButton {
     outline: none; 
 }
 
-/* 마우스 오버 시 */
-QPushButton:hover {
-    background-color: #d0d0d0;
-}
-
-/* 클릭 눌렀을 때 */
 QPushButton:pressed {
-    background-color: #a0a0a0;
     outline: none; 
 }</string>
     </property>
@@ -82,7 +75,8 @@ QPushButton:pressed {
      <string/>
     </property>
     <property name="icon">
-     <iconset theme="QIcon::ThemeIcon::CameraVideo"/>
+     <iconset resource="resource.qrc">
+      <normaloff>:/images/cctv_icon.png</normaloff>:/images/cctv_icon.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -94,10 +88,10 @@ QPushButton:pressed {
    <widget class="QPushButton" name="cctv_button_2">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>230</y>
-      <width>40</width>
-      <height>21</height>
+      <x>408</x>
+      <y>160</y>
+      <width>51</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -108,14 +102,7 @@ QPushButton:pressed {
     outline: none; 
 }
 
-/* 마우스 오버 시 */
-QPushButton:hover {
-    background-color: #d0d0d0;
-}
-
-/* 클릭 눌렀을 때 */
 QPushButton:pressed {
-    background-color: #a0a0a0;
     outline: none; 
 }</string>
     </property>
@@ -123,7 +110,8 @@ QPushButton:pressed {
      <string/>
     </property>
     <property name="icon">
-     <iconset theme="QIcon::ThemeIcon::CameraVideo"/>
+     <iconset resource="resource.qrc">
+      <normaloff>:/images/cctv_icon.png</normaloff>:/images/cctv_icon.png</iconset>
     </property>
     <property name="iconSize">
      <size>
@@ -511,6 +499,8 @@ QPushButton:pressed {
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

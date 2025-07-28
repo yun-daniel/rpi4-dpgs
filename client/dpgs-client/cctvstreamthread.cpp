@@ -14,22 +14,22 @@ CCTVStreamThread::CCTVStreamThread(bool &cctv2_mode_ref, QObject *parent)
 
 CCTVStreamThread::~CCTVStreamThread()
 {
-    stopStreaming();
+    stop_streaming();
 }
 
 bool CCTVStreamThread::init(const QString &uri, const QString &certPath)
 {
-    if (!setupPipeline(uri))
+    if (!setup_pipeline(uri))
         return false;
-    if (!setupTLS(certPath))
+    if (!setup_tls(certPath))
         return false;
     return true;
 }
 
-bool CCTVStreamThread::setupPipeline(const QString &uri)
+bool CCTVStreamThread::setup_pipeline(const QString &uri)
 {
     QString desc = QString(
-                       "rtspsrc name=src location=%1 tls-validation-flags=0 latency=30 ! "
+                       "rtspsrc name=src location=%1 tls-validation-flags=1 latency=30 ! "
                        "decodebin ! videoconvert ! video/x-raw,format=RGB,width=640,height=360 ! "
                        "appsink name=appsink").arg(uri);
 
@@ -56,7 +56,7 @@ bool CCTVStreamThread::setupPipeline(const QString &uri)
     return true;
 }
 
-bool CCTVStreamThread::setupTLS(const QString &certPath)
+bool CCTVStreamThread::setup_tls(const QString &certPath)
 {
     gst_element_set_state(pipeline, GST_STATE_READY);
     GstElement *src = gst_bin_get_by_name(GST_BIN(pipeline), "src");
@@ -114,14 +114,14 @@ void CCTVStreamThread::run()
             continue;
         }
 
-        QImage img = convertSampleToImage(sample);
+        QImage img = convert_sample_to_image(sample);
         gst_sample_unref(sample);
 
         if (img.isNull()) {
             qDebug() << "[CCTV] 변환된 이미지 NULL";
         } else {
             qDebug() << "[CCTV] 프레임 수신 성공";
-            emit frameReady(img);
+            emit frame_ready(img);
         }
     }
 
@@ -133,7 +133,7 @@ void CCTVStreamThread::run()
     qDebug() << "[CCTV] 스레드 종료";
 }
 
-QImage CCTVStreamThread::convertSampleToImage(GstSample *sample)
+QImage CCTVStreamThread::convert_sample_to_image(GstSample *sample)
 {
     GstBuffer *buffer = gst_sample_get_buffer(sample);
     GstCaps *caps = gst_sample_get_caps(sample);
@@ -156,7 +156,7 @@ QImage CCTVStreamThread::convertSampleToImage(GstSample *sample)
     return img;
 }
 
-void CCTVStreamThread::stopStreaming()
+void CCTVStreamThread::stop_streaming()
 {
     requestInterruption();
     wait();

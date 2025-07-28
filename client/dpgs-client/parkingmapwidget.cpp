@@ -12,9 +12,9 @@ ParkingMapWidget::ParkingMapWidget(QWidget *parent)
     cctv1_button = ui->cctv_button_1;
     cctv2_button = ui->cctv_button_2;
 
-    slotButtons[1] = ui->B3_button;
-    slotButtons[2] = ui->B2_button;
-    slotButtons[3] = ui->B1_button;
+    slotButtons[6] = ui->B3_button;
+    slotButtons[5] = ui->B2_button;
+    slotButtons[4] = ui->B1_button;
 
     this->setAttribute(Qt::WA_StyledBackground, true);
     this->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -25,7 +25,7 @@ ParkingMapWidget::~ParkingMapWidget()
     delete ui;
 }
 
-void ParkingMapWidget::updateSlotState(int slot_id, SlotState state)
+void ParkingMapWidget::update_slot_state(int slot_id, SlotState state)
 {
     if (slotButtons.contains(slot_id)) {
         QPushButton *btn = slotButtons[slot_id];

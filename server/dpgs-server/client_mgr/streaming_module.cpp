@@ -59,7 +59,7 @@ void StreamingModule::init_rtsps_server(const string& service_port, const string
     gst_rtsp_server_set_service(server, service_port.c_str());
     gst_rtsp_server_set_address(server, "0.0.0.0");
 
-    GTlsCertificate *cert = g_tls_certificate_new_from_files("server.crt", "server.key", NULL);
+    GTlsCertificate *cert = g_tls_certificate_new_from_files("./server2.crt", "./server2.key", NULL);
     if (!cert) {
         cerr << ("No certificate and key!") << endl;
         exit (1);

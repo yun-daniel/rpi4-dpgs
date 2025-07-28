@@ -38,8 +38,6 @@ qt_add_executable(Final
 
     ${APP_RESOURCES}
     slotdata.h
-
-
 )
 
 target_link_libraries(Final

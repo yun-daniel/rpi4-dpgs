@@ -12,8 +12,9 @@
 #include <QPixmap>
 #include <QStackedWidget>
 #include <QStandardPaths>
+#include <QSslSocket>
 
-Page2nd::Page2nd(QStackedWidget *parent_stacked, QTcpSocket *sharedSocket, QWidget *parent)
+Page2nd::Page2nd(QStackedWidget *parent_stacked, QSslSocket *sharedSocket, QWidget *parent)
     : QWidget{parent}
     , ui(new Ui::Page2nd)
     , stacked(parent_stacked)
@@ -23,10 +24,10 @@ Page2nd::Page2nd(QStackedWidget *parent_stacked, QTcpSocket *sharedSocket, QWidg
 {
     ui->setupUi(this);
 
-    initializeSlotNames();
+    initialize_slot_names();
     setup_pmap();
     setup_floor_table();
-    previousSlotStates.fill(UNKNOWN, 29);
+    previousSlotStates.fill(UNKNOWN, SLOTS_MAX_SIZE);
     setup_connections();
 }
 
@@ -45,12 +46,13 @@ void Page2nd::setup_connections()
 
 void Page2nd::handle_page_changed(int index)
 {
-    if(index != 1) {
-        disconnect(socket, &QTcpSocket::readyRead, this, &Page2nd::read_map_data);
-        return;
+    disconnect(socket, &QSslSocket::readyRead, this, &Page2nd::read_map_data);
+
+    if (index == 1)
+    {
+        connect(socket, &QSslSocket::readyRead, this, &Page2nd::read_map_data);
+        show_no_signal();
     }
-    connect(socket, &QTcpSocket::readyRead, this, &Page2nd::read_map_data);
-    show_no_signal();
 }
 
 void Page2nd::handle_cctv1_button_clicked()
@@ -150,7 +152,7 @@ void Page2nd::release_stream()
 
     if (cctvThread)
     {
-        cctvThread->stopStreaming();
+        cctvThread->stop_streaming();
         cctvThread->deleteLater();
         cctvThread = nullptr;
     }
@@ -164,10 +166,9 @@ void Page2nd::setup_gstreamer()
 {
     if (cctvThread && streamStarted) return;
 
-    QString uri = "rtsps://192.168.0.32:8555/stream";
-    QString cert = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/server.crt";
-
-    QFile in("certs/server.crt");
+    QString uri = "rtsps://192.168.0.67:8555/stream";
+    QString cert = QCoreApplication::applicationDirPath() + "/../../certs/server2.crt";
+    QFile in("certs/server2.crt");
     QFile out(cert);
     if (in.open(QIODevice::ReadOnly) && out.open(QIODevice::WriteOnly))
     {
@@ -188,7 +189,7 @@ void Page2nd::setup_gstreamer()
         return;
     }
 
-    connect(cctvThread, &CCTVStreamThread::frameReady, this, [=](const QImage &img) {
+    connect(cctvThread, &CCTVStreamThread::frame_ready, this, [=](const QImage &img) {
         if (cctv2_mode) return;
 
         QPixmap pixmap = QPixmap::fromImage(img).scaled(
@@ -231,18 +232,24 @@ void Page2nd::setup_floor_table()
     floorModel = new QStandardItemModel(this);
     floorModel->setHorizontalHeaderLabels({"층 수", "주차 가능 공간 수"});
 
-    QStringList floors = {"B1F", "B2F", "B3F"};
-    QList<int> spaces = {2, 0, 7};
+    QMap<QString, QString> initialSpaces = {
+        {"B1F", "0대"},   // 실시간 반영 (처음은 0)
+        {"B2F", "5대"},   // 하드코딩
+        {"B3F", "3대"}    // 하드코딩
+    };
 
-    for (int i = 0; i < floors.size(); ++i)
+    for (auto it = initialSpaces.constBegin(); it != initialSpaces.constEnd(); ++it)
     {
-        QStandardItem* floorItem = new QStandardItem(floors[i]);
-        QStandardItem* spaceItem = new QStandardItem(QString("%1대").arg(spaces[i]));
+        const QString &floor = it.key();
+        const QString &space = it.value();
+
+        QStandardItem *floorItem = new QStandardItem(floor);
+        QStandardItem *spaceItem = new QStandardItem(space);
 
         floorItem->setTextAlignment(Qt::AlignCenter);
         spaceItem->setTextAlignment(Qt::AlignCenter);
 
-        floorModel->appendRow({ floorItem, spaceItem });
+        floorModel->appendRow({floorItem, spaceItem});
     }
 
     ui->floor_table_view->setModel(floorModel);
@@ -369,6 +376,7 @@ void Page2nd::append_log_message(const QString &message)
         delete ui->logList->takeItem(0);
     }
 }
+
 void Page2nd::read_map_data()
 {
     static QByteArray buffer;
@@ -379,7 +387,7 @@ void Page2nd::read_map_data()
         SharedParkingLotMap mapData;
 
         memcpy(&mapData, buffer.constData(), sizeof(SharedParkingLotMap));
-        for(int i=0;i<29;i++)
+        for(int i=0;i<SLOTS_MAX_SIZE;i++)
         {
             qDebug() << "ID : "<< mapData.slotlist[i].slot_id << "State : "  <<mapData.slotlist[i].state;
         }
@@ -388,35 +396,64 @@ void Page2nd::read_map_data()
     }
 }
 
-void Page2nd::initializeSlotNames()
+void Page2nd::initialize_slot_names()
 {
-    slotNameMap[1] = "B3";
-    slotNameMap[2] = "B2";
-    slotNameMap[3] = "B1";
+    slotNameMap[4] = "B1";
+    slotNameMap[5] = "B2";
+    slotNameMap[6] = "B3";
+
+    floorSlotMap =
+    {
+        {"B1F", {4, 5, 6}}
+    };
 }
 
 void Page2nd::update_parking_map(const SharedParkingLotMap &map)
 {
-    for (int i = 0; i < 29; ++i)
+    int availableCount = 0;
+
+    QList<int> b1fSlots = floorSlotMap.value("B1F");
+
+    for (int i = 0; i < SLOTS_MAX_SIZE; ++i)
     {
         const Slot &slot = map.slotlist[i];
-        pmap->updateSlotState(slot.slot_id, slot.state);
+
+        pmap->update_slot_state(slot.slot_id, slot.state);
 
         if (slot.slot_id != 0 && previousSlotStates[i] != slot.state)
         {
             QString stateStr;
             switch (slot.state)
             {
-            case EMPTY:    stateStr = "EMPTY"; break;
-            case OCCUPIED: stateStr = "OCCUPIED"; break;
-            case EXITING:  stateStr = "EXITING"; break;
+            case EMPTY:    stateStr = "주차 가능"; break;
+            case OCCUPIED: stateStr = "주차 불가능"; break;
+            case EXITING:  stateStr = "출차 예정 감지"; break;
             case UNKNOWN:  stateStr = "UNKNOWN"; break;
             default:       stateStr = "???"; break;
             }
 
             QString slotName = slotNameMap.value(slot.slot_id, QString("슬롯%1").arg(slot.slot_id));
-            append_log_message(QString("주차 공간 '%1' → %2").arg(slotName, stateStr));
+            append_log_message(QString("[%1] → %2").arg(slotName, stateStr));
             previousSlotStates[i] = slot.state;
+        }
+
+        if (b1fSlots.contains(slot.slot_id) && slot.state == EMPTY)
+        {
+            availableCount++;
+        }
+    }
+
+    for (int row = 0; row < floorModel->rowCount(); ++row)
+    {
+        if (floorModel->item(row, 0)->text() == "B1F")
+        {
+            QStandardItem *item = floorModel->item(row, 1);
+            if (item)
+            {
+                item->setText(QString("%1대").arg(availableCount));
+                item->setTextAlignment(Qt::AlignCenter);
+            }
+            break;
         }
     }
 }

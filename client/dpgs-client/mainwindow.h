@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTcpSocket>
+#include <QSslSocket>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,7 +18,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QTcpSocket *sharedSocket;
+    QSslSocket *sharedSocket;
     class Page1st *page1;
     class Page2nd *page2;
 };

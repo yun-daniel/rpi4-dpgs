@@ -18,4 +18,4 @@ GTlsDatabase* load_tls_database(const char *ca_path);
 }
 #endif
 
-#endif // TLS_HELPER_H
+#endif

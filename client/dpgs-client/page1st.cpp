@@ -4,10 +4,12 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QStackedWidget>
-#include <QTcpSocket>
+#include <QSslSocket>
+#include <QSslConfiguration>
+#include <QFile>
 #include <QPainter>
 
-Page1st::Page1st(QStackedWidget *parent_stacked, QTcpSocket *sharedSocket, QWidget *parent)
+Page1st::Page1st(QStackedWidget *parent_stacked, QSslSocket *sharedSocket, QWidget *parent)
     : QWidget{parent}
     , ui(new Ui::Page1st)
     , stacked(parent_stacked)
@@ -36,8 +38,7 @@ void Page1st::handle_login_button_clicked()
     const QString id = ui->line_edit_id->text().trimmed();
     const QString pw = ui->line_edit_pw->text().trimmed();
 
-    if (id.isEmpty() || pw.isEmpty())
-    {
+    if (id.isEmpty() || pw.isEmpty()) {
         QMessageBox::warning(this, "입력 오류", "아이디와 비밀번호를 모두 입력해주세요.");
         return;
     }
@@ -46,11 +47,30 @@ void Page1st::handle_login_button_clicked()
         socket->abort();
     }
 
-    socket->connectToHost("192.168.0.32", 9999);
+    QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
+    QString certPath = QCoreApplication::applicationDirPath() + "/../../certs/server2.crt";
+    QFile certFile(certPath);
+    if (certFile.open(QIODevice::ReadOnly)) {
+        QSslCertificate caCert(&certFile, QSsl::Pem);
+        sslConfig.setCaCertificates({ caCert });
+        sslConfig.setPeerVerifyMode(QSslSocket::VerifyPeer);
+        socket->setSslConfiguration(sslConfig);
+    } else {
+        QMessageBox::critical(this, "인증서 오류", "인증서 파일을 열 수 없습니다.");
+        return;
+    }
 
-    if (!socket->waitForConnected(3000))
-    {
-        QMessageBox::critical(this, "서버 연결 실패", "서버에 연결할 수 없습니다.");
+    connect(socket, &QSslSocket::sslErrors, this, [](const QList<QSslError> &errors) {
+        qDebug() << "[TLS] SSL 오류 발생:";
+        for (const QSslError &error : errors) {
+            qDebug() << " - " << error.errorString();
+        }
+    });
+
+    socket->connectToHostEncrypted("192.168.0.67", 9999);
+
+    if (!socket->waitForEncrypted(3000)) {
+        QMessageBox::critical(this, "서버 연결 실패", "TLS 연결에 실패했습니다.");
         return;
     }
 
@@ -63,22 +83,17 @@ void Page1st::handle_login_button_clicked()
     socket->write(pwData);
     socket->flush();
 
-    if (!socket->waitForReadyRead(2000))
-    {
+    if (!socket->waitForReadyRead(2000)) {
         QMessageBox::warning(this, "응답 오류", "서버 응답이 없습니다.");
         return;
     }
 
     QByteArray response = socket->read(1);
-    qDebug()<<response;
 
-    if (!response.isEmpty() && response[0] == '1')
-    {
+    if (!response.isEmpty() && response[0] == '1') {
         stacked->setCurrentIndex(1);
-    }
-    else
-    {
-        QMessageBox::warning(this, "로그인 실패", "ID 또는 비밀번호가 틀렸습니다.");
+    } else {
+        QMessageBox::warning(this, "로그인 실패", "ID 또는 비밀번호가 틀리어졌습니다.");
         if (socket->state() == QAbstractSocket::ConnectedState)
             socket->disconnectFromHost();
     }
@@ -96,8 +111,7 @@ void Page1st::draw_parking_labels()
     painter.setFont(font);
     painter.setPen(Qt::white);
 
-    struct Label
-    {
+    struct Label {
         QString text;
         QPoint pos;
         qreal angle;
@@ -108,9 +122,7 @@ void Page1st::draw_parking_labels()
                            { "Guidance System", QPoint(350, 40), 30 },
                            };
 
-
-    for (const Label& label : labels)
-    {
+    for (const Label& label : labels) {
         painter.save();
         painter.translate(label.pos);
         painter.rotate(label.angle);

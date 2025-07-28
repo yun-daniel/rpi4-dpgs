@@ -3,5 +3,7 @@
         <file>images/parkingBox.png</file>
         <file>images/parking.png</file>
         <file>images/CI.png</file>
+        <file>images/cctv_icon.png</file>
+        <file>images/cctv_icon_on.png</file>
     </qresource>
 </RCC>
