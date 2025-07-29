@@ -54,7 +54,7 @@ case "$1" in
         rm -rf build
         ;;
     *)
-        echo "Usage: $0 {server|client|all}"
+        echo "Usage: $0 {server|client|all|clean}"
         exit 1
         ;;
 esac
