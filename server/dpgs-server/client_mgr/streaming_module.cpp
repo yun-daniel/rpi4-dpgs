@@ -20,6 +20,8 @@ StreamingModule::StreamingModule(VPEngine& _vp_engine)
     selected_queue = nullptr;
     selected_mutex = nullptr;
     selected_cv = nullptr;
+    selected_fb = nullptr;
+    
 }
 
 StreamingModule::~StreamingModule(){};
