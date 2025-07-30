@@ -1,7 +1,8 @@
 #!/bin/bash
 
+BUILD_DIR="release"
 SRC_BASE="server"
-BUILD_BASE="build/server"
+BUILD_BASE="$BUILD_DIR/server"
 SERVER_BUILD="$BUILD_BASE/dpgs-server"
 DEV_BUILD="$BUILD_BASE/dpgs-dev"
 
