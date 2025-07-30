@@ -58,19 +58,19 @@ CORE_SRCS		= \
 #VP_ENGINE_SRCS	= \
 #					$(VP_ENGINE_DIR)/vp_engine.cpp \
 #					$(VP_ENGINE_DIR)/cam_streaming_client.cpp
-#MAP_MGR_SRCS	= \
-#					$(MAP_MGR_DIR)/map_manager.cpp
+MAP_MGR_SRCS	= \
+					$(MAP_MGR_DIR)/map_manager.cpp
 DEVICE_MGR_SRCS	= \
 					$(DEVICE_MGR_DIR)/device_manager.cpp \
 					$(DEVICE_MGR_DIR)/cam_rx_module.cpp
 #					$(DEVICE_MGR_DIR)/remote_led_dp.cpp
-#CLIENT_MGR_SRCS	= \
-#					$(CLIENT_MGR_DIR)/client_manager.cpp \
-#					$(CLIENT_MGR_DIR)/connection_manager.cpp \
-#					$(CLIENT_MGR_DIR)/map_monitor.cpp \
-#					$(CLIENT_MGR_DIR)/client_info.cpp \
-#					$(CLIENT_MGR_DIR)/srv_sock_utils.cpp \
-#					$(CLIENT_MGR_DIR)/streaming_module.cpp
+CLIENT_MGR_SRCS	= \
+					$(CLIENT_MGR_DIR)/client_manager.cpp \
+					$(CLIENT_MGR_DIR)/connection_manager.cpp \
+					$(CLIENT_MGR_DIR)/map_monitor.cpp \
+					$(CLIENT_MGR_DIR)/client_info.cpp \
+					$(CLIENT_MGR_DIR)/srv_sock_utils.cpp \
+					$(CLIENT_MGR_DIR)/streaming_module.cpp
 
 SOURCES			= $(CORE_SRCS) $(AI_ENGINE_SRCS) $(VP_ENGINE_SRCS) $(MAP_MGR_SRCS) $(DEVICE_MGR_SRCS) $(CLIENT_MGR_SRCS)
 OBJS			:= $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(SOURCES))

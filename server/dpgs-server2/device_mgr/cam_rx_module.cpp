@@ -29,11 +29,6 @@ bool CamRxModule::initialize() {
 
     gst_init(nullptr, nullptr);
 
-//    cap.open(stream_src, cv::CAP_GSTREAMER);
-//    if (!cap.isOpened()) {
-//        std::cerr << "[CAM_RX] Error: Failed to open input stream: " << stream_src << "\n";
-//        return false;
-//    }
 
 
     std::cout << "[CAM_RX] Success: Camera Receiver Module Initialized\n";
@@ -44,13 +39,14 @@ bool CamRxModule::initialize() {
 void CamRxModule::run() {
     std::cout << "[CAM_RX] Run Camera Receive Module\n";
 
-    if (connect(sock, (struct sockaddr*)&cam_addr, sizeof(cam_addr)) < 0) {
-        std::cerr << "[CAM_RX] Connection Failed\n";
-        return;
-    }
-    std::cout << "[CAM_RX] Connected to cam_srv " << cam_ip << ":" << port << "\n";
-
-    cap.open(stream_src, cv::CAP_GSTREAMER);
+//    if (connect(sock, (struct sockaddr*)&cam_addr, sizeof(cam_addr)) < 0) {
+//        std::cerr << "[CAM_RX] Connection Failed\n";
+//        return;
+//    }
+//    std::cout << "[CAM_RX] Connected to cam_srv " << cam_ip << ":" << port << "\n";
+//
+//    cap.open(stream_src, cv::CAP_GSTREAMER);
+    cap.open("tb/test_a.mp4");
     if (!cap.isOpened()) {
         std::cerr << "[CAM_RX] Error: Failed to open input stream: " << stream_src << "\n";
         return;
@@ -66,10 +62,12 @@ void CamRxModule::run() {
             continue;
         }
 
+        fb.push(frame);
+
 
         // [Debug Session]
-        cv::imshow("[CAM_RX] frame", frame);
-        cv::waitKey(1);
+//        cv::imshow("[CAM_RX] frame", frame);
+//        cv::waitKey(1);
     }
 
     std::cout << "[CAM_RX] Camera Receive Module Terminated\n";

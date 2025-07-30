@@ -3,10 +3,10 @@
 
 #include "str_frame_buffer.h"
 #include "device_manager.h"
+#include "map_manager.h"
 #include "server_thread_supv.h"
 //#include "config.h"
 //#include "frame_buffer.h"
-//#include "map_manager.h"
 //#include "core_thr_supv.h"
 //#include "core_proc_supv.h"
 
@@ -28,7 +28,7 @@ class DPGSServer {
     std::unique_ptr<StrFrameBuffer> fb;
     std::unique_ptr<DeviceManager>  dev_mgr;
     std::unique_ptr<SrvThrSupv>     thr_supv;
-//    std::unique_ptr<MapManager>     map_mgr;
+    std::unique_ptr<MapManager>     map_mgr;
 //    std::unique_ptr<CoreProcSupv>   proc_supv;
 
 

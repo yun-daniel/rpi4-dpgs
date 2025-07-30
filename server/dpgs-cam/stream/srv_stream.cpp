@@ -152,7 +152,7 @@ void SrvStream::run() {
         cv::imshow("[SRV_STREAM] frame", frame_copy);
         cv::waitKey(1);
 
-//        push_to_server(frame_copy);
+        push_to_server(frame_copy);
 
     }
 

@@ -36,8 +36,8 @@ void StrFrameBuffer::push(const cv::Mat& frame) {
     buffer.push_back(cloned);
 
     // [Debug Session]
-//    cv::imshow("[FB] push", cloned);
-//    cv::waitKey(1);
+    cv::imshow("[FB] push", cloned);
+    cv::waitKey(1);
 
     sem_post(&sem_ready);
 }

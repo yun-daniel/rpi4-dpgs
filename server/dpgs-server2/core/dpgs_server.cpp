@@ -15,6 +15,12 @@ DPGSServer::~DPGSServer() {
 bool DPGSServer::initialize() {
     std::cout << "[SYS] Start to initialize...\n";
 
+    std::cout << "[SYS] Initialize MapManager...\n";
+    map_mgr = std::make_unique<MapManager>("DPGS_MM", "config/map.json");
+    if (!map_mgr->initialize()) {
+        std::cerr << "[SYS] Error: Failed to initialize MapManager\n";
+        return false;
+    }
 
     std::cout << "[SYS] Initialize StrFrameBuffer...\n";
     fb = std::make_unique<StrFrameBuffer>();
