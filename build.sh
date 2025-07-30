@@ -1,10 +1,12 @@
 #!/bin/bash
 
+BUILD_DIR="release"
+
 function build_server() {
     echo "[BUILD] Building server..."
 
     SRC_BASE="server"
-    BUILD_BASE="build/server"
+    BUILD_BASE="$BUILD_DIR/server"
 
     SERVER_SRC="$SRC_BASE/dpgs-server"
     RGB_SRC="$SRC_BASE/dpgs-dev/rgbmatrix"
@@ -51,10 +53,10 @@ case "$1" in
         ;;
     clean)
         echo "[CLEAN] Removing build directory..."
-        rm -rf build
+        rm -rf "$BUILD_DIR"
         ;;
     *)
-        echo "Usage: $0 {server|client|all|clean}"
+        echo "Usage: build.sh {server|client|all|clean}"
         exit 1
         ;;
 esac
