@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/parkingBox.png</file>
-        <file>images/parking.png</file>
         <file>images/CI.png</file>
-        <file>images/cctv_icon.png</file>
-        <file>images/cctv_icon_on.png</file>
+        <file>images/parking.png</file>
+        <file>images/parkingbox_B1F.png</file>
+        <file>images/parkingbox_B2F.png</file>
+        <file>images/parkingbox_B3F.png</file>
     </qresource>
 </RCC>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1150</width>
-    <height>680</height>
+    <width>1300</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,8 +21,8 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>190</y>
+     <x>870</x>
+     <y>250</y>
      <width>341</width>
      <height>251</height>
     </rect>
@@ -144,8 +144,8 @@ QGroupBox::title {
     <rect>
      <x>0</x>
      <y>-1</y>
-     <width>631</width>
-     <height>681</height>
+     <width>711</width>
+     <height>801</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -158,10 +158,10 @@ QGroupBox::title {
   <widget class="QLabel" name="label_parking">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>130</y>
-     <width>591</width>
-     <height>411</height>
+     <x>30</x>
+     <y>190</y>
+     <width>661</width>
+     <height>441</height>
     </rect>
    </property>
    <property name="styleSheet">

@@ -20,12 +20,11 @@ Page2nd::Page2nd(QStackedWidget *parent_stacked, QSslSocket *sharedSocket, QWidg
     , stacked(parent_stacked)
     , socket(sharedSocket)
     , timer(nullptr)
-    , pmap(nullptr)
 {
     ui->setupUi(this);
 
     initialize_slot_names();
-    setup_pmap();
+    setup_all_maps();
     setup_floor_table();
     previousSlotStates.fill(UNKNOWN, SLOTS_MAX_SIZE);
     setup_connections();
@@ -80,6 +79,8 @@ void Page2nd::handle_cctv1_button_clicked()
     }
 
     qDebug() << "[CCTV 1] 스트리밍 화면 표시";
+
+    toggle_camera1_cone();
 }
 
 void Page2nd::handle_cctv2_button_clicked()
@@ -107,12 +108,15 @@ void Page2nd::handle_cctv2_button_clicked()
     start_cctv2_signal_timer();
 
     qDebug() << "[CCTV 2] No Signal 표시";
+
+    toggle_camera2_cone();
 }
 
 void Page2nd::handle_logout_button_clicked()
 {
     QMessageBox::information(this, "관리자 모드", "로그인 화면으로 전환합니다.");
     release_stream();
+    clear_camera_cones();
     send_logout_and_close();
     stacked->setCurrentIndex(0);
 }
@@ -121,6 +125,7 @@ void Page2nd::handle_exit_button_clicked()
 {
     QMessageBox::information(this, "관리자 모드", "프로그램을 종료합니다.");
     release_stream();
+    clear_camera_cones();
     send_logout_and_close();
     qApp->exit();
 }
@@ -167,8 +172,8 @@ void Page2nd::setup_gstreamer()
     if (cctvThread && streamStarted) return;
 
     QString uri = "rtsps://192.168.0.67:8555/stream";
-    QString cert = QCoreApplication::applicationDirPath() + "/../../certs/server2.crt";
-    QFile in("certs/server2.crt");
+    QString cert = QCoreApplication::applicationDirPath() + "/../../certs/server.crt";
+    QFile in("certs/server.crt");
     QFile out(cert);
     if (in.open(QIODevice::ReadOnly) && out.open(QIODevice::WriteOnly))
     {
@@ -204,27 +209,69 @@ void Page2nd::setup_gstreamer()
     qDebug() << "[GStreamer] 스트리밍 시작 완료";
 }
 
-void Page2nd::setup_pmap()
+void Page2nd::setup_all_maps()
 {
+    mapB1F = new ParkingMapWidget();
+    mapB2F = new ParkingMapWidgetB2F();
+    mapB3F = new ParkingMapWidgetB3F();
 
-    pmap = new ParkingMapWidget();
-    pmap->setFixedSize(1050, 640);
 
-    QGraphicsScene* scene = new QGraphicsScene(this);
-    QGraphicsProxyWidget* proxy = scene->addWidget(pmap);
+    connect(mapB1F->get_cctv1_button(), &QPushButton::clicked, this, &Page2nd::handle_cctv1_button_clicked);
+    connect(mapB1F->get_cctv2_button(), &QPushButton::clicked, this, &Page2nd::handle_cctv2_button_clicked);
 
-    ui->mini_map_view->setFrameShape(QFrame::NoFrame);
-    ui->mini_map_view->setContentsMargins(0, 0, 0, 0);
-    ui->mini_map_view->setScene(scene);
+    miniMapScene = new QGraphicsScene(this);
+    ui->mini_map_view->setScene(miniMapScene);
     ui->mini_map_view->setRenderHint(QPainter::Antialiasing);
-    ui->mini_map_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->mini_map_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->mini_map_view->fitInView(proxy->boundingRect(), Qt::KeepAspectRatio);
 
-    scene->setSceneRect(proxy->boundingRect());
+    mapB1FProxy = miniMapScene->addWidget(mapB1F);
+    mapB2FProxy = miniMapScene->addWidget(mapB2F);
+    mapB3FProxy = miniMapScene->addWidget(mapB3F);
 
-    connect(pmap->get_cctv1_button(), &QPushButton::clicked, this, &Page2nd::handle_cctv1_button_clicked);
-    connect(pmap->get_cctv2_button(), &QPushButton::clicked, this, &Page2nd::handle_cctv2_button_clicked);
+    mapB1FProxy->setVisible(true);
+    mapB2FProxy->setVisible(false);
+    mapB3FProxy->setVisible(false);
+
+    miniMapScene->setSceneRect(mapB1FProxy->boundingRect());
+    ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+    ui->mini_map_view->fitInView(mapB1FProxy->boundingRect(), Qt::KeepAspectRatio);
+
+    currentFloor = "B1F";
+}
+
+void Page2nd::switch_floor_map(const QString &floor)
+{
+    if (currentFloor == floor)
+        return;
+
+    if (floor == "B1F")
+    {
+        mapB1FProxy->setVisible(true);
+        mapB2FProxy->setVisible(false);
+        mapB3FProxy->setVisible(false);
+        miniMapScene->setSceneRect(mapB1FProxy->boundingRect());
+        ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+        ui->mini_map_view->fitInView(mapB1FProxy->boundingRect(), Qt::KeepAspectRatio);
+    }
+    else if (floor == "B2F")
+    {
+        mapB1FProxy->setVisible(false);
+        mapB2FProxy->setVisible(true);
+        mapB3FProxy->setVisible(false);
+        miniMapScene->setSceneRect(mapB2FProxy->boundingRect());
+        ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+        ui->mini_map_view->fitInView(mapB2FProxy->boundingRect(), Qt::KeepAspectRatio);
+    }
+    else if (floor == "B3F")
+    {
+        mapB1FProxy->setVisible(false);
+        mapB2FProxy->setVisible(false);
+        mapB3FProxy->setVisible(true);
+        miniMapScene->setSceneRect(mapB3FProxy->boundingRect());
+        ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+        ui->mini_map_view->fitInView(mapB3FProxy->boundingRect(), Qt::KeepAspectRatio);
+    }
+
+    currentFloor = floor;
 }
 
 void Page2nd::setup_floor_table()
@@ -289,6 +336,8 @@ void Page2nd::handle_floor_clicked(const QModelIndex &index)
 {
     QString floor = floorModel->item(index.row(), 0)->text();
     if (ui->label_floor) ui->label_floor->setText(floor);
+
+    switch_floor_map(floor);
 }
 
 void Page2nd::show_no_signal()
@@ -358,7 +407,8 @@ void Page2nd::start_cctv2_signal_timer()
 
 void Page2nd::stop_cctv2_signal_timer()
 {
-    if (cctv2Timer) {
+    if (cctv2Timer)
+    {
         cctv2Timer->stop();
         delete cctv2Timer;
         cctv2Timer = nullptr;
@@ -383,13 +433,18 @@ void Page2nd::read_map_data()
 
     buffer.append(socket->readAll());
 
-    while (buffer.size() >= sizeof(SharedParkingLotMap)) {
+    while (buffer.size() >= sizeof(SharedParkingLotMap))
+    {
         SharedParkingLotMap mapData;
 
         memcpy(&mapData, buffer.constData(), sizeof(SharedParkingLotMap));
-        for(int i=0;i<SLOTS_MAX_SIZE;i++)
+        for (int i = 0; i < SLOTS_MAX_SIZE; ++i)
         {
-            qDebug() << "ID : "<< mapData.slotlist[i].slot_id << "State : "  <<mapData.slotlist[i].state;
+            int id = mapData.slotlist[i].slot_id;
+            if (id >= 22 && id <= 26)
+            {
+                qDebug() << "ID : " << id << "State : " << mapData.slotlist[i].state;
+            }
         }
         buffer.remove(0, sizeof(SharedParkingLotMap));
         update_parking_map(mapData);
@@ -398,18 +453,27 @@ void Page2nd::read_map_data()
 
 void Page2nd::initialize_slot_names()
 {
-    slotNameMap[4] = "B1";
-    slotNameMap[5] = "B2";
-    slotNameMap[6] = "B3";
-
-    floorSlotMap =
+    for (int i = 0; i < 29; ++i)
     {
-        {"B1F", {4, 5, 6}}
-    };
+        QString name;
+
+        if (i >= 0 && i <= 3)       name = QString("A%1").arg(i + 1);
+        else if (i >= 4 && i <= 10) name = QString("B%1").arg(i - 3);
+        else if (i >= 11 && i <= 14)name = QString("C%1").arg(i - 10);
+        else if (i >= 15 && i <= 21)name = QString("D%1").arg(i - 14);
+        else if (i >= 22 && i <= 28)name = QString("E%1").arg(i - 21);
+
+        slotNameMap[i] = name;
+    }
+
+    floorSlotMap = {{"B1F", {22, 23, 24, 25, 26}}};
 }
 
 void Page2nd::update_parking_map(const SharedParkingLotMap &map)
 {
+
+    //if (currentFloor != "B1F") return;
+
     int availableCount = 0;
 
     QList<int> b1fSlots = floorSlotMap.value("B1F");
@@ -418,16 +482,19 @@ void Page2nd::update_parking_map(const SharedParkingLotMap &map)
     {
         const Slot &slot = map.slotlist[i];
 
-        pmap->update_slot_state(slot.slot_id, slot.state);
+        if (!b1fSlots.contains(slot.slot_id))
+            continue;
 
-        if (slot.slot_id != 0 && previousSlotStates[i] != slot.state)
+        mapB1F->update_slot_state(slot.slot_id, slot.state);
+
+        if (previousSlotStates[i] != slot.state)
         {
             QString stateStr;
             switch (slot.state)
             {
-            case EMPTY:    stateStr = "주차 가능"; break;
-            case OCCUPIED: stateStr = "주차 불가능"; break;
-            case EXITING:  stateStr = "출차 예정 감지"; break;
+            case EMPTY:    stateStr = "비어 있음"; break;
+            case OCCUPIED: stateStr = "사용 중"; break;
+            case EXITING:  stateStr = "출차 예정"; break;
             case UNKNOWN:  stateStr = "UNKNOWN"; break;
             default:       stateStr = "???"; break;
             }
@@ -458,3 +525,105 @@ void Page2nd::update_parking_map(const SharedParkingLotMap &map)
     }
 }
 
+void Page2nd::toggle_camera1_cone()
+{
+
+    if (camera2Cone)
+    {
+        miniMapScene->removeItem(camera2Cone);
+        delete camera2Cone;
+        camera2Cone = nullptr;
+    }
+
+    if (camera1Cone)
+    {
+        miniMapScene->removeItem(camera1Cone);
+        delete camera1Cone;
+    }
+
+    QPointF cameraPos(666, 580);
+
+    const int height = 95;
+    const int width = 190;
+
+    QPointF leftTop(cameraPos.x() - width, cameraPos.y() - height);
+    QPointF rightTop(cameraPos.x() + width, cameraPos.y() - height);
+
+    QPainterPath path;
+    path.moveTo(cameraPos);
+    path.lineTo(leftTop);
+    path.lineTo(rightTop);
+    path.closeSubpath();
+
+    QLinearGradient gradient(cameraPos, QPointF(cameraPos.x(), cameraPos.y() - height));
+    gradient.setColorAt(0.0, QColor(0, 255, 255, 180));
+    gradient.setColorAt(1.0, QColor(0, 255, 255, 5));
+
+    camera1Cone = new QGraphicsPathItem(path);
+    camera1Cone->setBrush(gradient);
+    camera1Cone->setPen(Qt::NoPen);
+
+    miniMapScene->addItem(camera1Cone);
+    activeCameraId = 1;
+}
+
+void Page2nd::toggle_camera2_cone()
+{
+
+    if (camera1Cone)
+    {
+        miniMapScene->removeItem(camera1Cone);
+        delete camera1Cone;
+        camera1Cone = nullptr;
+    }
+
+    if (camera2Cone)
+    {
+        miniMapScene->removeItem(camera2Cone);
+        delete camera2Cone;
+    }
+
+    QPointF cameraPos(422, 230);
+
+    const int height = 85;
+    const int width = 150;
+
+    QPointF leftTop(cameraPos.x() - width, cameraPos.y() - height);
+    QPointF rightTop(cameraPos.x() + width, cameraPos.y() - height);
+
+    QPainterPath path;
+    path.moveTo(cameraPos);
+    path.lineTo(leftTop);
+    path.lineTo(rightTop);
+    path.closeSubpath();
+
+    QLinearGradient gradient(cameraPos, QPointF(cameraPos.x(), cameraPos.y() - height));
+    gradient.setColorAt(0.0, QColor(0, 255, 255, 180));
+    gradient.setColorAt(1.0, QColor(0, 255, 255, 5));
+
+    camera2Cone = new QGraphicsPathItem(path);
+    camera2Cone->setBrush(gradient);
+    camera2Cone->setPen(Qt::NoPen);
+
+    miniMapScene->addItem(camera2Cone);
+    activeCameraId = 2;
+}
+
+void Page2nd::clear_camera_cones()
+{
+    if (camera1Cone)
+    {
+        miniMapScene->removeItem(camera1Cone);
+        delete camera1Cone;
+        camera1Cone = nullptr;
+    }
+
+    if (camera2Cone)
+    {
+        miniMapScene->removeItem(camera2Cone);
+        delete camera2Cone;
+        camera2Cone = nullptr;
+    }
+
+    activeCameraId = 0;
+}

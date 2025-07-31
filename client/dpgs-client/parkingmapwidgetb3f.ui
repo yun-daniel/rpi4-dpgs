@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ParkingMapWidgetB3F</class>
+ <widget class="QWidget" name="ParkingMapWidgetB3F">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1114</width>
+    <height>670</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>-10</x>
+     <y>-20</y>
+     <width>1131</width>
+     <height>691</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QGroupBox {
+    background-image: url(:/images/parkingbox_B3F.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-origin: content;
+}
+
+QPushButton {
+    background-color: #FF3B3B;
+    border-radius: 6px;
+}</string>
+   </property>
+   <property name="title">
+    <string/>
+   </property>
+   <widget class="QPushButton" name="F2_button">
+    <property name="geometry">
+     <rect>
+      <x>42</x>
+      <y>192</y>
+      <width>80</width>
+      <height>45</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>B1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="F2_button_2">
+    <property name="geometry">
+     <rect>
+      <x>42</x>
+      <y>267</y>
+      <width>80</width>
+      <height>45</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>B2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="F2_button_3">
+    <property name="geometry">
+     <rect>
+      <x>42</x>
+      <y>378</y>
+      <width>80</width>
+      <height>45</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>B3</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="F2_button_4">
+    <property name="geometry">
+     <rect>
+      <x>42</x>
+      <y>452</y>
+      <width>80</width>
+      <height>45</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>B4</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>296</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>C6</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_2">
+    <property name="geometry">
+     <rect>
+      <x>369</x>
+      <y>296</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>C5</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_3">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>410</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>D6</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_4">
+    <property name="geometry">
+     <rect>
+      <x>369</x>
+      <y>410</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton{
+	background-color : #32CD32;
+}</string>
+    </property>
+    <property name="text">
+     <string>D5</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_5">
+    <property name="geometry">
+     <rect>
+      <x>473</x>
+      <y>296</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>C4</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_6">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>296</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>C3</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_7">
+    <property name="geometry">
+     <rect>
+      <x>473</x>
+      <y>410</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton{
+	background-color : #32CD32;
+}</string>
+    </property>
+    <property name="text">
+     <string>D4</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_8">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>410</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>D3</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_9">
+    <property name="geometry">
+     <rect>
+      <x>648</x>
+      <y>296</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>C2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_10">
+    <property name="geometry">
+     <rect>
+      <x>721</x>
+      <y>296</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>C1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_11">
+    <property name="geometry">
+     <rect>
+      <x>648</x>
+      <y>410</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>D2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_12">
+    <property name="geometry">
+     <rect>
+      <x>721</x>
+      <y>410</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>D1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_13">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>73</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>A4</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_14">
+    <property name="geometry">
+     <rect>
+      <x>388</x>
+      <y>73</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>A3</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_15">
+    <property name="geometry">
+     <rect>
+      <x>456</x>
+      <y>73</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>A2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="D7_button_16">
+    <property name="geometry">
+     <rect>
+      <x>524</x>
+      <y>73</y>
+      <width>45</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton{
+	background-color : #32CD32;
+}</string>
+    </property>
+    <property name="text">
+     <string>A1</string>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

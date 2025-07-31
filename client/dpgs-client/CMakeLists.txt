@@ -4,6 +4,7 @@ project(Final LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 qt6_add_resources(APP_RESOURCES resource.qrc)
 
@@ -38,6 +39,11 @@ qt_add_executable(Final
 
     ${APP_RESOURCES}
     slotdata.h
+    parkingmapwidgetb2f.h parkingmapwidgetb2f.cpp parkingmapwidgetb2f.ui
+    parkingmapwidgetb3f.h parkingmapwidgetb3f.cpp parkingmapwidgetb3f.ui
+
+
+
 )
 
 target_link_libraries(Final
@@ -49,3 +55,4 @@ target_link_libraries(Final
         OpenSSL::SSL
         OpenSSL::Crypto
 )
+target_link_libraries(Final PRIVATE Qt6::Widgets)

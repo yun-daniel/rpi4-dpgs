@@ -48,7 +48,7 @@ void Page1st::handle_login_button_clicked()
     }
 
     QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
-    QString certPath = QCoreApplication::applicationDirPath() + "/../../certs/server2.crt";
+    QString certPath = QCoreApplication::applicationDirPath() + "/../../certs/server.crt";
     QFile certFile(certPath);
     if (certFile.open(QIODevice::ReadOnly)) {
         QSslCertificate caCert(&certFile, QSsl::Pem);
@@ -93,7 +93,7 @@ void Page1st::handle_login_button_clicked()
     if (!response.isEmpty() && response[0] == '1') {
         stacked->setCurrentIndex(1);
     } else {
-        QMessageBox::warning(this, "로그인 실패", "ID 또는 비밀번호가 틀리어졌습니다.");
+        QMessageBox::warning(this, "로그인 실패", "ID 또는 비밀번호가 틀렸습니다.");
         if (socket->state() == QAbstractSocket::ConnectedState)
             socket->disconnectFromHost();
     }
@@ -107,7 +107,7 @@ void Page1st::draw_parking_labels()
     QPixmap pixmap(":/images/parking.png");
     QPainter painter(&pixmap);
 
-    QFont font("Arial", 20, QFont::Bold);
+    QFont font("Arial", 30, QFont::Bold);
     painter.setFont(font);
     painter.setPen(Qt::white);
 
@@ -118,8 +118,8 @@ void Page1st::draw_parking_labels()
     };
 
     QList<Label> labels = {
-                           { "Dynamic Parking", QPoint(50, 140), -30 },
-                           { "Guidance System", QPoint(350, 40), 30 },
+                           { "Dynamic Parking", QPoint(10, 190), -30 },
+                           { "Guidance System", QPoint(340, 30), 30 },
                            };
 
     for (const Label& label : labels) {

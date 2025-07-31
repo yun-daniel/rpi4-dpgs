@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , page2(nullptr)
 {
     ui->setupUi(this);
-    setFixedSize(1150, 680);
+    setFixedSize(1400, 800);
     setWindowTitle("Dynamic Parking Guidance System Project");
 
     ui->stackedWidget->setCurrentIndex(0);
