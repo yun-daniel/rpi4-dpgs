@@ -19,4 +19,4 @@ private:
     Ui::ParkingMapWidgetB2F *ui;
 };
 
-#endif // PARKINGMAPWIDGETB2F_H
+#endif

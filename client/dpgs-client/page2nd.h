@@ -44,7 +44,6 @@ private slots:
     void read_map_data();
 
     void toggle_camera1_cone();
-    void toggle_camera2_cone();
     void clear_camera_cones();
 
 private:
@@ -57,6 +56,7 @@ private:
     void setup_gstreamer();
     void setup_all_maps();
     void setup_floor_table();
+    void create_dummy_log();
 
     void initialize_slot_names();
     void update_parking_map(const SharedParkingLotMap &map);
@@ -84,7 +84,6 @@ private:
 
     QGraphicsScene *miniMapScene = nullptr;
     QGraphicsPathItem *camera1Cone = nullptr;
-    QGraphicsPathItem *camera2Cone = nullptr;
 
     QGraphicsProxyWidget *mapB1FProxy = nullptr;
     QGraphicsProxyWidget *mapB2FProxy = nullptr;

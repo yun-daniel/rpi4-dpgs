@@ -40,7 +40,7 @@ void ParkingMapWidget::update_slot_state(int slot_id, SlotState state)
             btn->setStyleSheet("background-color: #FF3B3B;");
             break;
         case EXITING:
-            btn->setStyleSheet("background-color: #FF9900;");
+            btn->setStyleSheet("background-color: #FFBF00;");
             break;
         default:
             btn->setStyleSheet("background-color: gray;");

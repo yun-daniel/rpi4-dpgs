@@ -22,9 +22,11 @@ Page2nd::Page2nd(QStackedWidget *parent_stacked, QSslSocket *sharedSocket, QWidg
     , timer(nullptr)
 {
     ui->setupUi(this);
+    ui->log_tab_widget->setCurrentIndex(0);
 
     initialize_slot_names();
     setup_all_maps();
+    create_dummy_log();
     setup_floor_table();
     previousSlotStates.fill(UNKNOWN, SLOTS_MAX_SIZE);
     setup_connections();
@@ -109,7 +111,14 @@ void Page2nd::handle_cctv2_button_clicked()
 
     qDebug() << "[CCTV 2] No Signal 표시";
 
-    toggle_camera2_cone();
+    if (camera1Cone)
+    {
+        miniMapScene->removeItem(camera1Cone);
+        delete camera1Cone;
+        camera1Cone = nullptr;
+    }
+
+    activeCameraId = 2;
 }
 
 void Page2nd::handle_logout_button_clicked()
@@ -117,6 +126,7 @@ void Page2nd::handle_logout_button_clicked()
     QMessageBox::information(this, "관리자 모드", "로그인 화면으로 전환합니다.");
     release_stream();
     clear_camera_cones();
+    activeCameraId = 0;
     send_logout_and_close();
     stacked->setCurrentIndex(0);
 }
@@ -126,6 +136,7 @@ void Page2nd::handle_exit_button_clicked()
     QMessageBox::information(this, "관리자 모드", "프로그램을 종료합니다.");
     release_stream();
     clear_camera_cones();
+    activeCameraId = 0;
     send_logout_and_close();
     qApp->exit();
 }
@@ -215,7 +226,6 @@ void Page2nd::setup_all_maps()
     mapB2F = new ParkingMapWidgetB2F();
     mapB3F = new ParkingMapWidgetB3F();
 
-
     connect(mapB1F->get_cctv1_button(), &QPushButton::clicked, this, &Page2nd::handle_cctv1_button_clicked);
     connect(mapB1F->get_cctv2_button(), &QPushButton::clicked, this, &Page2nd::handle_cctv2_button_clicked);
 
@@ -233,15 +243,40 @@ void Page2nd::setup_all_maps()
 
     miniMapScene->setSceneRect(mapB1FProxy->boundingRect());
     ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+    ui->mini_map_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->mini_map_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->mini_map_view->fitInView(mapB1FProxy->boundingRect(), Qt::KeepAspectRatio);
 
     currentFloor = "B1F";
+}
+
+void Page2nd::create_dummy_log()
+{
+    ui->loglist_b2->addItem(new QListWidgetItem("[10:40:20] [B4] → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[11:56:20] [E2] → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[11:56:20] [B2] → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[11:56:20] [A2] → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[12:00:01] [A4] → 사용 중"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[12:15:05] [E3] → 출차 예정"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[12:15:20] [E3] → 비어 있음"));
+
+    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:02] [A1] → 출차 예정"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:12] [D4] → 출차 예정"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:15] [A1] → 비어 있음"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:30] [D4] → 비어 있음"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[10:37:08] [B3] → 사용 중"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[10:50:10] [B1] → 사용 중"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[11:47:02] [D5] → 출차 예정"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[11:47:22] [D5] → 비어 있음"));
 }
 
 void Page2nd::switch_floor_map(const QString &floor)
 {
     if (currentFloor == floor)
         return;
+
+    clear_camera_cones();
+    currentFloor = floor;
 
     if (floor == "B1F")
     {
@@ -250,7 +285,12 @@ void Page2nd::switch_floor_map(const QString &floor)
         mapB3FProxy->setVisible(false);
         miniMapScene->setSceneRect(mapB1FProxy->boundingRect());
         ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+        ui->mini_map_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        ui->mini_map_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui->mini_map_view->fitInView(mapB1FProxy->boundingRect(), Qt::KeepAspectRatio);
+
+        if (activeCameraId == 1)
+            toggle_camera1_cone();
     }
     else if (floor == "B2F")
     {
@@ -259,6 +299,8 @@ void Page2nd::switch_floor_map(const QString &floor)
         mapB3FProxy->setVisible(false);
         miniMapScene->setSceneRect(mapB2FProxy->boundingRect());
         ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+        ui->mini_map_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        ui->mini_map_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui->mini_map_view->fitInView(mapB2FProxy->boundingRect(), Qt::KeepAspectRatio);
     }
     else if (floor == "B3F")
@@ -268,10 +310,10 @@ void Page2nd::switch_floor_map(const QString &floor)
         mapB3FProxy->setVisible(true);
         miniMapScene->setSceneRect(mapB3FProxy->boundingRect());
         ui->mini_map_view->setFrameShape(QFrame::NoFrame);
+        ui->mini_map_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        ui->mini_map_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         ui->mini_map_view->fitInView(mapB3FProxy->boundingRect(), Qt::KeepAspectRatio);
     }
-
-    currentFloor = floor;
 }
 
 void Page2nd::setup_floor_table()
@@ -300,6 +342,7 @@ void Page2nd::setup_floor_table()
     }
 
     ui->floor_table_view->setModel(floorModel);
+    ui->floor_table_view->setMouseTracking(true);
 
     ui->floor_table_view->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->floor_table_view->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -311,7 +354,7 @@ void Page2nd::setup_floor_table()
     ui->floor_table_view->horizontalHeader()->setStretchLastSection(true);
     ui->floor_table_view->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
     ui->floor_table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-    ui->floor_table_view->setColumnWidth(0, 100);
+    ui->floor_table_view->setColumnWidth(0, 200);
     ui->floor_table_view->verticalHeader()->setVisible(false);
 
     int totalHeight = ui->floor_table_view->viewport()->height();
@@ -338,6 +381,16 @@ void Page2nd::handle_floor_clicked(const QModelIndex &index)
     if (ui->label_floor) ui->label_floor->setText(floor);
 
     switch_floor_map(floor);
+
+    if (floor == "B1F") {
+        ui->log_tab_widget->setCurrentIndex(0);
+    }
+    else if (floor == "B2F") {
+        ui->log_tab_widget->setCurrentIndex(1);
+    }
+    else if (floor == "B3F") {
+        ui->log_tab_widget->setCurrentIndex(2);
+    }
 }
 
 void Page2nd::show_no_signal()
@@ -418,12 +471,12 @@ void Page2nd::stop_cctv2_signal_timer()
 void Page2nd::append_log_message(const QString &message)
 {
     QString fullMessage = QString("[%1] %2").arg(QDateTime::currentDateTime().toString("hh:mm:ss"), message);
-    ui->logList->addItem(new QListWidgetItem(fullMessage));
-    ui->logList->scrollToBottom();
-
-    if (ui->logList->count() > 100)
+    QListWidget *target_log_list = ui->loglist_b1;
+    target_log_list->addItem(new QListWidgetItem(fullMessage));
+    target_log_list->scrollToBottom();
+    if (target_log_list->count() > 100)
     {
-        delete ui->logList->takeItem(0);
+        delete target_log_list->takeItem(0);
     }
 }
 
@@ -471,9 +524,6 @@ void Page2nd::initialize_slot_names()
 
 void Page2nd::update_parking_map(const SharedParkingLotMap &map)
 {
-
-    //if (currentFloor != "B1F") return;
-
     int availableCount = 0;
 
     QList<int> b1fSlots = floorSlotMap.value("B1F");
@@ -527,21 +577,14 @@ void Page2nd::update_parking_map(const SharedParkingLotMap &map)
 
 void Page2nd::toggle_camera1_cone()
 {
-
-    if (camera2Cone)
-    {
-        miniMapScene->removeItem(camera2Cone);
-        delete camera2Cone;
-        camera2Cone = nullptr;
-    }
-
     if (camera1Cone)
     {
         miniMapScene->removeItem(camera1Cone);
         delete camera1Cone;
+        camera1Cone = nullptr;
     }
 
-    QPointF cameraPos(666, 580);
+    QPointF cameraPos(655, 580);
 
     const int height = 95;
     const int width = 190;
@@ -556,7 +599,7 @@ void Page2nd::toggle_camera1_cone()
     path.closeSubpath();
 
     QLinearGradient gradient(cameraPos, QPointF(cameraPos.x(), cameraPos.y() - height));
-    gradient.setColorAt(0.0, QColor(0, 255, 255, 180));
+    gradient.setColorAt(0.0, QColor(0, 255, 255, 170));
     gradient.setColorAt(1.0, QColor(0, 255, 255, 5));
 
     camera1Cone = new QGraphicsPathItem(path);
@@ -567,48 +610,6 @@ void Page2nd::toggle_camera1_cone()
     activeCameraId = 1;
 }
 
-void Page2nd::toggle_camera2_cone()
-{
-
-    if (camera1Cone)
-    {
-        miniMapScene->removeItem(camera1Cone);
-        delete camera1Cone;
-        camera1Cone = nullptr;
-    }
-
-    if (camera2Cone)
-    {
-        miniMapScene->removeItem(camera2Cone);
-        delete camera2Cone;
-    }
-
-    QPointF cameraPos(422, 230);
-
-    const int height = 85;
-    const int width = 150;
-
-    QPointF leftTop(cameraPos.x() - width, cameraPos.y() - height);
-    QPointF rightTop(cameraPos.x() + width, cameraPos.y() - height);
-
-    QPainterPath path;
-    path.moveTo(cameraPos);
-    path.lineTo(leftTop);
-    path.lineTo(rightTop);
-    path.closeSubpath();
-
-    QLinearGradient gradient(cameraPos, QPointF(cameraPos.x(), cameraPos.y() - height));
-    gradient.setColorAt(0.0, QColor(0, 255, 255, 180));
-    gradient.setColorAt(1.0, QColor(0, 255, 255, 5));
-
-    camera2Cone = new QGraphicsPathItem(path);
-    camera2Cone->setBrush(gradient);
-    camera2Cone->setPen(Qt::NoPen);
-
-    miniMapScene->addItem(camera2Cone);
-    activeCameraId = 2;
-}
-
 void Page2nd::clear_camera_cones()
 {
     if (camera1Cone)
@@ -617,13 +618,5 @@ void Page2nd::clear_camera_cones()
         delete camera1Cone;
         camera1Cone = nullptr;
     }
-
-    if (camera2Cone)
-    {
-        miniMapScene->removeItem(camera2Cone);
-        delete camera2Cone;
-        camera2Cone = nullptr;
-    }
-
-    activeCameraId = 0;
 }
+
