@@ -182,9 +182,9 @@ void Page2nd::setup_gstreamer()
 {
     if (cctvThread && streamStarted) return;
 
-    QString uri = "rtsps://192.168.0.67:8555/stream";
-    QString cert = QCoreApplication::applicationDirPath() + "/../../certs/server.crt";
-    QFile in("certs/server.crt");
+    QString uri = "rtsps://192.168.0.32:8555/stream";
+    QString cert = QCoreApplication::applicationDirPath() + "/../../certs/Final.crt";
+    QFile in("certs/Final.crt");
     QFile out(cert);
     if (in.open(QIODevice::ReadOnly) && out.open(QIODevice::WriteOnly))
     {
@@ -252,22 +252,22 @@ void Page2nd::setup_all_maps()
 
 void Page2nd::create_dummy_log()
 {
-    ui->loglist_b2->addItem(new QListWidgetItem("[10:40:20] [B4] → 비어 있음"));
-    ui->loglist_b2->addItem(new QListWidgetItem("[11:56:20] [E2] → 비어 있음"));
-    ui->loglist_b2->addItem(new QListWidgetItem("[11:56:20] [B2] → 비어 있음"));
-    ui->loglist_b2->addItem(new QListWidgetItem("[11:56:20] [A2] → 비어 있음"));
-    ui->loglist_b2->addItem(new QListWidgetItem("[12:00:01] [A4] → 사용 중"));
-    ui->loglist_b2->addItem(new QListWidgetItem("[12:15:05] [E3] → 출차 예정"));
-    ui->loglist_b2->addItem(new QListWidgetItem("[12:15:20] [E3] → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.01] [10:40:20] B4 → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.01] [11:56:20] E2 → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.01] [11:56:20] B2 → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.01] [11:56:20] A2 → 비어 있음"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.01] [12:00:01] A4 → 사용 중"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.02] [12:15:05] E3 → 출차 예정"));
+    ui->loglist_b2->addItem(new QListWidgetItem("[2025.08.02] [12:15:20] E3 → 비어 있음"));
 
-    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:02] [A1] → 출차 예정"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:12] [D4] → 출차 예정"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:15] [A1] → 비어 있음"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[08:58:30] [D4] → 비어 있음"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[10:37:08] [B3] → 사용 중"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[10:50:10] [B1] → 사용 중"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[11:47:02] [D5] → 출차 예정"));
-    ui->loglist_b3->addItem(new QListWidgetItem("[11:47:22] [D5] → 비어 있음"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.01] [08:58:02] A1 → 출차 예정"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.01] [08:58:12] D4 → 출차 예정"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.01] [08:58:15] A1 → 비어 있음"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.01] [08:58:30] D4 → 비어 있음"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.02] [10:37:08] B3 → 사용 중"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.02] [10:50:10] B1 → 사용 중"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.02] [11:47:02] D5 → 출차 예정"));
+    ui->loglist_b3->addItem(new QListWidgetItem("[2025.08.02] [11:47:22] D5 → 비어 있음"));
 }
 
 void Page2nd::switch_floor_map(const QString &floor)
@@ -467,13 +467,18 @@ void Page2nd::stop_cctv2_signal_timer()
         cctv2Timer = nullptr;
     }
 }
-
 void Page2nd::append_log_message(const QString &message)
 {
-    QString fullMessage = QString("[%1] %2").arg(QDateTime::currentDateTime().toString("hh:mm:ss"), message);
+    QDateTime now = QDateTime::currentDateTime();
+    QString dateStr = now.toString("yyyy.MM.dd");
+    QString timeStr = now.toString("hh:mm:ss");
+
+    QString fullMessage = QString("[%1] [%2] %3").arg(dateStr, timeStr, message);
+
     QListWidget *target_log_list = ui->loglist_b1;
     target_log_list->addItem(new QListWidgetItem(fullMessage));
     target_log_list->scrollToBottom();
+
     if (target_log_list->count() > 100)
     {
         delete target_log_list->takeItem(0);
@@ -550,7 +555,7 @@ void Page2nd::update_parking_map(const SharedParkingLotMap &map)
             }
 
             QString slotName = slotNameMap.value(slot.slot_id, QString("슬롯%1").arg(slot.slot_id));
-            append_log_message(QString("[%1] → %2").arg(slotName, stateStr));
+            append_log_message(QString("%1 → %2").arg(slotName, stateStr));
             previousSlotStates[i] = slot.state;
         }
 

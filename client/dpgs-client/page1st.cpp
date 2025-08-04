@@ -8,6 +8,9 @@
 #include <QSslConfiguration>
 #include <QFile>
 #include <QPainter>
+#include <QRegularExpression>
+#include <QGraphicsDropShadowEffect>
+
 
 Page1st::Page1st(QStackedWidget *parent_stacked, QSslSocket *sharedSocket, QWidget *parent)
     : QWidget{parent}
@@ -16,9 +19,23 @@ Page1st::Page1st(QStackedWidget *parent_stacked, QSslSocket *sharedSocket, QWidg
     , socket(sharedSocket)
 {
     ui->setupUi(this);
-    ui->line_edit_pw->setEchoMode(QLineEdit::Password);
     setup_connections();
     draw_parking_labels();
+
+    ui->line_edit_id->setPlaceholderText("ID");
+    ui->line_edit_id->addAction(QIcon(":/images/user.png"), QLineEdit::LeadingPosition);
+
+    ui->line_edit_pw->setPlaceholderText("Password");
+    ui->line_edit_pw->setEchoMode(QLineEdit::Password);
+    ui->line_edit_pw->addAction(QIcon(":/images/password.png"), QLineEdit::LeadingPosition);
+
+    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect;
+    shadow->setBlurRadius(50);
+    shadow->setOffset(0, 8);
+    shadow->setColor(QColor(0, 0, 0, 150));
+
+    ui->groupBox->setGraphicsEffect(shadow);
+
 }
 
 Page1st::~Page1st()
@@ -38,8 +55,33 @@ void Page1st::handle_login_button_clicked()
     const QString id = ui->line_edit_id->text().trimmed();
     const QString pw = ui->line_edit_pw->text().trimmed();
 
+    ui->label_result1->clear();
+    ui->label_result2->clear();
+
+    auto clearInputs = [&]() {
+        ui->line_edit_id->clear();
+        ui->line_edit_pw->clear();
+    };
+
     if (id.isEmpty() || pw.isEmpty()) {
-        QMessageBox::warning(this, "입력 오류", "아이디와 비밀번호를 모두 입력해주세요.");
+        ui->label_result1->setText("Login failed");
+        ui->label_result2->setText("Please enter both ID and password.");
+        clearInputs();
+        return;
+    }
+
+    static const QRegularExpression passwordPattern(
+        "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}$"
+        );
+
+    if (!passwordPattern.match(pw).hasMatch()) {
+        ui->label_result1->setText("Login failed");
+        ui->label_result2->setText("Password must contain:\n"
+                                   "- At least one letter\n"
+                                   "- At least one number\n"
+                                   "- At least one special character (!@#$%^&*)\n"
+                                   "- At least 8 characters total");
+        clearInputs();
         return;
     }
 
@@ -48,7 +90,7 @@ void Page1st::handle_login_button_clicked()
     }
 
     QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
-    QString certPath = QCoreApplication::applicationDirPath() + "/../../certs/server.crt";
+    QString certPath = QCoreApplication::applicationDirPath() + "/../../certs/Final.crt";
     QFile certFile(certPath);
     if (certFile.open(QIODevice::ReadOnly)) {
         QSslCertificate caCert(&certFile, QSsl::Pem);
@@ -56,7 +98,9 @@ void Page1st::handle_login_button_clicked()
         sslConfig.setPeerVerifyMode(QSslSocket::VerifyPeer);
         socket->setSslConfiguration(sslConfig);
     } else {
-        QMessageBox::critical(this, "인증서 오류", "인증서 파일을 열 수 없습니다.");
+        ui->label_result1->setText("Login failed");
+        ui->label_result2->setText("Failed to open certificate file.");
+        clearInputs();
         return;
     }
 
@@ -67,10 +111,12 @@ void Page1st::handle_login_button_clicked()
         }
     });
 
-    socket->connectToHostEncrypted("192.168.0.67", 9999);
+    socket->connectToHostEncrypted("192.168.0.32", 9999);
 
-    if (!socket->waitForEncrypted(3000)) {
-        QMessageBox::critical(this, "서버 연결 실패", "TLS 연결에 실패했습니다.");
+    if (!socket->waitForEncrypted(2000)) {
+        ui->label_result1->setText("Login failed");
+        ui->label_result2->setText("Failed to establish TLS connection.");
+        clearInputs();
         return;
     }
 
@@ -83,28 +129,32 @@ void Page1st::handle_login_button_clicked()
     socket->write(pwData);
     socket->flush();
 
-    if (!socket->waitForReadyRead(2000)) {
-        QMessageBox::warning(this, "응답 오류", "서버 응답이 없습니다.");
+    if (!socket->waitForReadyRead(3000)) {
+        ui->label_result1->setText("Login failed");
+        ui->label_result2->setText("No response from server.");
+        clearInputs();
         return;
     }
 
     QByteArray response = socket->read(1);
 
     if (!response.isEmpty() && response[0] == '1') {
+        ui->label_result1->clear();
+        ui->label_result2->clear();
         stacked->setCurrentIndex(1);
     } else {
-        QMessageBox::warning(this, "로그인 실패", "ID 또는 비밀번호가 틀렸습니다.");
+        ui->label_result1->setText("Login failed");
+        ui->label_result2->setText("ID or password is incorrect.");
         if (socket->state() == QAbstractSocket::ConnectedState)
             socket->disconnectFromHost();
+        clearInputs();
     }
-
-    ui->line_edit_id->clear();
-    ui->line_edit_pw->clear();
 }
 
 void Page1st::draw_parking_labels()
 {
     QPixmap pixmap(":/images/parking.png");
+
     QPainter painter(&pixmap);
 
     QFont font("Arial", 30, QFont::Bold);
@@ -118,8 +168,8 @@ void Page1st::draw_parking_labels()
     };
 
     QList<Label> labels = {
-                           { "Dynamic Parking", QPoint(10, 190), -30 },
-                           { "Guidance System", QPoint(340, 30), 30 },
+                           { "Dynamic Parking", QPoint(10, 180), -30 },
+                           { "Guidance System", QPoint(360, 25), 30 },
                            };
 
     for (const Label& label : labels) {
