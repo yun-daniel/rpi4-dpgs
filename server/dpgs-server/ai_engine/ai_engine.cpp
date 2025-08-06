@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <limits.h>
 
+#include <chrono>
+
 
 // === AIEngine::Impl ===
 AIEngine::Impl::Impl(FrameBuffer& _fb, MapManager& _mgr)
@@ -37,6 +39,11 @@ void AIEngine::Impl::run() {
 
     is_running = true;
 
+    // Only for measuring perf
+//    int frame_count = 0;
+//    auto start_time = std::chrono::steady_clock::now();
+
+
     while (is_running) {
         cv::Mat frame = frame_sampling();
         if (frame.empty()) {
@@ -48,13 +55,24 @@ void AIEngine::Impl::run() {
         detector(frame, net, detections, class_list);
         classifier.classify(frame, detections);
 
-
         // [Debug Session]
-//        overlay_slots(frame, map);
-//        overlay_detection(frame, detections, class_list);
-//        print_frame(frame);
-//        cv::waitKey(1);
+    //    overlay_slots(frame, map);
+    //    overlay_detection(frame, detections, class_list);
+    //    print_frame(frame);
+    //    cv::waitKey(1);
         // --------------
+
+
+	// [Performance Analysis]
+//        frame_count++;
+//	auto now = std::chrono::steady_clock::now();
+//	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
+//	if (elapsed >= 1) {
+//	    double fps = static_cast<double>(frame_count)/elapsed;
+//	    std::cout << "[AI][ENGINE] FPS: " << fps << " (" << frame_count << " frames in " << elapsed << " sec)\n";
+//	    frame_count = 0;
+//	    start_time = now;
+//	}
 
     }
 

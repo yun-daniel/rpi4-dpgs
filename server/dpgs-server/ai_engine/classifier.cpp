@@ -5,7 +5,7 @@ const float SLOT_THRESHOLD_RATIO    = 0.3;
 const int   HEADLIGHT_THRESHOLD     = 130;
 const int   NUM_SLOT_INFO_RATIO     = 10;
 const int   NUM_SLOT_INFO_BRIGHT    = 5;
-const int   OCCUPIED_THRESHOLD      = 50;
+const int   OCCUPIED_THRESHOLD      = 55;
 const int   EXITING_THRESHOLD       = 40;
 
 const int   HEADLIGHT_THRESHOLD_L   = 120;
@@ -138,7 +138,7 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
 
 
     // [Debug Session]
-//    if ( (slot_id==25) )
+//    if ( (slot_id==25 || slot_id==26) )
 //        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", state_cnt=" << info.state_cnt << ", bright=" << max_bright << "\n";
     // ---------------
 
