@@ -160,5 +160,4 @@ void CCTVStreamThread::stop_streaming()
 {
     requestInterruption();
     wait();
-
 }

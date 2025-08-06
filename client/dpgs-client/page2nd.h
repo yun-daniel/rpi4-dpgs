@@ -3,12 +3,18 @@
 
 #include "cctvstreamthread.h"
 #include "parkingmapwidget.h"
+#include "parkingmapwidgetb2f.h"
+#include "parkingmapwidgetb3f.h"
 #include "slotdata.h"
 
 #include <QWidget>
 #include <QTimer>
 #include <QStandardItemModel>
 #include <QSslSocket>
+
+#include <QGraphicsScene>
+#include <QGraphicsPathItem>
+#include <QPainterPath>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Page2nd; }
@@ -37,6 +43,9 @@ private slots:
 
     void read_map_data();
 
+    void toggle_camera1_cone();
+    void clear_camera_cones();
+
 private:
     void show_no_signal();
     void show_cctv2_signal();
@@ -45,12 +54,14 @@ private:
 
     void setup_connections();
     void setup_gstreamer();
-    void setup_pmap();
+    void setup_all_maps();
     void setup_floor_table();
+    void create_dummy_log();
 
     void initialize_slot_names();
     void update_parking_map(const SharedParkingLotMap &map);
     void append_log_message(const QString &message);
+    void switch_floor_map(const QString &floor);
     void release_stream();
     void send_logout_and_close();
 
@@ -71,9 +82,22 @@ private:
     QMap<int, QString> slotNameMap;
     QMap<QString, QList<int>> floorSlotMap;
 
+    QGraphicsScene *miniMapScene = nullptr;
+    QGraphicsPathItem *camera1Cone = nullptr;
+
+    QGraphicsProxyWidget *mapB1FProxy = nullptr;
+    QGraphicsProxyWidget *mapB2FProxy = nullptr;
+    QGraphicsProxyWidget *mapB3FProxy = nullptr;
+
+    ParkingMapWidget *mapB1F = nullptr;
+    ParkingMapWidgetB2F *mapB2F = nullptr;
+    ParkingMapWidgetB3F *mapB3F = nullptr;
+    QString currentFloor = "B1F";
+
 private:
     bool streamStarted = false;
     bool cctv2_mode = false;
+    int activeCameraId = 0;
 };
 
 #endif

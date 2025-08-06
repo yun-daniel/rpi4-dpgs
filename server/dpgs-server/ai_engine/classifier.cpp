@@ -1,12 +1,14 @@
 #include "classifier.h"
 #include <deque>
 
-const float SLOT_THRESHOLD_RATIO    = 0.5;
-const int   HEADLIGHT_THRESHOLD     = 92;
-const int   NUM_SLOT_INFO_RATIO     = 15;
+const float SLOT_THRESHOLD_RATIO    = 0.3;
+const int   HEADLIGHT_THRESHOLD     = 130;
+const int   NUM_SLOT_INFO_RATIO     = 10;
 const int   NUM_SLOT_INFO_BRIGHT    = 5;
-const int   OCCUPIED_THRESHOLD      = 45;
+const int   OCCUPIED_THRESHOLD      = 50;
 const int   EXITING_THRESHOLD       = 40;
+
+const int   HEADLIGHT_THRESHOLD_L   = 120;
 
 
 // === Utility ===
@@ -72,6 +74,10 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
         }
     }
 
+    int bright_th = HEADLIGHT_THRESHOLD;
+    if ( (slot_id >= 25) && (slot_id <= 26) ) {
+        bright_th = HEADLIGHT_THRESHOLD_L;
+    }
 
     switch (curr_state) {
         case EMPTY:
@@ -89,7 +95,8 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
                 info.state_cnt = 0;
             }
             else {
-                if (max_bright <= HEADLIGHT_THRESHOLD) {
+//                if (max_bright <= HEADLIGHT_THRESHOLD) {
+                if (max_bright <= bright_th) {
                     info.state_cnt++;
                 }
                 else {
@@ -109,7 +116,8 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
                 info.state_cnt = 0;
             }
             else {
-                if (max_bright <= HEADLIGHT_THRESHOLD) {
+//                if (max_bright <= HEADLIGHT_THRESHOLD) {
+                if (max_bright <= bright_th) {
                     if (info.state_cnt >= EXITING_THRESHOLD) {
                         mgr.update_slot(slot_id, OCCUPIED);
                         info.state_cnt = 0;
@@ -130,8 +138,8 @@ void ParkingStatusClassifier::updateState(int slot_id, SlotInfo& info) {
 
 
     // [Debug Session]
-    if (slot_id == 1)
-        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", state_cnt=" << info.state_cnt << ", bright=" << max_bright << "\n";
+//    if ( (slot_id==25) )
+//        std::cout << "[DEBUG][CLSF] updateState: Slot " << slot_id << ": curr_state=" << curr_state << ", state_cnt=" << info.state_cnt << ", bright=" << max_bright << "\n";
     // ---------------
 
 }

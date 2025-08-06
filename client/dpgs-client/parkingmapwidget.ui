@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1050</width>
-    <height>640</height>
+    <width>1126</width>
+    <height>673</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,23 +20,30 @@
    <bool>false</bool>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">background-color: white;</string>
   </property>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>-20</x>
-     <y>0</y>
-     <width>1091</width>
-     <height>640</height>
+     <x>-6</x>
+     <y>-15</y>
+     <width>1133</width>
+     <height>689</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>맑은 고딕</family>
+     <pointsize>20</pointsize>
+     <bold>false</bold>
+    </font>
    </property>
    <property name="autoFillBackground">
     <bool>false</bool>
    </property>
    <property name="styleSheet">
     <string notr="true">QGroupBox {
-    background-image: url(:/images/parkingBox.png);
+    background-image: url(:/images/parkingbox_B1F.png);
     background-repeat: no-repeat;
     background-position: center;
     background-origin: content;
@@ -53,8 +60,8 @@ QPushButton {
    <widget class="QPushButton" name="cctv_button_1">
     <property name="geometry">
      <rect>
-      <x>662</x>
-      <y>160</y>
+      <x>640</x>
+      <y>597</y>
       <width>51</width>
       <height>31</height>
      </rect>
@@ -69,27 +76,31 @@ QPushButton {
 
 QPushButton:pressed {
     outline: none; 
-}</string>
+}
+
+QPushButton:hover{
+background-color: #FFF3E0;
+}
+</string>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="icon">
-     <iconset resource="resource.qrc">
-      <normaloff>:/images/cctv_icon.png</normaloff>:/images/cctv_icon.png</iconset>
+     <iconset theme="QIcon::ThemeIcon::CameraVideo"/>
     </property>
     <property name="iconSize">
      <size>
-      <width>40</width>
-      <height>40</height>
+      <width>50</width>
+      <height>50</height>
      </size>
     </property>
    </widget>
    <widget class="QPushButton" name="cctv_button_2">
     <property name="geometry">
      <rect>
-      <x>408</x>
-      <y>160</y>
+      <x>420</x>
+      <y>246</y>
       <width>51</width>
       <height>31</height>
      </rect>
@@ -104,30 +115,44 @@ QPushButton:pressed {
 
 QPushButton:pressed {
     outline: none; 
-}</string>
+}
+
+QPushButton:hover{
+background-color: #FFF3E0;
+}
+</string>
     </property>
     <property name="text">
      <string/>
     </property>
     <property name="icon">
-     <iconset resource="resource.qrc">
-      <normaloff>:/images/cctv_icon.png</normaloff>:/images/cctv_icon.png</iconset>
+     <iconset theme="QIcon::ThemeIcon::CameraVideo"/>
     </property>
     <property name="iconSize">
      <size>
-      <width>40</width>
-      <height>40</height>
+      <width>50</width>
+      <height>50</height>
      </size>
     </property>
    </widget>
    <widget class="QPushButton" name="C1_button">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>177</y>
+      <x>47</x>
+      <y>194</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="text">
      <string>C1</string>
@@ -136,11 +161,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="C2_button">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>243</y>
+      <x>47</x>
+      <y>267</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>C2</string>
@@ -149,11 +181,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="C3_button">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>349</y>
+      <x>47</x>
+      <y>380</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>C3</string>
@@ -162,11 +201,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="C4_button">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>417</y>
+      <x>47</x>
+      <y>450</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>C4</string>
@@ -175,11 +221,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="A1_button">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>416</y>
+      <x>1010</x>
+      <y>450</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>A1</string>
@@ -188,11 +241,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="A3_button">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>245</y>
+      <x>1010</x>
+      <y>267</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>A3</string>
@@ -201,11 +261,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="A4_button">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>178</y>
+      <x>1010</x>
+      <y>194</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>A4</string>
@@ -214,11 +281,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="A2_button">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>349</y>
+      <x>1010</x>
+      <y>380</y>
       <width>80</width>
       <height>45</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>A2</string>
@@ -227,11 +301,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B1_button">
     <property name="geometry">
      <rect>
-      <x>729</x>
-      <y>60</y>
+      <x>767</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B1</string>
@@ -240,11 +321,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B2_button">
     <property name="geometry">
      <rect>
-      <x>665</x>
-      <y>60</y>
+      <x>699</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B2</string>
@@ -253,11 +341,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B3_button">
     <property name="geometry">
      <rect>
-      <x>602</x>
-      <y>60</y>
+      <x>632</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B3</string>
@@ -266,11 +361,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B4_button">
     <property name="geometry">
      <rect>
-      <x>505</x>
-      <y>60</y>
+      <x>527</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B4</string>
@@ -279,11 +381,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B5_button">
     <property name="geometry">
      <rect>
-      <x>443</x>
-      <y>60</y>
+      <x>458</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B5</string>
@@ -292,11 +401,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B6_button">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>60</y>
+      <x>390</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B6</string>
@@ -305,11 +421,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="B7_button">
     <property name="geometry">
      <rect>
-      <x>317</x>
-      <y>60</y>
+      <x>322</x>
+      <y>70</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>B7</string>
@@ -318,11 +441,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D1_button">
     <property name="geometry">
      <rect>
-      <x>745</x>
-      <y>270</y>
+      <x>785</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D1</string>
@@ -331,11 +461,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D2_button">
     <property name="geometry">
      <rect>
-      <x>681</x>
-      <y>270</y>
+      <x>718</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D2</string>
@@ -344,11 +481,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D3_button">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>270</y>
+      <x>649</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D3</string>
@@ -357,11 +501,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D4_button">
     <property name="geometry">
      <rect>
-      <x>521</x>
-      <y>270</y>
+      <x>544</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D4</string>
@@ -370,11 +521,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D5_button">
     <property name="geometry">
      <rect>
-      <x>459</x>
-      <y>270</y>
+      <x>475</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D5</string>
@@ -383,11 +541,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D6_button">
     <property name="geometry">
      <rect>
-      <x>361</x>
-      <y>270</y>
+      <x>371</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D6</string>
@@ -396,11 +561,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="D7_button">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>270</y>
+      <x>304</x>
+      <y>295</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>D7</string>
@@ -409,11 +581,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E7_button">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>376</y>
+      <x>304</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E7</string>
@@ -422,11 +601,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E6_button">
     <property name="geometry">
      <rect>
-      <x>363</x>
-      <y>376</y>
+      <x>371</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E6</string>
@@ -435,11 +621,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E5_button">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>376</y>
+      <x>475</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E5</string>
@@ -448,11 +641,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E4_button">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>376</y>
+      <x>544</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E4</string>
@@ -461,11 +661,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E3_button">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>376</y>
+      <x>649</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E3</string>
@@ -474,11 +681,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E2_button">
     <property name="geometry">
      <rect>
-      <x>682</x>
-      <y>376</y>
+      <x>718</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E2</string>
@@ -487,11 +701,18 @@ QPushButton:pressed {
    <widget class="QPushButton" name="E1_button">
     <property name="geometry">
      <rect>
-      <x>745</x>
-      <y>376</y>
+      <x>785</x>
+      <y>410</y>
       <width>45</width>
       <height>80</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>13</pointsize>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>E1</string>
@@ -499,8 +720,6 @@ QPushButton:pressed {
    </widget>
   </widget>
  </widget>
- <resources>
-  <include location="resource.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

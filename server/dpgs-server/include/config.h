@@ -10,7 +10,8 @@
 #define MM_SHM_NAME     "DPGS_MM"
 // MM_MAP_FILE_PATH
 //   MapManager Map File Path
-#define MM_MAP_FILE_PATH    "config/map.json"
+//#define MM_MAP_FILE_PATH    "config/map.json"
+#define MM_MAP_FILE_PATH    "config/multi_map.json"
 //#define MM_MAP_FILE_PATH    "config/test_map.json"
 // CERT_FILE_PATH/KEY_FILE_PATH
 //   Certification/Key File Path
