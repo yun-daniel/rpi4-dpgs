@@ -53,3 +53,7 @@ cd rpi4-dpgs
 
 ### Load device driver and run LED Display application (on RPi4 connected with LED Display)
 ./run.sh drivers
+```
+
+## Notes
+This project is the final outcome of **VEDA** academy course. The overall background and objectives of the project are provided in the docs.
